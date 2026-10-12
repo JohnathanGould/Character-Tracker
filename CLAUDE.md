@@ -20,7 +20,7 @@ Keep the look (black background, silver-blue accent, Marcellus / Albert Sans / I
 - `data/spell-bank.json`: 1,192 wizard spells, levels 1 to 4 (names, levels, summaries). The same data is inlined in `index.html` as `BANK`. School and duration are recorded only for about 170 Core Rulebook spells; the rest are `?`. Filling those gaps from a source such as Archives of Nethys is a good follow-up.
 
 ## State (one JSON document)
-`v, round, burnout, gained, overdrive, mythic, lightUsed, vials, strDmg, blood, exp, active[], pending[], log[]`
+`v, round, burnout, gained, overdrive, mythic, lightUsed, hp, petHp, stun, vials, strDmg, blood, exp, active[], pending[], log[]`
 - `active[]`: `{id, name, cast, end (null = open-ended), total}`, max 2 entries.
 - `pending[]`: Detonate reminders `{id, name, fire, text}`.
 - `exp`: experimental spell id (`haste` default, or a `b-...` bank id, level 3 or lower).
@@ -35,6 +35,10 @@ Keep the look (black background, silver-blue accent, Marcellus / Albert Sans / I
 - **Blood Money** is a swift action: 1d6 damage, and blood replaces one material component this round. Components over 1 gp cost 1 Strength damage plus 1 per full 500 gp.
 - **Detonate**: costs 50 gp in vials, max 10d8, holds a concentration slot for 1 round.
 - Top bar order: Reset, No cast, Cast spell, New day. Reset clears concentration. New day needs two taps.
+- **Hit points.** Daerlieth 82 max; Hard to Kill: stabilizes below 0, dies at -32 (twice Con 16). Gwathfaron (panther companion) 45 max, dies at -15. New day heals 8 and 7 (natural healing).
+- **Stunning Fist** 2/day, refills on New day. **Mythic Surge** (+1d6 to a d20) and **Amazing Initiative** (extra standard action, no spells or artillery) each cost 1 mythic power.
+- **Mythic spells** (Mythic Spell Lore): fireball (d10s, burning 2d6/round on a failed save) and dimension door (one-way portal for up to CL allies), +1 mythic power each.
+- Ranged touch +15 (BAB 8 + Dex 7). Dimension door carries 1 creature per 3 CL.
 - Strength buttons act on the score: "Strength -1" adds Strength damage, "+1" heals it.
 
 ## Open rulings for the GM (no longer shown on the page)

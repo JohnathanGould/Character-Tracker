@@ -137,7 +137,7 @@ h1 {
 /* view-only mode for anyone who cannot write */
 .ro .clock .btn, .ro .tray-wrap, .ro #pCast, .ro #pSpells .fields,
 .ro [data-act="str"], .ro [data-act="resolve"], .ro [data-act="endspell"], .ro [data-act="clearlog"],
-.ro [data-act="burn"], .ro [data-act="res"] { display: none !important; }
+.ro [data-act="burn"], .ro [data-act="res"], .ro [data-act="hp"], .ro [data-act="mspend"] { display: none !important; }
 .ro .toggle, .ro .spell, .ro .cell, .ro .pip { pointer-events: none; }
 .ro .cols { grid-template-columns: 1fr; }
 .lv {
@@ -327,6 +327,9 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
 .stat .v { font-family: var(--font-display); font-size: 1.45rem; line-height: 1.15; }
 .stat .s { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
 .conds { display: flex; flex-wrap: wrap; gap: 8px; }
+.hpgrid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.hpb { border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px; padding: 12px; min-width: 0; }
+.hpb .lbl { margin-bottom: 6px; }
 .toggle {
   min-height: 40px;
   padding: 0 12px;
@@ -411,6 +414,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
   <section class="panel" id="pStats"></section>
 
+  <section class="panel" id="pBody"></section>
+
   <section class="lower">
     <div class="panel" id="pLog"></div>
     <div class="panel" id="pRules"></div>
@@ -459,11 +464,13 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 <script src="vendor/firebase-firestore-compat.js"></script>
 <script>
 (function () {
+  /* hit points: 82 max; Hard to Kill means she dies only at -32 (twice Con 16). Gwathfaron the panther: 45 max, Con 15, dies at -15. */
+  var HP_MAX = 82, HP_DEAD = 32, PET_MAX = 45, PET_DEAD = 15, TOUCH = 15;
   var BASE_CL = 8, CHA = 6, KEY = "ilmadria-burnout-ledger-v1";
 
   var DEFAULT = {
     v: 1, round: 1, burnout: 0, gained: false,
-    overdrive: 10, mythic: 7, lightUsed: false,
+    overdrive: 10, mythic: 7, lightUsed: false, hp: 82, petHp: 45, stun: 2,
     vials: 2, strDmg: 0, blood: null, exp: "haste", active: [], pending: [], log: []
   };
 
@@ -494,8 +501,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     { id: "resist-energy", name: "Resist energy", lvl: 2, per: 100, calc: "re" },
     { id: "scorching-ray", name: "Scorching ray", lvl: 2, fire: true, calc: "sr" },
     { id: "dispel-magic", name: "Dispel magic", lvl: 3, calc: "dm" },
-    { id: "fireball", name: "Fireball", lvl: 3, fire: true, save: "Reflex", calc: "fb" },
-    { id: "dimension-door", name: "Dimension door", lvl: 4, calc: "dd" },
+    { id: "fireball", name: "Fireball", lvl: 3, fire: true, save: "Reflex", calc: "fb", myth: true },
+    { id: "dimension-door", name: "Dimension door", lvl: 4, calc: "dd", myth: true },
     { id: "detonate", name: "Detonate", lvl: 4, per: 1, fixed: 2, cost: 50, save: "Reflex", calc: "det" },
     { id: "arcane-artillery", name: "Arcane artillery", lvl: 4, calc: "art", art: true }
   ];
@@ -547,7 +554,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   var state = clone(DEFAULT);
   var ui = {
     tray: false, qOd: false, qBlood: true, trayMsg: "", dayArmed: false, blood: false, bmChoice: "det", bmGp: 100,
-    sel: "fireball", od: false, d8: false, wa: false, mode: "std", element: "fire",
+    sel: "fireball", od: false, d8: false, wa: false, myth: false, mode: "std", element: "fire",
     customName: "", customLvl: 1, customDur: "none", unkFire: false
   };
   var readOnly = false, roLabel = "";
@@ -565,6 +572,9 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     s.burnout = Math.max(0, Math.floor(+s.burnout || 0));
     s.overdrive = Math.min(10, Math.max(0, Math.floor(+s.overdrive || 0)));
     s.mythic = Math.min(7, Math.max(0, Math.floor(+s.mythic || 0)));
+    s.hp = isFinite(+s.hp) && s.hp !== null ? Math.min(HP_MAX, Math.max(-HP_DEAD, Math.round(+s.hp))) : HP_MAX;
+    s.petHp = isFinite(+s.petHp) && s.petHp !== null ? Math.min(PET_MAX, Math.max(-PET_DEAD, Math.round(+s.petHp))) : PET_MAX;
+    s.stun = isFinite(+s.stun) && s.stun !== null ? Math.min(2, Math.max(0, Math.floor(+s.stun))) : 2;
     s.vials = Math.max(0, Math.floor(+s.vials || 0));
     s.strDmg = Math.min(16, Math.max(0, Math.floor(+s.strDmg || 0)));
     s.round = Math.max(1, Math.floor(+s.round || 1));
@@ -610,6 +620,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   function compute(sp) {
     var s = state, lvl = sp.lvl;
     var wa = ui.wa || !!sp.custom;
+    var myth = !!sp.myth && ui.myth;
     var fire = !!sp.fire || (sp.calc === "det" && ui.element === "fire");
     var cl = Math.max(1, BASE_CL - s.burnout + (wa ? 2 : 0) + (fire ? 2 : 0));
     var dc = 10 + lvl + CHA - Math.floor(s.burnout / 2);
@@ -631,14 +642,17 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       case "art": {
         var n = Math.max(0, 6 - Math.floor(s.burnout / 2)), f = d8 ? 8 : 6;
         rows.push(["Damage", n + "d" + f + "+6 arcane, avg " + avg(n, f, 6) + (d8 ? " (artillery overdrive d8)" : "")]);
-        if (ui.mode === "std") rows.push(["Delivery", "Ranged touch +14, 30 ft, standard action"]);
-        if (ui.mode === "sniper") rows.push(["Delivery", "Ranged touch +14, 120 ft (Artillery Sniper)"]);
+        if (ui.mode === "std") rows.push(["Delivery", "Ranged touch +" + TOUCH + ", 30 ft, standard action"]);
+        if (ui.mode === "sniper") rows.push(["Delivery", "Ranged touch +" + TOUCH + ", 120 ft (Artillery Sniper)"]);
         if (ui.mode === "burst") rows.push(["Delivery", "15 ft burst around her, Reflex half. She takes no damage (Artillery Burst)"]);
         break;
       }
       case "fb": {
         var nf = Math.min(10, cl);
-        rows.push(["Damage", nf + "d6 fire, avg " + avg(nf, 6, 0) + ", 20 ft burst, Reflex half"]);
+        if (myth) {
+          rows.push(["Damage", nf + "d10 fire, avg " + avg(nf, 10, 0) + ", 20 ft burst, Reflex half (mythic)"]);
+          rows.push(["Burning", "A creature that fails its save catches fire: 2d6 fire each round until put out (save DC " + dc + " to extinguish)"]);
+        } else rows.push(["Damage", nf + "d6 fire, avg " + avg(nf, 6, 0) + ", 20 ft burst, Reflex half"]);
         break;
       }
       case "det": {
@@ -670,7 +684,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       }
       case "sr": {
         var rays = cl >= 11 ? 3 : cl >= 7 ? 2 : 1;
-        rows.push(["Damage", rays + " ray" + (rays > 1 ? "s" : "") + ", 4d6 fire each, avg " + avg(4 * rays, 6, 0) + " total, ranged touch +14"]);
+        rows.push(["Damage", rays + " ray" + (rays > 1 ? "s" : "") + ", 4d6 fire each, avg " + avg(4 * rays, 6, 0) + " total, ranged touch +" + TOUCH]);
         break;
       }
       case "dm": {
@@ -682,7 +696,13 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         break;
       }
       case "dd": {
-        rows.push(["Range", (400 + 40 * cl) + " ft, her and up to 1 other creature"]);
+        if (myth) {
+          rows.push(["Range", (400 + 40 * cl) + " ft"]);
+          rows.push(["Portal", "She goes through at once and brings no one. An invisible one-way portal stays in her square for " + Math.max(1, Math.floor(cl / 2)) + " round" + (Math.floor(cl / 2) > 1 ? "s" : "") + "; up to " + cl + " creatures she picks can step through (not an action), then can't act until their next turn"]);
+        } else {
+          var pass = Math.floor(cl / 3);
+          rows.push(["Range", (400 + 40 * cl) + " ft, her and " + (pass ? "up to " + pass + " willing Medium or smaller creature" + (pass > 1 ? "s" : "") : "no one else")]);
+        }
         break;
       }
     }
@@ -698,12 +718,10 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       rows.push(["Duration", sp.dtext ? (sp.dtext + (dur > 0 ? " = " + fmtDur(dur) : "") + ", uses a concentration slot") : (sp.fixed ? "1 round, then instantaneous" : dur < 0 ? "While she concentrates" : fmtDur(dur)) + ", uses a concentration slot until it goes off"]);
     }
 
-    var odCost = od ? 1 : 0, mythCost = wa ? 1 : 0;
-    if (ui.wa && s.mythic < 1) problems.push("No mythic power left for Wild Arcana.");
-    if (sp.custom && s.mythic < 1) problems.push("No mythic power left for Wild Arcana.");
-    if (s.mythic < mythCost) { /* covered above */ }
+    var mythCost = (wa ? 1 : 0) + (myth ? 1 : 0);
+    if (s.mythic < mythCost) problems.push(mythCost > 1 ? "Wild Arcana and the mythic version need 2 mythic power; she has " + s.mythic + "." : wa ? "No mythic power left for Wild Arcana." : "No mythic power left for the mythic version.");
 
-    return { cl: cl, dc: dc, gain: gain, burn: burn, od: od, d8: d8, blood: !!(sp.calc === "det" && s.blood), bmStr: bmStr, bmName: bmName, odCost: (od ? 1 : 0) + (d8 ? 1 : 0), wa: wa, odUseful: odUseful, dur: dur,
+    return { cl: cl, dc: dc, gain: gain, burn: burn, od: od, d8: d8, blood: !!(sp.calc === "det" && s.blood), bmStr: bmStr, bmName: bmName, odCost: (od ? 1 : 0) + (d8 ? 1 : 0), wa: wa, myth: myth, mythCost: mythCost, odUseful: odUseful, dur: dur,
       rows: rows, problems: problems, fire: fire };
   }
 
@@ -725,7 +743,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       s.blood = { name: c.bmName };
       log("Cast Blood Money for " + c.bmName + ": 1d6 damage" + (c.bmStr ? ", Strength damage +" + c.bmStr : ", no Strength damage"));
     });
-    ui.od = false; ui.d8 = false; ui.wa = false;
+    ui.od = false; ui.d8 = false; ui.wa = false; ui.myth = false;
     render();
   }
 
@@ -738,13 +756,13 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var nm = sp.custom ? sp.name : sp.name;
     mutate(function (s) {
       if (c.odCost) s.overdrive = Math.max(0, s.overdrive - c.odCost);
-      if (c.wa) s.mythic = Math.max(0, s.mythic - 1);
+      if (c.mythCost) s.mythic = Math.max(0, s.mythic - c.mythCost);
       if (sp.calc === "det" && !c.blood) s.vials = Math.max(0, s.vials - 1);
       if (c.burn > 0) { s.burnout += c.burn; s.gained = true; }
       var bits = [];
       bits.push(c.burn > 0 ? "+" + c.burn + " burnout" : "no burnout");
       if (c.odCost) bits.push("overdrive −" + c.odCost);
-      if (c.wa) bits.push("mythic −1");
+      if (c.mythCost) bits.push("mythic −" + c.mythCost + (c.myth ? " (mythic " + sp.name.toLowerCase() + ")" : ""));
       if (c.blood) bits.push("paid with Blood Money");
       else if (sp.calc === "det") bits.push("vials −1");
       bits.push("CL " + c.cl);
@@ -768,7 +786,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     });
     ui.od = false;
     ui.d8 = false;
-    ui.wa = false;
+    ui.wa = false; ui.myth = false;
     ui.blood = false;
     render();
   }
@@ -792,7 +810,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var sp = getSpell(parts[0]);
     if (!sp) return;
     ui.sel = sp.id;
-    ui.od = ui.qOd; ui.d8 = false; ui.wa = false;
+    ui.od = ui.qOd; ui.d8 = false; ui.wa = false; ui.myth = false;
     if (sp.calc === "det" && parts[1]) ui.element = parts[1];
     if (sp.art && parts[1]) ui.mode = parts[1];
     var gp = sp.cost || 0;
@@ -829,10 +847,12 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     mutate(function (s) {
       s.round = 1; s.gained = false; s.blood = null;
       s.burnout = 0; s.overdrive = 10; s.mythic = 7;
-      s.lightUsed = false; s.active = []; s.pending = [];
+      s.lightUsed = false; s.active = []; s.pending = []; s.stun = 2;
       var healed = s.strDmg > 0;
       if (healed) s.strDmg -= 1;
-      log("New day: overdrive 10, mythic power 7, burnout 0" + (healed ? ", Strength damage −1" : ""));
+      /* natural healing after 8 hours of rest: 1 hp per level (8) or hit die (panther 7) */
+      s.hp = Math.min(HP_MAX, s.hp + 8); s.petHp = Math.min(PET_MAX, s.petHp + 7);
+      log("New day: overdrive 10, mythic power 7, burnout 0, Stunning Fist 2, hp +8 (panther +7)" + (healed ? ", Strength damage −1" : ""));
     });
     ui.tray = false;
     render();
@@ -909,7 +929,9 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       '<div class="big"><div class="bignum num">' + state.mythic + '<small>/7</small></div></div>' +
       pips("mythic", state.mythic, 7) +
       '<div class="ctl"><button class="btn icon" data-act="res" data-k="mythic" data-d="-1" aria-label="Mythic power minus one">−</button>' +
-      '<button class="btn icon" data-act="res" data-k="mythic" data-d="1" aria-label="Mythic power plus one">+</button></div>';
+      '<button class="btn icon" data-act="res" data-k="mythic" data-d="1" aria-label="Mythic power plus one">+</button>' +
+      '<button class="btn sm" data-act="mspend" data-what="surge"' + (state.mythic < 1 ? " disabled" : "") + ' title="Immediate action, after seeing the roll: add 1d6 to a d20 roll she just made">Surge +1d6</button>' +
+      '<button class="btn sm" data-act="mspend" data-what="init"' + (state.mythic < 1 ? " disabled" : "") + ' title="Amazing Initiative: free action on her turn, once per round. An extra standard action that cannot cast a spell or use artillery">Extra action</button></div>';
   }
 
   function spellBtn(sp) {
@@ -989,10 +1011,12 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var d8Dis = !c.d8 && (state.overdrive - (c.od ? 1 : 0)) < 1;
     var d8Hint = d8Dis ? "No overdrive left after the other spend" : "Damage die becomes d8";
     var waDis = state.mythic < 1 || sp.custom;
+    var mythDis = !c.myth && state.mythic < 1;
     var waHint = sp.custom ? "Always used for a spell outside her known list" : state.mythic < 1 ? "No mythic power left" : "Standard action, CL +2 for this spell";
     opts += '<div class="opts">' +
       '<label class="opt' + (odDis ? " dis" : "") + '"><input type="checkbox" id="odChk"' + (c.od ? " checked" : "") + (odDis ? " disabled" : "") + '><span>Spend 1 overdrive to ignore burnout<small>' + odHint + "</small></span></label>" +
       (sp.art ? '<label class="opt' + (d8Dis ? " dis" : "") + '"><input type="checkbox" id="d8Chk"' + (c.d8 ? " checked" : "") + (d8Dis ? " disabled" : "") + '><span>Artillery overdrive, 1 more overdrive<small>' + d8Hint + "</small></span></label>" : "") +
+      (sp.myth ? '<label class="opt' + (mythDis ? " dis" : "") + '"><input type="checkbox" id="mythChk"' + (c.myth ? " checked" : "") + (mythDis ? " disabled" : "") + '><span>Mythic version, 1 mythic power<small>' + (mythDis ? "No mythic power left" : sp.calc === "fb" ? "d10s instead of d6s, and targets that fail catch fire" : "One-way portal her chosen allies can use") + "</small></span></label>" : "") +
       '<label class="opt' + (waDis ? " dis" : "") + '"><input type="checkbox" id="waChk"' + (c.wa ? " checked" : "") + (waDis ? " disabled" : "") + '><span>Wild Arcana, 1 mythic power<small>' + waHint + "</small></span></label>" +
       "</div>";
 
@@ -1062,6 +1086,28 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       '<button class="toggle" data-act="str" data-d="-1">Strength +1</button></div>';
   }
 
+
+  function hpBlock(k, name, cur, max, dead, note) {
+    var st = cur > 0 ? (cur <= max / 4 ? "Bloodied" : "Up") : cur === 0 ? "Disabled" : cur > -dead ? "Dying" : "Dead";
+    var btn = function (d) { return '<button class="btn sm" data-act="hp" data-k="' + k + '" data-d="' + d + '">' + (d > 0 ? "+" : "−") + Math.abs(d) + "</button>"; };
+    return '<div class="hpb"><div class="lbl">' + esc(name) + '</div>' +
+      '<div class="big"><div class="bignum num">' + cur + "<small>/" + max + "</small></div><span class=\"chip" + (cur <= 0 ? " hot" : "") + '">' + st + "</span></div>" +
+      '<div class="ctl">' + [-10, -5, -1, 1, 5, 10].map(btn).join("") + "</div>" +
+      '<p class="hint">' + note + "</p></div>";
+  }
+  function renderBody() {
+    var stun = "";
+    for (var i = 1; i <= 2; i++) stun += '<button class="pip my' + (i <= state.stun ? " on" : "") + '" data-act="setres" data-k="stun" data-n="' + i + '" aria-label="Set Stunning Fist uses to ' + i + '"></button>';
+    $("pBody").innerHTML =
+      '<div class="ph"><h2>Hit points</h2><span class="hint">New day heals 8 (her) and 7 (Gwathfaron)</span></div>' +
+      '<div class="hpgrid">' +
+      hpBlock("hp", "Daerlieth", state.hp, HP_MAX, HP_DEAD, "Hard to Kill: stabilizes on her own below 0, dies at −" + HP_DEAD + ". Blood Money costs 1d6 here.") +
+      hpBlock("petHp", "Gwathfaron, panther", state.petHp, PET_MAX, PET_DEAD, "Dies at −" + PET_DEAD + ".") +
+      '<div class="hpb"><div class="lbl">Stunning Fist</div><div class="big"><div class="bignum num">' + state.stun + '<small>/2</small></div></div>' +
+      '<div class="pips">' + stun + '</div><p class="hint">Declare before the roll, 1 per round. Fort DC 18 or stunned until just before her next turn.</p></div>' +
+      "</div>";
+  }
+
   function renderLog() {
     var h = state.log.length
       ? '<ul class="log">' + state.log.map(function (e) { return '<li><span class="r">R' + e.r + '</span><span class="tx">' + esc(e.t) + "</span></li>"; }).join("") + "</ul>"
@@ -1124,7 +1170,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     $("dayBtn").textContent = ui.dayArmed ? "Confirm new day" : "New day";
     $("dayBtn").classList.toggle("warn", ui.dayArmed);
     renderTray();
-    renderBurn(); renderOver(); renderMyth(); renderSpells(); renderCast(); renderSlots(); renderStats(); renderLog();
+    renderBurn(); renderOver(); renderMyth(); renderSpells(); renderCast(); renderSlots(); renderStats(); renderBody(); renderLog();
   }
 
   /* ---------- events ---------- */
@@ -1134,7 +1180,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var a = t.getAttribute("data-act");
     if (a === "pick") {
       ui.sel = t.getAttribute("data-id");
-      ui.od = false; ui.d8 = false; ui.wa = false; ui.blood = false;
+      ui.od = false; ui.d8 = false; ui.wa = false; ui.myth = false; ui.blood = false;
       render();
       if (window.matchMedia("(max-width: 859px)").matches) {
         var el = $("pCast");
@@ -1165,9 +1211,20 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     } else if (a === "res") {
       var k = t.getAttribute("data-k"), dd = parseInt(t.getAttribute("data-d"), 10), mx = k === "overdrive" ? 10 : 7;
       mutate(function (s) { s[k] = Math.min(mx, Math.max(0, s[k] + dd)); });
+    } else if (a === "hp") {
+      var hk = t.getAttribute("data-k"), hd = parseInt(t.getAttribute("data-d"), 10);
+      var hmax = hk === "hp" ? HP_MAX : PET_MAX, hdead = hk === "hp" ? HP_DEAD : PET_DEAD;
+      mutate(function (s) { s[hk] = Math.min(hmax, Math.max(-hdead, s[hk] + hd)); });
+    } else if (a === "mspend") {
+      var what = t.getAttribute("data-what");
+      mutate(function (s) {
+        if (s.mythic < 1) return;
+        s.mythic -= 1;
+        log(what === "surge" ? "Mythic surge: +1d6 to a d20 roll, mythic −1" : "Amazing Initiative: extra standard action (no spells or artillery), mythic −1");
+      });
     } else if (a === "setres") {
       var k2 = t.getAttribute("data-k"), n2 = parseInt(t.getAttribute("data-n"), 10);
-      mutate(function (s) { s[k2] = s[k2] === n2 ? n2 - 1 : n2; });
+      mutate(function (s) { s[k2] = s[k2] === n2 ? n2 - 1 : n2; if (k2 === "stun" && s[k2] < n2) log("Stunning Fist used"); });
     } else if (a === "endspell") {
       var i = parseInt(t.getAttribute("data-i"), 10);
       mutate(function (s) { var g = s.active.splice(i, 1)[0]; if (g) log(g.name + " ended"); });
@@ -1194,6 +1251,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     else if (e.target.classList && e.target.classList.contains("traySel")) { if (e.target.value) trayCast(e.target.value); }
     else if (id === "fireChk") { ui.unkFire = e.target.checked; renderCast(); }
     else if (id === "waChk") { ui.wa = e.target.checked; renderCast(); }
+    else if (id === "mythChk") { ui.myth = e.target.checked; renderCast(); }
     else if (id === "modeSel") { ui.mode = e.target.value; renderCast(); }
     else if (id === "elSel") { ui.element = e.target.value; renderCast(); }
     else if (id === "cLvl") { ui.customLvl = parseInt(e.target.value, 10); renderSpells(); renderCast(); }
