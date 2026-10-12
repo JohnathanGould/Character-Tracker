@@ -1265,7 +1265,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     ref.set({ json: payload, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
       .then(function () { if (mine === saveSeq && !dirty) setStatus("Saved"); })
       .catch(function (err) {
-        if (err && err.code === "permission-denied") setReadOnly("View only");
+        if (err && err.code === "permission-denied") setReadOnly("Save refused by the Firestore rules for " + ((user && user.email) || "this account") + ". Publish firestore.rules with this UID: " + ((user && user.uid) || "?"));
         else setStatus("Not saved");
       });
   }
