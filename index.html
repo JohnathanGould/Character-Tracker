@@ -424,7 +424,19 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     <label id="siEmailRow">Email<input id="siEmail" type="email" autocomplete="username" required></label>
     <label>Password<input id="siPass" type="password" autocomplete="current-password" required></label>
     <p class="err" id="siErr" aria-live="polite"></p>
-    <div class="row"><button type="button" class="btn" id="siCancel">Cancel</button><button type="submit" class="btn primary" id="siGo">Sign in</button></div>
+    <div class="row"><button type="button" class="acct" id="siForgot" style="margin-right:auto">Forgot password?</button><button type="button" class="btn" id="siCancel">Cancel</button><button type="submit" class="btn primary" id="siGo">Sign in</button></div>
+  </form>
+</div>
+
+<div class="sheet" id="rsSheet" hidden>
+  <form id="rsForm" autocomplete="on">
+    <h2>Set a new password</h2>
+    <input type="text" id="rsUser" autocomplete="username" hidden>
+    <p class="sub" id="rsFor"></p>
+    <label>New password<input id="rsNew" type="password" autocomplete="new-password" minlength="6" required></label>
+    <label>New password again<input id="rsNew2" type="password" autocomplete="new-password" minlength="6" required></label>
+    <p class="err" id="rsErr" aria-live="polite"></p>
+    <div class="row"><button type="button" class="btn" id="rsCancel">Cancel</button><button type="submit" class="btn primary" id="rsGo">Save password</button></div>
   </form>
 </div>
 
@@ -1334,6 +1346,51 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
             : (x && x.message) || "Could not change the password.";
         })
         .then(function () { $("pwGo").disabled = false; });
+    });
+
+    /* forgot password: Firebase emails a reset link. With the template's action URL pointed at
+       this page, the link opens the reset sheet below, and the code is spent only when she
+       submits, so mail scanners that pre-open links can't use it up. */
+    $("siForgot").addEventListener("click", function () {
+      var email = CFG.editorEmail || $("siEmail").value.trim();
+      if (!email) { err.textContent = "Enter the email first."; return; }
+      err.textContent = "Sending…";
+      auth.sendPasswordResetEmail(email, { url: location.origin + location.pathname + "?edit" })
+        .then(function () { err.textContent = "Reset email sent. Open the newest one; the link works once."; })
+        .catch(function (x) { err.textContent = (x && x.message) || "Could not send the email."; });
+    });
+
+    var rs = $("rsSheet"), rsErr = $("rsErr");
+    var q = new URLSearchParams(location.search), rsCode = q.get("mode") === "resetPassword" ? q.get("oobCode") : null;
+    function closeRs() {
+      rs.hidden = true; rsErr.textContent = ""; $("rsForm").reset();
+      history.replaceState(null, "", location.pathname + "?edit"); /* drop the spent code from the address */
+    }
+    if (rsCode) {
+      lsSet(WANTS_EDIT, "1");
+      rs.hidden = false;
+      auth.verifyPasswordResetCode(rsCode)
+        .then(function (email) { $("rsUser").value = email; $("rsFor").textContent = "For " + email; $("rsNew").focus(); })
+        .catch(function () { rsErr.textContent = "This reset link has expired or was already used. Tap Sign in, then Forgot password? to get a new one."; $("rsGo").disabled = true; });
+    }
+    $("rsCancel").addEventListener("click", closeRs);
+    $("rsForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      rsErr.textContent = "";
+      var nw = $("rsNew").value;
+      if (nw !== $("rsNew2").value) { rsErr.textContent = "The passwords don't match."; return; }
+      if (nw.length < 6) { rsErr.textContent = "Use at least 6 characters."; return; }
+      $("rsGo").disabled = true;
+      auth.confirmPasswordReset(rsCode, nw)
+        .then(function () { return auth.signInWithEmailAndPassword($("rsUser").value, nw); })
+        .then(function () { closeRs(); setStatus("Password changed"); })
+        .catch(function (x) {
+          var c = (x && x.code) || "";
+          rsErr.textContent = /expired|invalid-action-code/.test(c) ? "This reset link has expired or was already used. Request a new one."
+            : /weak-password/.test(c) ? "That password is too weak. Use at least 6 characters."
+            : (x && x.message) || "Could not set the password.";
+          $("rsGo").disabled = false;
+        });
     });
 
     $("signinForm").addEventListener("submit", function (e) {
