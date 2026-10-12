@@ -464,7 +464,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     { id: "expeditious-retreat", name: "Expeditious retreat", lvl: 1, per: 10, note: "+30 ft base speed (35 ft becomes 65 ft)." },
     { id: "feather-fall", name: "Feather fall", lvl: 1, per: 1, note: "Immediate action. Ends when she lands or after 1 round per level." },
     { id: "blood-money", name: "Blood Money", lvl: 1, calc: "bm" },
-    { id: "magic-missile", name: "Magic missile", lvl: 1, calc: "mm" },
     { id: "unwelcome-halo", name: "Unwelcome halo", lvl: 1, per: 10, save: "Will", note: "Target glows and loses darkness concealment. Medium range, one nongood creature." },
     { id: "darkvision", name: "Darkvision", lvl: 2, per: 600, note: "Darkvision 60 ft." },
     { id: "resist-energy", name: "Resist energy", lvl: 2, per: 100, calc: "re" },
@@ -636,11 +635,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         rows.push(["Effect", "Her blood becomes one material component of the next spell she casts this round (" + bmName + ", " + gp + " gp)"]);
         rows.push(["Action", "Swift action. It does not end the round, and it can be paired with Wild Arcana (a standard action)"]);
         if (s.blood) problems.push("Blood Money is already active this round.");
-        break;
-      }
-      case "mm": {
-        var mm = Math.min(5, 1 + Math.floor((cl - 1) / 2));
-        rows.push(["Damage", mm + " missiles, 1d4+1 force each, avg " + avg(mm, 4, mm) + ", no attack roll"]);
         break;
       }
       case "sr": {
