@@ -3,7 +3,7 @@
 This folder is a working single-file tracker (`index.html`) for a Pathfinder 1e gestalt character: Eternal Mage 8 (Artillery Expert) / Spell-less Ranger 8, mythic Archmage tier 2. The player is the only editor. Her GM only needs to view.
 
 ## Status
-The hosted version is built: Supabase (table `trackers`, RLS, realtime), email/password sign-in for the player, public live view for the GM, PWA with offline edits that sync on reconnect. Setup steps are in `README.md`.
+The hosted version is built: Firebase (Firestore document `trackers/{characterId}`, security rules in `firestore.rules`), email/password sign-in for the player, public live view for the GM, PWA with offline edits that sync on reconnect. Setup steps are in `README.md`.
 
 ## Goal
 Turn it into a hosted web app:
@@ -14,8 +14,8 @@ Turn it into a hosted web app:
 Keep the look (black background, silver-blue accent, Marcellus / Albert Sans / IBM Plex Mono) and every rule below.
 
 ## What exists
-- `index.html`: all HTML, CSS and JS in one file. Keeps a local copy in `localStorage` key `ilmadria-burnout-ledger-v1` (plus `:pending`, `:owner`, `:edit` flags).
-- Storage is isolated in the storage section at the bottom of the script (`initStore`, `pull`, `applyRemote`, `setUser`, `scheduleSave`, `flush`, `setReadOnly`, `setEditable`). It talks to Supabase using `config.js`; with an empty config it falls back to local-only. Everything else is pure UI and rules.
+- `index.html`: all HTML, CSS and JS in one file. Keeps a local copy in `localStorage` key `ilmadria-burnout-ledger-v1` (plus an `:edit` flag).
+- Storage is isolated in the storage section at the bottom of the script (`initStore`, `applyRemote`, `setUser`, `scheduleSave`, `flush`, `setReadOnly`, `setEditable`). It talks to Firebase using `config.js`; with an empty config it falls back to local-only. Everything else is pure UI and rules.
 - `.ro` class on `<body>` hides every editing control (read-only mode already exists; reuse it for the GM view).
 - `data/spell-bank.json`: 1,192 wizard spells, levels 1 to 4 (names, levels, summaries). The same data is inlined in `index.html` as `BANK`. School and duration are recorded only for about 170 Core Rulebook spells; the rest are `?`. Filling those gaps from a source such as Archives of Nethys is a good follow-up.
 

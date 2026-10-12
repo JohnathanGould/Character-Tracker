@@ -10,27 +10,30 @@ It is plain static files with no build step. Opening `index.html` straight from 
 ## Files
 | File | What it is |
 | --- | --- |
-| `index.html` | The whole app: HTML, CSS, rules and UI. The storage section at the bottom of the script talks to Supabase. |
-| `config.js` | Supabase URL, anon key and character id. Empty values run the page in local-only mode. |
-| `supabase/schema.sql` | Table, row level security, realtime and the seed row. |
+| `index.html` | The whole app: HTML, CSS, rules and UI. The storage section at the bottom of the script talks to Firebase. |
+| `config.js` | Firebase web config, the player's User UID and the character id. An empty `apiKey` runs the page in local-only mode. |
+| `firestore.rules` | Security rules: anyone reads, only the player writes. |
 | `sw.js`, `manifest.webmanifest`, `icons/` | Installable PWA and offline cache. |
-| `vendor/supabase.js` | supabase-js 2.45.4 UMD build, vendored so the app shell caches offline. |
+| `vendor/firebase-*-compat.js` | Firebase JS SDK 10.14.1 (app, auth, firestore), vendored so the app shell caches offline. |
 | `data/spell-bank.json` | The wizard spell bank (also inlined in `index.html` as `BANK`). |
 
-## Setup (one time)
-1. **Pick a Supabase project.** A new one, or an existing project you already use: the tracker only adds one table, `public.trackers`, and touches nothing else.
-2. **Sign-ups:** in a project used only for this tracker, turn them off (Authentication > Sign In / Providers > Email > "Allow new users to sign up"). In a shared project that needs sign-ups for another app, leave them on. Writes are locked to the owner's account by row level security either way, so other accounts can only view.
-3. **Create the player's login:** Authentication > Users > Add user > Create new user, with her email and a password. Tick "Auto confirm user".
-4. **Run the SQL:** open SQL Editor, paste `supabase/schema.sql`, replace `PLAYER_EMAIL_HERE` with her email, and run it.
-5. **Fill in `config.js`** from Project Settings > API: the Project URL and the `anon` `public` key. The anon key is safe to publish; row level security means only her account can write.
-6. **Host it.** Any static host works. The included workflow deploys to GitHub Pages on every push to `main`: in the repo, Settings > Pages > Source: **GitHub Actions**. (Pages on a private repo needs a paid GitHub plan; otherwise make the repo public, or use Netlify or Cloudflare Pages with no build command and `.` as the output folder.)
-7. Send the GM the plain link. Open `<link>?edit` yourself, sign in, then Share > Add to Home Screen (iPhone) or Install app (Android).
+## Setup (one time, Firebase project `tracker-fe359`, free Spark plan)
+1. **Add a web app:** Project settings (gear) > General > Your apps > the `</>` web icon. Name it anything; skip Firebase Hosting. Copy the `firebaseConfig` values into `config.js`.
+2. **Turn on email sign-in:** Build > Authentication > Get started > Sign-in method > Email/Password > Enable (leave "Email link" off).
+3. **Create the player's login:** Authentication > Users > Add user, with her email and a password. Copy her **User UID** into `ownerUid` in `config.js`.
+4. **Create the database:** Build > Firestore Database > Create database. Pick a location near you and start in **production mode**.
+5. **Set the rules:** Firestore > Rules: paste `firestore.rules`, replace `PLAYER_UID` with her User UID, and Publish.
+6. **Host it.** The included workflow deploys to GitHub Pages on every push to `main`: in the repo, Settings > Pages > Source: **GitHub Actions**. (Pages on a private repo needs a paid GitHub plan, so keep the repo public. Firebase Hosting or Netlify also work: they need no build step and serve `.` as the output folder.)
+7. **Allow the site to sign in:** Authentication > Settings > Authorized domains > Add domain: your Pages host, e.g. `<user>.github.io`.
+8. Send the GM the plain link. Open `<link>?edit` yourself, sign in, then Share > Add to Home Screen (iPhone) or Install app (Android).
+
+The config values are meant to be public. The rules are what keep everyone but her from writing, so anyone can open the page but only she can change it.
 
 ## How it works
-- One row per character in `public.trackers` holds the whole state as JSON.
-- Everyone can `select`; only `auth.uid() = owner` can `update`. The page checks the owner on sign-in and unlocks editing; anyone else gets the existing view-only mode (`.ro`).
-- Saves are debounced (350 ms) and broadcast through Supabase Realtime, so every open page updates within a second.
-- A copy is kept in `localStorage`. Offline edits are flagged as pending and pushed when the device is back online. The player is the only editor, so the newest local copy wins.
+- One Firestore document per character, `trackers/daerlieth`, holds the whole state as a JSON string.
+- Rules allow everyone to read and only her UID to write. The page compares the signed-in UID with `ownerUid` to unlock editing; everyone else gets the view-only mode (`.ro`).
+- Saves are debounced (350 ms), and `onSnapshot` pushes them to every open page within a second.
+- Firestore's offline cache (IndexedDB) keeps the last state on every device. Offline edits are queued and sent automatically when she reconnects, even after closing the app.
 - The service worker serves the app network-first and falls back to its cache offline. Bump `VERSION` in `sw.js` when shipping changes if you want old caches dropped at once.
 
 ## Follow-ups

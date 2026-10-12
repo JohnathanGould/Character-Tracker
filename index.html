@@ -429,7 +429,9 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 </div>
 
 <script src="config.js"></script>
-<script src="vendor/supabase.js"></script>
+<script src="vendor/firebase-app-compat.js"></script>
+<script src="vendor/firebase-auth-compat.js"></script>
+<script src="vendor/firebase-firestore-compat.js"></script>
 <script>
 (function () {
   var BASE_CL = 8, CHA = 6, KEY = "ilmadria-burnout-ledger-v1";
@@ -1198,14 +1200,14 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   });
 
   /* ---------- storage ----------
-     Hosted: one row per character in the Supabase table public.trackers (id, state, owner).
-     Anyone with the link can read it; row level security lets only the owner write. Realtime
-     pushes every save to each open page. A copy in localStorage keeps the page usable offline;
-     the editor's offline changes are marked pending and pushed when the connection returns.
+     Hosted: one Firestore document per character, trackers/{characterId}, holding the state as a
+     JSON string. Anyone with the link can read it; security rules (firestore.rules) let only the
+     owner's account write. onSnapshot pushes every save to each open page. Firestore's offline
+     cache keeps the page usable without a connection and sends queued edits when it returns.
      Without config.js values the page runs as before: editable, saved in this browser only. */
   var CFG = window.TRACKER_CONFIG || {};
-  var PENDING = KEY + ":pending", OWNER = KEY + ":owner", WANTS_EDIT = KEY + ":edit";
-  var sb = null, user = null, canEdit = false, retryTimer = null;
+  var WANTS_EDIT = KEY + ":edit";
+  var auth = null, ref = null, user = null, saveSeq = 0;
 
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* storage unavailable */ } }
@@ -1232,64 +1234,41 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     clearTimeout(saveTimer);
     saveTimer = setTimeout(flush, 350);
   }
-  async function flush() {
-    if (saving) return;
-    saving = true;
-    clearTimeout(retryTimer);
-    var failed = null;
-    try {
-      while (dirty) {
-        dirty = false;
-        var payload = clone(state);
-        lsSet(KEY, JSON.stringify(payload));
-        if (!sb) continue;
-        lsSet(PENDING, "1");
-        if (!navigator.onLine) { failed = { offline: true }; break; }
-        var res = await sb.from("trackers").update({ state: payload, updated_at: new Date().toISOString() }).eq("id", CFG.characterId).select("id");
-        if (res.error) throw res.error;
-        if (!res.data || !res.data.length) throw { denied: true };
-        if (!dirty) lsSet(PENDING, null);
-      }
-    } catch (err) { failed = err; }
-    saving = false;
-    if (!failed) { setStatus(sb ? "Saved" : "Saved on this device"); return; }
-    if (failed.denied) { await setUser(user, true); pull(); return; }
-    setStatus(failed.offline ? "Offline, saved on this device" : "Not synced yet, retrying");
-    if (!failed.offline) retryTimer = setTimeout(function () { dirty = true; flush(); }, 8000);
+  function flush() {
+    if (!dirty) return;
+    dirty = false;
+    var payload = JSON.stringify(state);
+    lsSet(KEY, payload);
+    if (!ref) { setStatus("Saved on this device"); return; }
+    var mine = ++saveSeq;
+    if (!navigator.onLine) setStatus("Offline, saved on this device");
+    /* resolves only once the server has it; while offline Firestore queues it */
+    ref.set({ json: payload, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+      .then(function () { if (mine === saveSeq && !dirty) setStatus("Saved"); })
+      .catch(function (err) {
+        if (err && err.code === "permission-denied") setReadOnly("View only");
+        else setStatus("Not saved");
+      });
   }
 
-  function applyRemote(data) {
-    if (dirty || saving || (canEdit && lsGet(PENDING))) return;
-    var incoming = normalize(clone(data || {}));
-    lsSet(KEY, JSON.stringify(incoming));
-    if (JSON.stringify(incoming) !== JSON.stringify(state)) { state = incoming; render(); }
-    setStatus(canEdit ? "Saved" : "Live");
+  function applyRemote(snap) {
+    if (snap.metadata.hasPendingWrites || dirty) return; /* our own edit, not yet on the server */
+    if (snap.exists) {
+      try {
+        var incoming = normalize(JSON.parse(snap.data().json || "{}"));
+        lsSet(KEY, JSON.stringify(incoming));
+        if (JSON.stringify(incoming) !== JSON.stringify(state)) { state = incoming; render(); }
+      } catch (e) { /* keep what is shown */ }
+    }
+    var label = snap.metadata.fromCache ? "Offline, last saved copy" : "Live";
+    if (readOnly) setReadOnly(snap.exists || snap.metadata.fromCache ? label : "Waiting for the first save");
+    else setStatus(snap.metadata.fromCache ? "Offline, saved on this device" : "Saved");
   }
 
-  async function pull() {
-    if (!sb) return;
-    if (canEdit && lsGet(PENDING)) { dirty = true; return flush(); }
-    var res = await sb.from("trackers").select("state").eq("id", CFG.characterId).maybeSingle();
-    if (res.error) { setStatus(navigator.onLine ? "Can't reach the server" : "Offline, last saved copy"); return; }
-    if (!res.data) { setReadOnly("Tracker not set up yet"); return; }
-    applyRemote(res.data.state);
-  }
-
-  async function setUser(u, recheck) {
+  function setUser(u) {
     user = u || null;
-    canEdit = false;
-    if (user) {
-      var r = await sb.from("trackers").select("owner").eq("id", CFG.characterId).maybeSingle();
-      if (!r.error) canEdit = !!(r.data && r.data.owner === user.id);
-      else if (!recheck) canEdit = lsGet(OWNER) === user.id; /* offline: trust the last check */
-      lsSet(OWNER, canEdit ? user.id : null);
-    }
-    if (canEdit) {
-      setEditable(lsGet(PENDING) ? "Offline, saved on this device" : "Saved");
-      if (lsGet(PENDING) && navigator.onLine) { dirty = true; flush(); }
-    } else {
-      setReadOnly(user ? "Signed in, view only" : navigator.onLine ? "Live" : "Offline, last saved copy");
-    }
+    if (user && user.uid === CFG.ownerUid) setEditable(navigator.onLine ? "Saved" : "Offline, saved on this device");
+    else setReadOnly(user ? "Signed in, view only" : navigator.onLine ? "Live" : "Offline, last saved copy");
     render();
     renderAcct();
   }
@@ -1298,7 +1277,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   function renderAcct() {
     var b = $("acctBtn");
     if (!b) return;
-    if (!sb) { b.hidden = true; return; }
+    if (!auth) { b.hidden = true; return; }
     b.hidden = !user && !lsGet(WANTS_EDIT);
     b.textContent = user ? "Sign out" : "Sign in";
   }
@@ -1307,47 +1286,45 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var sheet = $("signin"), err = $("siErr");
     function close() { sheet.hidden = true; err.textContent = ""; }
     $("acctBtn").addEventListener("click", function () {
-      if (user) { sb.auth.signOut(); return; }
+      if (user) { auth.signOut(); return; }
       sheet.hidden = false;
       $("siEmail").focus();
     });
     $("siCancel").addEventListener("click", close);
     sheet.addEventListener("click", function (e) { if (e.target === sheet) close(); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !sheet.hidden) close(); });
-    $("signinForm").addEventListener("submit", async function (e) {
+    $("signinForm").addEventListener("submit", function (e) {
       e.preventDefault();
       err.textContent = "";
       $("siGo").disabled = true;
-      var res = await sb.auth.signInWithPassword({ email: $("siEmail").value.trim(), password: $("siPass").value });
-      $("siGo").disabled = false;
-      if (res.error) { err.textContent = res.error.message; return; }
-      $("siPass").value = "";
-      close();
+      auth.signInWithEmailAndPassword($("siEmail").value.trim(), $("siPass").value)
+        .then(function () { $("siPass").value = ""; close(); })
+        .catch(function (x) {
+          err.textContent = /invalid-credential|wrong-password|user-not-found|invalid-email/.test(x && x.code) ? "Wrong email or password." : (x && x.message) || "Could not sign in.";
+        })
+        .then(function () { $("siGo").disabled = false; });
     });
   }
 
-  async function initStore() {
+  function initStore() {
     var cached = lsGet(KEY);
     if (cached) { try { state = normalize(JSON.parse(cached)); render(); } catch (e) { /* ignore a bad copy */ } }
-    if (!CFG.supabaseUrl || !CFG.supabaseAnonKey || !CFG.characterId || !window.supabase) {
+    var fb = CFG.firebase || {};
+    if (!fb.apiKey || !fb.projectId || !CFG.characterId || !window.firebase) {
       setStatus("This device only");
       return;
     }
-    sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey);
+    firebase.initializeApp(fb);
+    var store = firebase.firestore();
+    store.enablePersistence({ synchronizeTabs: true }).catch(function () { /* private window or old browser: online only */ });
+    auth = firebase.auth();
+    ref = store.collection("trackers").doc(CFG.characterId);
     setReadOnly("Loading");
     hookAccount();
-    var got = await sb.auth.getSession();
-    await setUser(got.data && got.data.session ? got.data.session.user : null);
-    sb.auth.onAuthStateChange(function (ev, session) {
-      var u = session ? session.user : null;
-      if ((u && u.id) !== (user && user.id)) setUser(u).then(pull);
-    });
-    await pull();
-    sb.channel("tracker-" + CFG.characterId)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "trackers", filter: "id=eq." + CFG.characterId },
-        function (p) { if (p.new && p.new.state) applyRemote(p.new.state); })
-      .subscribe(function (st) { if (st === "SUBSCRIBED") pull(); });
-    window.addEventListener("online", function () { setUser(user).then(pull); });
+    renderAcct();
+    auth.onAuthStateChanged(setUser);
+    ref.onSnapshot({ includeMetadataChanges: true }, applyRemote, function () { setStatus("Can't reach the tracker"); });
+    window.addEventListener("online", function () { setUser(user); });
     window.addEventListener("offline", function () { if (readOnly) setReadOnly("Offline, last saved copy"); else setStatus("Offline, saved on this device"); });
   }
 

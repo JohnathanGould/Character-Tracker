@@ -1,6 +1,6 @@
 /* App shell cache so the tracker opens offline. Bump VERSION when shipping changes. */
-var VERSION = "daerlieth-v1";
-var SHELL = ["./", "index.html", "config.js", "vendor/supabase.js", "vendor/591.supabase.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png"];
+var VERSION = "daerlieth-v2";
+var SHELL = ["./", "index.html", "config.js", "vendor/firebase-app-compat.js", "vendor/firebase-auth-compat.js", "vendor/firebase-firestore-compat.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png"];
 
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
@@ -17,7 +17,7 @@ self.addEventListener("fetch", function (e) {
   if (req.method !== "GET") return;
   var url = new URL(req.url);
   var fonts = url.host === "fonts.googleapis.com" || url.host === "fonts.gstatic.com";
-  if (url.origin !== location.origin && !fonts) return; /* Supabase traffic goes straight to the network */
+  if (url.origin !== location.origin && !fonts) return; /* Firebase traffic goes straight to the network */
   if (fonts) {
     /* cache first: font files never change at a given URL */
     e.respondWith(caches.match(req).then(function (hit) {
