@@ -1,0 +1,1364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05060a">
+<meta name="description" content="Daerlieth Nightstar burnout ledger: live Pathfinder 1e tracker">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Daerlieth">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<style>html{color-scheme:dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Daerlieth Burnout Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Marcellus&display=swap">
+<style>
+/* Layout: sticky round clock on top; three resource gauges; spell list beside a cast preview with the two concentration slots; stats, log and rulings below. Black ground, moon-silver accent, gold for mythic power, ember for burnout. One committed dark look. */
+:root {
+  --bg: #05060a;
+  --surface: #0c0f17;
+  --surface-2: #141925;
+  --line: #1d2333;
+  --line-strong: #394460;
+  --fg: #e9edf7;
+  --muted: #8f99b5;
+  --moon: #a9c1ff;
+  --moon-ink: #060914;
+  --gold: #ebc676;
+  --gold-fill: #d9a93f;
+  --heat: #ff8f61;
+  --heat-fill: #ec6a36;
+  --good: #6fd6a4;
+  --glow: rgba(120, 150, 255, 0.10);
+  --hair: rgba(255, 255, 255, 0.05);
+  --font-display: "Marcellus", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-body: "Albert Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 80% 420px at 50% -120px, var(--glow), transparent 70%);
+  background-repeat: no-repeat;
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.45;
+  padding-inline: 16px;
+  padding-block: 0 40px;
+}
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--moon); outline-offset: 2px; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1120px; margin-inline: auto; }
+
+/* top bar */
+.top {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 5;
+  background: rgba(5, 6, 10, 0.88);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+  margin-inline: -16px;
+  padding: 10px 16px;
+}
+.top-in {
+  max-width: 1120px;
+  margin-inline: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 20px;
+}
+.ident { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ident svg { width: 30px; height: 30px; flex: none; color: var(--moon); filter: drop-shadow(0 0 8px rgba(169, 193, 255, 0.45)); }
+h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.55rem;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  margin: 0;
+  text-wrap: balance;
+}
+.sub { margin: 2px 0 0; color: var(--muted); font-size: 0.8rem; }
+.clock { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.round {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-right: 6px;
+}
+.round .lbl, .lbl {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+.round b { font-family: var(--font-display); font-weight: 400; font-size: 1.7rem; line-height: 1; }
+
+.btn {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: background 0.15s, border-color 0.15s, filter 0.15s;
+}
+.btn:hover:not(:disabled) { background: var(--surface-2); border-color: var(--moon); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn.primary { background: linear-gradient(180deg, #c3d4ff, var(--moon)); border-color: var(--moon); color: var(--moon-ink); box-shadow: 0 0 18px rgba(169, 193, 255, 0.22); }
+.btn.primary:hover:not(:disabled) { background: linear-gradient(180deg, #d3e0ff, #b6caff); filter: none; }
+.btn.warn { border-color: var(--heat); color: var(--heat); }
+.btn.warn:hover:not(:disabled) { border-color: var(--heat); background: rgba(236, 106, 54, 0.12); }
+.btn.sm { min-height: 34px; padding: 0 10px; font-size: 0.82rem; }
+.btn.icon { width: 40px; padding: 0; font-family: var(--font-mono); font-size: 1.05rem; }
+.tray-wrap { max-width: 1120px; margin-inline: auto; }
+.tray { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 10px; }
+.tray .lbl { margin-right: 4px; }
+.tray .field { flex: 1 1 150px; max-width: 230px; }
+.tray .warn-text { flex-basis: 100%; margin: 0; }
+
+/* view-only mode for anyone who cannot write */
+.ro .clock .btn, .ro .tray-wrap, .ro #pCast, .ro #pSpells .fields,
+.ro [data-act="str"], .ro [data-act="resolve"], .ro [data-act="endspell"], .ro [data-act="clearlog"],
+.ro [data-act="burn"], .ro [data-act="res"] { display: none !important; }
+.ro .toggle, .ro .spell, .ro .cell, .ro .pip { pointer-events: none; }
+.ro .cols { grid-template-columns: 1fr; }
+.lv {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 78px;
+  min-height: 52px;
+  padding: 6px 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.lv:hover { background: var(--surface-2); }
+.lv b { font-weight: 600; font-size: 0.9rem; }
+.lv span { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
+.lv span.cost { color: var(--heat); }
+
+main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
+.panel {
+  background: linear-gradient(180deg, #0f131d, var(--surface) 140px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+  min-width: 0;
+  box-shadow: inset 0 1px 0 var(--hair), 0 14px 32px rgba(0, 0, 0, 0.45);
+}
+.panel h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
+.ph { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.hint { color: var(--muted); font-size: 0.8rem; margin: 0; }
+
+/* resources */
+.gauges { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .gauges { grid-template-columns: 1.5fr 1fr 1fr; } }
+.big { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+.bignum { font-family: var(--font-display); font-size: 3.2rem; line-height: 1; min-width: 2ch; }
+.bignum small { font-size: 1.1rem; color: var(--muted); font-family: var(--font-mono); }
+.effects { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  padding: 3px 8px;
+  border: 1px solid rgba(169, 193, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(169, 193, 255, 0.16);
+  color: var(--moon);
+  white-space: nowrap;
+}
+.chip.hot { border-color: var(--heat); color: var(--heat); background: rgba(236, 106, 54, 0.14); }
+.chip.on { border-color: var(--moon); color: var(--moon-ink); background: var(--moon); }
+.track { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
+.cell {
+  height: 30px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.cell.on { background: var(--heat-fill); border-color: var(--heat-fill); color: #1a0a03; font-weight: 600; box-shadow: 0 0 10px rgba(236, 106, 54, 0.4); }
+.tiers { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; margin-top: 4px; }
+.tiers span {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  text-align: center;
+  color: var(--muted);
+  border-top: 2px solid var(--line);
+  padding-top: 2px;
+}
+.tiers span.on { color: var(--heat); border-top-color: var(--heat-fill); }
+.over { font-family: var(--font-mono); font-size: 0.78rem; color: var(--heat); margin-top: 6px; }
+.ctl { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.explain { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 0.86rem; display: flex; flex-direction: column; gap: 8px; }
+.explain p { margin: 0; max-width: 62ch; }
+.explain b { font-weight: 600; }
+.costs { display: flex; flex-wrap: wrap; gap: 6px; }
+.pips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pips:has(.pip.od) { display: grid; grid-template-columns: repeat(5, 24px); gap: 8px 10px; }
+.pip {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-strong);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.pip.od.on { background: var(--moon); border-color: var(--moon); box-shadow: 0 0 8px rgba(169, 193, 255, 0.5); }
+.pip.my.on { background: var(--moon); border-color: var(--moon); box-shadow: 0 0 8px rgba(169, 193, 255, 0.5); }
+
+/* spells + cast */
+.cols { display: grid; gap: 16px; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 860px) { .cols { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); } }
+.stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.group { margin-bottom: 14px; }
+.group:last-child { margin-bottom: 0; }
+.group h3 {
+  margin: 0 0 6px;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+.spells { display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.spell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 42px;
+  padding: 6px 10px;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  cursor: pointer;
+  min-width: 0;
+}
+.spell:hover { background: var(--surface-2); }
+.spell[aria-pressed="true"] { border-color: var(--moon); background: rgba(169, 193, 255, 0.08); box-shadow: inset 0 0 0 1px var(--moon); }
+.spell .nm { min-width: 0; overflow-wrap: anywhere; font-weight: 500; font-size: 0.9rem; }
+.spell .bg { flex: none; font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
+.spell .bg.cost { color: var(--heat); }
+.spell .live { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--good); margin-right: 6px; }
+
+.opts { display: flex; flex-direction: column; gap: 8px; margin: 0 0 12px; }
+.opt { display: flex; align-items: flex-start; gap: 10px; font-size: 0.88rem; }
+.opt input[type="checkbox"] { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--moon); flex: none; }
+.opt small { display: block; color: var(--muted); font-size: 0.78rem; }
+.opt.dis { opacity: 0.5; }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--muted); }
+.field select, .field input[type="text"] {
+  min-height: 38px;
+  padding: 0 8px;
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  color: var(--fg);
+}
+.fields { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.fields .field { flex: 1 1 140px; min-width: 0; }
+
+.cast-name { font-family: var(--font-display); font-size: 1.5rem; line-height: 1.15; margin: 0; }
+.cast-lvl { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); }
+.rows { margin: 10px 0 12px; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; font-size: 0.9rem; }
+.rows dt { color: var(--muted); font-size: 0.8rem; padding-top: 1px; }
+.rows dd { margin: 0; overflow-wrap: anywhere; }
+.rows dd.gain { color: var(--heat); font-weight: 600; }
+.rows dd.zero { color: var(--good); font-weight: 600; }
+.spend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.warn-text { color: var(--heat); font-size: 0.82rem; margin: 0 0 10px; }
+
+/* slots */
+.slots { display: grid; gap: 10px; grid-template-columns: 1fr; }
+@media (min-width: 520px) { .slots { grid-template-columns: 1fr 1fr; } }
+.slot { border: 1px dashed var(--line-strong); border-radius: 8px; padding: 10px 12px; min-width: 0; min-height: 92px; display: flex; flex-direction: column; gap: 6px; }
+.slot.full { border-style: solid; border-color: var(--line); background: var(--surface-2); }
+.slot .nm { font-weight: 600; overflow-wrap: anywhere; }
+.slot .left { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: linear-gradient(90deg, #7f9fe8, var(--moon)); }
+.slot .empty { color: var(--muted); font-size: 0.85rem; }
+.pending { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.pend { display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; flex-wrap: wrap; }
+.pend.due { border-color: var(--heat); }
+.pend .t { min-width: 0; overflow-wrap: anywhere; font-size: 0.88rem; }
+.pend .t b { display: block; }
+.pend.due .t b { color: var(--heat); }
+
+/* stats */
+.stats { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-bottom: 14px; }
+.stat { border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.stat .v { font-family: var(--font-display); font-size: 1.45rem; line-height: 1.15; }
+.stat .s { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
+.conds { display: flex; flex-wrap: wrap; gap: 8px; }
+.toggle {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 500;
+  text-align: left;
+}
+.toggle:disabled { opacity: 0.45; cursor: not-allowed; }
+.toggle[aria-pressed="true"] { border-color: var(--moon); background: rgba(169, 193, 255, 0.08); box-shadow: inset 0 0 0 1px var(--moon); color: var(--moon); }
+
+/* log + rules */
+.lower { display: grid; gap: 16px; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 860px) { .lower { grid-template-columns: 1fr 1fr; } }
+.log { list-style: none; margin: 0; padding: 0; max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.log li { display: flex; gap: 10px; font-size: 0.85rem; padding: 4px 0; border-bottom: 1px solid var(--line); }
+.log li:last-child { border-bottom: 0; }
+.log .r { font-family: var(--font-mono); color: var(--muted); flex: none; min-width: 3.2ch; }
+.log .tx { min-width: 0; overflow-wrap: anywhere; }
+.log-empty { color: var(--muted); font-size: 0.88rem; margin: 0; }
+details { border-top: 1px solid var(--line); padding: 10px 0; }
+details:first-of-type { border-top: 0; padding-top: 0; }
+summary { cursor: pointer; font-weight: 600; font-size: 0.92rem; }
+details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: var(--fg); display: flex; flex-direction: column; gap: 4px; }
+.status { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
+
+/* account: sign-in link, sign-in sheet */
+.acct { background: none; border: 0; padding: 0; margin-left: 6px; color: var(--moon); font-family: var(--font-mono); font-size: 0.72rem; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.sheet { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.7); }
+.sheet form { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 12px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px; padding: 20px; }
+.sheet h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.25rem; margin: 0; }
+.sheet label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--muted); }
+.sheet input { background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; padding: 9px 10px; color: var(--fg); }
+.sheet .row { display: flex; gap: 10px; justify-content: flex-end; }
+.sheet .err { color: var(--heat); font-size: 0.85rem; margin: 0; min-height: 1.2em; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .bar i { transition: width 0.25s ease; }
+  .cell, .pip, .spell, .toggle { transition: background 0.15s, border-color 0.15s, box-shadow 0.15s; }
+}
+</style>
+
+</head>
+<body>
+<div class="top">
+  <div class="top-in">
+    <div class="ident">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1 L13.76 7.75 L19.78 4.22 L16.25 10.24 L23 12 L16.25 13.76 L19.78 19.78 L13.76 16.25 L12 23 L10.24 16.25 L4.22 19.78 L7.75 13.76 L1 12 L7.75 10.24 L4.22 4.22 L10.24 7.75 Z"/></svg>
+      <div>
+        <h1>Daerlieth Nightstar</h1>
+        <p class="sub">Eternal Mage 8 · Artillery Expert · Archmage tier 2 · <span id="status" class="status" aria-live="polite">Loading</span><button type="button" id="acctBtn" class="acct" hidden></button></p>
+      </div>
+    </div>
+    <div class="clock">
+      <div class="round"><span class="lbl">Round</span><b id="round" class="num">1</b><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects. Burnout carries over.">Reset</button></div>
+      <button class="btn primary" data-act="nocast" title="Pass one round without casting. Burnout drops by 1.">No cast</button>
+      <button class="btn" id="castBtn" data-act="tray" aria-expanded="false" title="Cast a spell of a chosen level. The round advances.">Cast spell ▾</button>
+      <button class="btn" id="dayBtn" data-act="newday" title="Start a new day after 8 hours of sleep. Refills overdrive and mythic power and clears burnout and active spells, and heals 1 Strength damage.">New day</button>
+    </div>
+  </div>
+  <div class="tray-wrap"><div class="tray" id="tray" hidden></div></div>
+</div>
+
+<div class="wrap">
+<main>
+  <section class="gauges" aria-label="Resources">
+    <div class="panel" id="pBurn"></div>
+    <div class="panel" id="pOver"></div>
+    <div class="panel" id="pMyth"></div>
+  </section>
+
+  <section class="cols">
+    <div class="panel" id="pSpells"></div>
+    <div class="stack">
+      <div class="panel" id="pCast"></div>
+      <div class="panel" id="pSlots"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="pStats"></section>
+
+  <section class="lower">
+    <div class="panel" id="pLog"></div>
+    <div class="panel" id="pRules"></div>
+  </section>
+</main>
+</div>
+
+<div class="sheet" id="signin" hidden>
+  <form id="signinForm" autocomplete="on">
+    <h2>Sign in to edit</h2>
+    <label>Email<input id="siEmail" type="email" autocomplete="username" required></label>
+    <label>Password<input id="siPass" type="password" autocomplete="current-password" required></label>
+    <p class="err" id="siErr" aria-live="polite"></p>
+    <div class="row"><button type="button" class="btn" id="siCancel">Cancel</button><button type="submit" class="btn primary" id="siGo">Sign in</button></div>
+  </form>
+</div>
+
+<script src="config.js"></script>
+<script src="vendor/supabase.js"></script>
+<script>
+(function () {
+  var BASE_CL = 8, CHA = 6, KEY = "ilmadria-burnout-ledger-v1";
+
+  var DEFAULT = {
+    v: 1, round: 1, burnout: 0, gained: false,
+    overdrive: 10, mythic: 7, moon: false, lightUsed: false,
+    vials: 2, strDmg: 0, blood: null, exp: "haste", active: [], pending: [], log: []
+  };
+
+  var EXP = [
+    { id: "haste", name: "Haste", lvl: 3, per: 1, note: "+1 attack and AC, +30 ft speed, one extra attack on a full attack." },
+    { id: "fly", name: "Fly", lvl: 3, per: 10, note: "Speed 60 ft in the air, good maneuverability." },
+    { id: "cats-grace", name: "Cat's grace", lvl: 2, per: 10, note: "+4 Dex." },
+    { id: "mirror-image", name: "Mirror image", lvl: 2, per: 10, note: "1d4 + 1 per 3 levels images, max 8." },
+    { id: "protection-from-energy", name: "Protection from energy", lvl: 3, per: 100, note: "Absorbs 12 per level (max 120) of one energy type." },
+    { id: "protection-from-evil", name: "Protection from evil", lvl: 1, per: 10, note: "+2 AC and saves against evil, blocks mental control." }
+  ];
+
+  var SPELLS = [
+    { id: "acid-splash", name: "Acid splash", lvl: 0, note: "Ranged touch, 1d3 acid." },
+    { id: "ray-of-frost", name: "Ray of frost", lvl: 0, note: "Ranged touch, 1d3 cold." },
+    { id: "spark", name: "Spark", lvl: 0, fire: true, note: "Ignites one unattended flammable object." },
+    { id: "mage-hand", name: "Mage hand", lvl: 0, per: -1, note: "5 lb telekinesis. Lasts while she concentrates." },
+    { id: "message", name: "Message", lvl: 0, per: 100, note: "Whispered message, 100 ft + 10 ft per level." },
+    { id: "mending", name: "Mending", lvl: 0, note: "Repairs minor damage to an object." },
+    { id: "open-close", name: "Open/close", lvl: 0, note: "Opens or closes a small unlocked item." },
+    { id: "prestidigitation", name: "Prestidigitation", lvl: 0, per: 600, note: "Minor tricks, 1 hour per level." },
+    { id: "shield", name: "Shield", lvl: 1, per: 10, note: "+4 shield bonus to AC (AC 27). Blocks magic missile." },
+    { id: "expeditious-retreat", name: "Expeditious retreat", lvl: 1, per: 10, note: "+30 ft base speed (35 ft becomes 65 ft)." },
+    { id: "feather-fall", name: "Feather fall", lvl: 1, per: 1, note: "Immediate action. Ends when she lands or after 1 round per level." },
+    { id: "blood-money", name: "Blood Money", lvl: 1, calc: "bm" },
+    { id: "magic-missile", name: "Magic missile", lvl: 1, calc: "mm" },
+    { id: "unwelcome-halo", name: "Unwelcome halo", lvl: 1, per: 10, save: "Will", note: "Target glows and loses darkness concealment. Medium range, one nongood creature." },
+    { id: "darkvision", name: "Darkvision", lvl: 2, per: 600, note: "Darkvision 60 ft." },
+    { id: "resist-energy", name: "Resist energy", lvl: 2, per: 100, calc: "re" },
+    { id: "scorching-ray", name: "Scorching ray", lvl: 2, fire: true, calc: "sr" },
+    { id: "dispel-magic", name: "Dispel magic", lvl: 3, calc: "dm" },
+    { id: "fireball", name: "Fireball", lvl: 3, fire: true, save: "Reflex", calc: "fb" },
+    { id: "dimension-door", name: "Dimension door", lvl: 4, calc: "dd" },
+    { id: "detonate", name: "Detonate", lvl: 4, per: 1, fixed: 2, cost: 50, save: "Reflex", calc: "det" },
+    { id: "arcane-artillery", name: "Arcane artillery", lvl: 4, calc: "art", art: true }
+  ];
+
+  var DURS = {
+    none: { label: "No duration to track", per: 0 },
+    round: { label: "1 round per level", per: 1 },
+    min: { label: "1 min per level", per: 10 },
+    tmin: { label: "10 min per level", per: 100 },
+    hour: { label: "1 hour per level", per: 600 }
+  };
+
+
+  /* Wizard spells, levels 1 to 4, from the Archives of Nethys wizard list (all Pathfinder 1e sources). Fields: name | level | school | duration | flags | summary.
+     School and duration are filled in only for the Core Rulebook spells; "?" means not recorded. Flags: F fire descriptor, L casting time over 1 standard action. */
+  var SCHOOLS = { A: "Abjuration", C: "Conjuration", D: "Divination", E: "Enchantment", V: "Evocation", I: "Illusion", N: "Necromancy", T: "Transmutation" };
+  var FOCUS = { A: true, C: true, V: true, T: true };
+  var BANK = ["Abjuring Step|1|?|?||You can move slowly and safely and still cast spells, until you move quickly, make an attack, or cast a harmful spell.", "Abundant Ammunition|1|?|?||Replaces nonmagical ammunition every round.", "Adhesive Spittle|1|?|?||Spit a tanglefoot bag at a creature.", "Air Bubble|1|?|?||Creates a small pocket of air around your head or an object.", "Alarm|1|A|p1200||Wards an area for 2 hours/level.", "Alchemical Tinkering|1|?|?||Transform an alchemical item or firearm into another similar item.", "Alter Musical Instrument|1|?|?||Make one instrument sound like a different kind of instrument.", "Alter Winds|1|?|?||Increase/decrease strength of natural winds.", "Animate Rope|1|T|r||Makes a rope move at your command.", "Ant Haul|1|?|?||Triples carrying capacity of a creature.", "Anticipate Peril|1|?|?||Target gains a bonus on one initiative check.", "Aphasia|1|?|?||Prevent a target from understanding language.", "Arcane Pocket|1|?|?||Conjure an extradimensional space inside a pouch or pocket.", "Auditory Hallucination|1|?|?||Create a phantasm with auditory effects.", "Authenticating Gaze|1|?|?||Gain a bonus on Appraise/Linguistics checks related to books and scrolls, along with some magical detection abilities.", "Bed of Iron|1|?|?||Allow the enchanted to sleep comfortably in medium or heavy armor.", "Bestow Planar Infusion I|1|?|?||Grant the target the effects of a planar infusion", "Blend|1|?|?||Change the color of yourself to match your surroundings and gain a bonus to Stealth.", "Blend with Surroundings|1|?|?||Change the appearance of a creature to better blend in with its surroundings.", "Blood Money|1|?|?||Use your own blood in order to create valuable material components.", "Blurred Movement|1|?|?||As blur, but only while you are moving.", "Body Capacitance|1|?|?||Store electricity attacks used against you and release the energy as a touch attack.", "Legal only for Goblin PCs Bouncy Body|1|?|?||Transmute the subject’s flesh into rubber, helping to protect against falls and grapples.", "Break|1|?|?||Gives an object the broken condition.", "Brightest Night|1|?|?||Grant improved low-light vision to several creatures", "Bungle|1|?|?||Target takes a -20 penalty on its next attack roll or check.", "Burning Disarm|1|?|?||Make a metal item become red hot, forcing those holding it to drop it or risk searing their hand.", "Burning Hands|1|V|n|F|1d4/level fire damage (max 5d4).", "Burning Sands|1|?|?||Create a field of hot sand that creates difficult terrain and minor fire damage", "Cause Fear|1|N|o||One creature of 5 HD or less flees for 1d4 rounds.", "Celestial Healing|1|?|?||Grant fast healing 1 for 1 round/2 levels.", "Charm Fey|1|?|?||As charm person, but targets fey", "Charm Person|1|E|h||Makes one person your friend.", "Chastise|1|?|?||+5 bonus to convince a target to do what you want or get in trouble with their superiors.", "Chill Touch|1|N|n||One touch/level deals 1d6 damage and possibly 1 Str damage.", "Clarion Call|1|?|?||Make yourself heard over great distances.", "Cloak of Secrets|1|?|?||Filter speech from a given area to sound like a different conversation.", "Coin Shot|1|?|?||Turn coins into deadly projectiles.", "Color Spray|1|I|n||Knocks unconscious, blinds, and/or stuns weak creatures.", "Comprehend Languages|1|D|t||You understand all languages.", "Corrosive Touch|1|?|?||Touch attack deals 1d4 acid/level.", "Coward's Cowl|1|?|?||Enhance a target’s defensive instincts.", "Crafter's Curse|1|?|?||Subject takes –5 on Craft skill checks.", "Crafter's Fortune|1|?|?||Subject gains +5 on next Craft check.", "Cultural Adaptation|1|?|?||Adapt to fit the local cultural", "Cultural Adaptation (Taldan)|1|?|?||Better impersonate the member of a specific culture.", "Damp Powder|1|?|?||Ruins ammunition loaded in the targeted firearm.", "Dancing Darkness|1|?|?||Create four spheres of floating darkness.", "Dancing Lantern|1|?|?||Animates a lantern that follows you.", "Darting Duplicate|1|?|?||Summon a duplicate of yourself to provoke enemy attacks of opportunity.", "Dazzling Blade|1|?|?||Make a weapon appear dazzingly shiny, making it easier to disarm and feint in combat.", "Decompose Corpse|1|?|?||Turn a corpse into a clean skeleton.", "Decrepit Disguise|1|?|?||Make an object seem worthless.", "Deja Vu|1|?|?||Make a creature repeat its actions.", "Delusional Pride|1|?|?||Target is penalized on attacks and checks but gains bonus against charms and compulsions.", "Depilate|1|?|?||Creature takes -2 penalty to Diplomacy, Intimidate, and Perform for 1 week", "Desperate Weapon|1|?|?||Create an improvised weapon.", "Detect Charm|1|?|?||Detect charm, compulsion, and possession effects in the area", "Detect Metal|1|?|?||Detect metal objects or creatures.", "Detect Radiation|1|?|?||Detect radiation in the surrounding area.", "Detect Secret Doors|1|D|o||Reveals hidden doors within 60 ft.", "Detect Undead|1|D|o||Reveals undead within 60 ft.", "Discern Next of Kin|1|?|?||Read the target’s mind to learn about its family.", "Disguise Self|1|I|t||Changes your appearance.", "Disguise Weapon|1|?|?||Changes one weapon’s appearance.", "Ear-Piercing Scream|1|?|?||Deal sonic damage and daze target.", "Ears of the City|1|?|?||The target of this spell sees and hears a stream of past scenes and pieces of conversations related to local people and events.", "Emblazon Crest|1|?|?||Display your crest on anything you carry.", "Only nagaji characters may take legal choices from this section. Endothermic Touch|1|?|?||Stagger a creature and reduce their speed by half, but increase the time they can hold their breath.", "Endure Elements|1|A|o||Exist comfortably in hot or cold regions.", "Enlarge Person|1|T|m||Humanoid creature doubles in size.", "Enlarge Tail|1|?|?||Increase the reach and power of your tail.", "Erase|1|T|n||Mundane or magical writing vanishes.", "Expeditious Construction|1|?|?||Create a low wall or other simple structure of packed earth or stone.", "Expeditious Excavation|1|?|?||Moves 5-ft. cubes of earth.", "Expeditious Retreat|1|T|m||Your base land speed increases by 30 ft.", "Fabricate Bullets|1|?|?||Converts 1 pound of metal into ammunition.", "Fabricate Disguise|1|?|?||Create a disguise in an instant.", "Face of the Devourer|1|?|?||Horribly mutate the target’s face, disfiguring it while granting it a natural attack.", "False Face|1|?|?||Polymorph into a disguised identity", "Fastidiousness|1|?|?||Keep yourself and your equipment clean and dry", "Feather Fall|1|T|r||Objects or creatures fall slowly.", "Ferment|1|?|?||Affected liquid becomes alcoholic", "Flare Burst|1|?|?||As flare, but affects all creatures in 10 ft.", "Floating Disk|1|V|h||Creates 3-ft.-diameter horizontal disk that holds 100 lbs./level.", "Fool's Gold (VC)|1|?|?||Disguise copper pieces or silver pieces as gold pieces", "Forced Quiet|1|?|?||Target cannot make loud noises.", "Fumblestep|1|?|?||Target takes -1 penalty to Reflex and Acrobatics, discharge to perform a trip combat maneuver.", "Gentle Breeze|1|?|?||Light wind protects one target from clouds, gases, heat, and vapors.", "Glue Seal|1|?|?||Makes one 5-ft. square or one object sticky.", "Grappling Scarf|1|?|?||Enchanted scarf functions as grappling hook with 100 ft of rope", "Grasping Corpse|1|?|?||Cause a corpse to grab or trip a foe", "Gravity Bow|1|?|?||Arrows do damage as though one size category bigger.", "Grease|1|C|r||Makes 10-ft. square or one object slippery.", "Guardian Armor|1|?|?||Teleport your armor onto an ally in range", "Handy Grapnel|1|?|?||Transform a ropelike object into a retracting grapple.", "Heightened Awareness|1|?|?||Your recall and ability to process information improve.", "Hide Bruises|1|?|?||Disguise a creature's injuries, making them more difficult to heal", "Hide Weapon|1|?|?||Hide a weapon within your own arm.", "Hobble|1|?|?||Reduce creature's speed", "Hold Portal|1|A|m||Holds door shut.", "Hydraulic Push|1|?|?||Wave of water bull rushes an enemy.", "Hypnotism|1|E|o||Fascinates 2d4 HD of creatures.", "Icicle Dagger|1|?|?||Masterwork ice dagger deals +1 cold damage.", "Identify|1|?|?||Gives +10 bonus to identify magic items.", "Illusion of Calm|1|?|?||You appear to be standing still, even when you take some actions.", "Implant Urge|1|?|?||Implant a subconscious goal into a creature", "Incendiary Runes|1|?|?||As explosive runes, except it creates a small surge of flames instead of an explosion of force.", "Incessant Buzzing|1|?|?||Summon illusory wasps to distract creatures", "Infernal Healing|1|?|?||Give someone fast healing 1 for a minute, at the cost of a temporary evil alignment.", "Instant Portrait|1|?|?||Create a portrait of a creature on the touched surface", "Interrogation|1|?|?||Target answers questions or suffers pain.", "Invisibility Alarm|1|?|?||As alarm, but reacting only to invisible creatures.", "Itching Curse|1|?|?||Creature takes -1 penalty to attack, saves, skill checks, and ability checks", "Jump|1|T|m||Subject gets bonus on Acrobatics checks.", "Jury-Rig|1|?|?||Removes the broken condition from the targeted object.", "Keep Watch|1|?|?||Allow creatures to stand watch without fatigue throughout the night.", "This spell is legal for play but accessible only to worshippers of Barzahk. Keyhole|1|?|?||Create a keyhole in any door or enlarge an existing keyhole", "Ki Arrow|1|?|?||Arrow deals damage as your unarmed strike.", "Kreighton's Perusal|1|?|?||Gain a brief understanding from a book as if you had read it for 1 hour.", "Liberating Command|1|?|?||Target makes an Escape Artist check as an immediate action and gains a bonus on it.", "Lighten Object|1|?|?||Decrease the target’s weight by half or reduce the armor check penalty of armor.", "Line in the Sand|1|?|?||Increase your attacks of opportunity per round.", "Linked Legacy|1|?|?||Share information with all targets of the spell in the blink of an eye.", "Lock Gaze|1|?|?||Compels the target to look only at you for the duration of the spell.", "Locksight|1|?|?||Determine from a distance the quality of a lock and whether it is open, closed, or jammed.", "Long Arm|1|?|?||Your arms lengthen, giving you extra reach.", "Longshot|1|?|?||Grants a +10-foot bonus to the range increment for any ranged weapon fired.", "Lose the Trail|1|?|?||Obscure a target’s tracks when fleeing from a pursuer.", "Lucky Number|1|?|?||Tweak tiny variables in a creature’s immediate future.", "Mage Armor|1|C|h||Gives subject +4 armor bonus.", "Magic Aura|1|I|o||Alters object's magic aura.", "Magic Missile|1|V|n||1d4+1 damage; +1 missile per two levels above 1st (max 5).", "Magic Weapon|1|T|m||Weapon gains +1 bonus.", "Marid's Mastery|1|?|?||Target gains bonus to attack/damage when combat is in water, penalty if on land.", "Memorize Page|1|?|?||Target perfectly memorizes one page of information.", "Memory Lapse|1|?|?||Subject forgets events back to last turn.", "Mindlink|1|?|?||Communicate a great deal of information in an instant.", "Mirror Mantis|1|?|?||Creature sees an looming assassin whenever they see their reflection in a mirror", "Mirror Polish|1|?|?||Polish a metal item until it’s usable as a mirror.", "Mirror Strike|1|?|?||You may strike multiple opponents with a single attack.", "Moment of Greatness|1|?|?||Doubles a morale bonus.", "Monkey Fish|1|?|?||Gain a climb speed and a swim speed of 10 ft. for a time.", "Mount|1|C|p1200||Summons riding horse for 2 hours/level.", "Mudball|1|?|?||Throw a ball of mud to blind your enemy.", "Murderous Crow|1|?|?||Conjure a supernaturally vicious and clever crow to watch over you.", "Negative Reaction|1|?|?||Targeted creature may not positively influence anyone.", "Night Blindness|1|?|?||Impair target’s vision as if it were darker.", "Obscure Poison|1|?|?||Make it harder to detect a poison or venomous creature.", "Obscuring Mist|1|C|m||Fog surrounds you.", "Open and Shut|1|?|?||Obfuscate whether a door is open or closed.", "3.5 MaterialPattern Recognition|1|?|?||Gain an insight bonus on Search checks and Survival checks to follow tracks.", "Peace Bond|1|?|?||Create a glowing rune of peace to protect targets from your own magic.", "Peacebond|1|?|?||Locks a weapon in place on the target's body.", "Peasant Armaments|1|?|?||Transform improvised weapons into actual weapons.", "Pesh Vigor|1|?|?||Increase target’s strength with consumption of pesh.", "Phantom Blood|1|?|?||Gain temporary hp if Con loss would knock you out or kill you.", "Pierce Facade|1|?|?||Gain a +5 insight bonus to Perception to see through disguises", "Planar Orientation|1|?|?||Locate places of power on your current plane", "Poisoned Egg|1|?|?||Transform a single egg into a dose of poison.", "Polypurpose Panacea|1|?|?||Gain a relaxing or entertaining effect.", "Positive Pulse|1|?|?||Energy harms undead or bolsters the living", "Preserve|1|?|?||Prevent objects from rotting and spoiling", "Protection from Chaos|1|A|m||+2 to AC and saves, plus additional protection against selected alignment.", "Protection from Evil|1|A|m||+2 to AC and saves, plus additional protection against selected alignment.", "Protection from Good|1|A|m||+2 to AC and saves, plus additional protection against selected alignment.", "Protection from Law|1|A|m||+2 to AC and saves, plus additional protection against selected alignment.", "Punishing Armor|1|?|?||Coat yourself with a thin layer of energy that turns back nonlethal damage on your attacker.", "Quintessence|1|?|?||Mask any flaws of or damage to a creature or object.", "Ray of Enfeeblement|1|N|m||Ray causes 1d6 Str penalty + 1 per 2 levels.", "Ray of Sickening|1|?|?||Ray makes subject sickened.", "Recharge Innate Magic|1|?|?||Regain a use of all 0-level and 1st-level spell-like abilities.", "Reduce Person|1|T|m||Humanoid creature halves in size.", "Refine Improvised Weapon|1|?|?||Transform improvised weapon into a masterwork simple or martial weapon.", "Reinforce Armaments|1|?|?||Temporarily mitigates the fragile quality in targeted weapon or armor.", "Repair Undead|1|?|?||Heals one undead of 1d8 hp + 1/level (max +5).", "Restore Corpse|1|?|?||Skeletal corpse grows flesh.", "Reveal Secrets|1|?|?||Target reveals if it has secret knowledge of a topic", "Rite of Centered Mind|1|?|?||+1 to saves vs mind-affecting effects for 24 hours, discharge to reroll a failed save vs a mind-affecting effect.", "Rune Trace|1|?|?||Learn information about a magical rune without triggering it", "Sculpt Corpse|1|?|?||Makes corpse look like another creature.", "Sculpted Cape|1|?|?||Enchanted cape stiffens and can bear weight", "Secluded Grimoire|1|?|?||Safeguard your spellbook on the Ethereal Plane", "See Alignment|1|?|?||Pick an alignment; in your sight, creatures and items with that alignment emit a ghostly radiance.", "Serren's Swift Girding|1|?|?||Immediately clad a number of targets in armor.", "Shadow Trap|1|?|?||Pin someone’s target, causing them to become stuck.", "Shadow Weapon|1|?|?||Create a quasi-real masterwork weapon.", "Shadowfade|1|?|?||Become invisibile to creatures using darkvision", "Shield|1|A|m||Invisible disc gives +4 to AC, blocks magic missiles.", "Shield Companion (AA)|1|?|?||As shield other, but affects the caster’s animal companion or familiar.", "3.5 MaterialShield Speech|1|?|?||Speak freely to one creature within 10 feet without being overheard.", "Shock Shield|1|?|?||A shield of force protects you until you dismiss it in an explosion of electricity.", "Shocking Grasp|1|V|n||Touch delivers 1d6/level electricity damage (max 5d6).", "Silent Image|1|I|o||Creates minor illusion of your design.", "Skim|1|?|?||Read four times faster than normal", "Skin Tag|1|?|?||Curse food or drink to gain afamilar connection to the creature", "Sleep|1|E|m||Puts 4 HD of creatures into magical slumber.", "Snapdragon Fireworks|1|?|?||Create 1 dragon firework/level.", "Snowball|1|?|?||Throw a conjured ball of snow at a target", "Songbird|1|?|?||Conjure music from a good-aligned plane", "Sow Thought|1|?|?||Plant an idea in the mind of the subject.", "Speak Local Language|1|?|?||Target gains the ability to speak and understand a regional human language.", "Speechreader's Sight|1|?|?||Read lips from a distance", "Spirit Share|1|?|?||Grant beneficial liquids with a touch", "Starsight|1|?|?||Observe the night sky as if it were a clear and unobstructed night.", "Stone Fist|1|?|?||Your unarmed strikes are lethal.", "Stone Shield|1|?|?||Summon a thick stone slab from the ground to shield you from attacks.", "Strong Wings|1|?|?||Enhance the target’s wings, giving them greater fly speed and maneuverability.", "Stumble Gap|1|?|?||Small hole trips creatures.", "Stunning Barrier|1|?|?||Magical field grants a +1 bonus to AC and on saves, and stuns one creature attacking you.", "Summon Minor Monster|1|?|?||Summon 1d3 Tiny animals.", "Summon Monster 1|1|C|r|L|Summons extraplanar creature to fight for you.", "Sunder Breaker|1|?|?||The next weapon that sunders an item belonging to the target takes damage.", "Sundering Shards|1|?|?||Sundered item explodes, dealing 1d6 damage to adjacent creatures.", "Sure Casting|1|?|?||Treat your CL as 5 higher for the purposes of bypassing SR with the next spell you cast", "Technomancy|1|?|?||As detect magic, except detecting the presence of technological objects.", "Theft Ward|1|?|?||Gain a +10 Perception bonus to notice someone trying to take a specific object from you.", "Thunderstomp|1|?|?||Trip one creature within range.", "Touch of Blindness|1|?|?||Coat a creature’s eyes in darkness, blinding them.", "Touch of Combustion|1|?|?||Cause someone to combust with a touch.", "Touch of Gracelessness|1|?|?||Subject loses 1d6 + 1 Dex/two levels and is prone to falling down.", "Touch of the Sea|1|?|?||Swim speed becomes 30 ft.", "Transfer Tattoo|1|?|?||Transfer a magical tattoo from one creature to another.", "Tripvine|1|?|?||Animate a rope/vine/etc. to trip nearby creatures.", "True Skill|1|?|?||Gain an insight bonus equal to half your caster level on one skill check", "True Strike|1|D|f1||+20 on your next attack roll.", "Undine's Curse|1|?|?||The target loses it’s body’s natural ability to breathe automatically.", "Unerring Weapon|1|?|?||Grants a +2 bonus, +1 per four caster levels, on attack rolls to confirm a critical hit.", "Unhallowed Blows|1|?|?||One natural weapon or unarmed strike of subject undead gets +1 on attack and damage rolls", "Unlock Flesh|1|?|?||Stagger a living creature or deal 1d6 damage/level to a corporeal undead", "Unprepared Combatant|1|?|?||Target takes -4 on initiative and Reflex saves.", "Unseen Servant|1|C|h||Invisible force obeys your commands.", "Unwelcome Halo|1|?|?||Force a halo around a target, preventing it from hiding in the dark.", "Urban Grace|1|?|?||Move through crowds and urban settings with ease.", "Vanish|1|?|?||As invisibility for 1 round/level (5 max).", "Ventriloquism|1|I|m||Throws voice for 1 min./level.", "Vocal Alteration|1|?|?||Disguise target's voice.", "Waterproof|1|?|?||Target becomes waterproof for the spells duration", "Wave Shield|1|?|?||Water blunts one incoming attack or fire effect.", "Weaken Powder|1|?|?||Targeted firearm's ammunition halves the firearm's range and imposes a –2 penalty on damage rolls.", "Web Bolt|1|?|?||Throw a fist-sized ball of webbing at a target to ensare them.", "Windy Escape|1|?|?||Briefly become insubstantial, allowing an attack to pass harmlessly through you.", "Winter Feathers|1|?|?||Protect a feathered creature from the cold for a day.", "Wizened Appearance|1|?|?||Make a target appear as an older version of itself.", "Youthful Appearance|1|?|?||Target appears younger.", "Aboleth's Lung|2|?|?||Allow the target to breathe water at the cost of no longer being able to breathe air.", "Accelerate Poison|2|?|?||Hastens targeted poison's onset.", "Acid Arrow|2|C|o||Ranged touch attack; 2d4 damage for 1 round + 1 round/three levels.", "Adhesive Blood|2|?|?||Attackers’ weapons stick to your gluey blood.", "3.5 MaterialAdmonishing Ray|2|?|?||Fire multiple rays that deal nonlethal force.", "Adoration|2|?|?||You gain a bonus on Diplomacy checks and performance combat checks.", "Aggressive Thundercloud|2|?|?||Flying storm cloud deals 3d6 electricity damage.", "Air Step|2|?|?||Tread unsteadily on air, with limitations.", "Ally Across Time|2|?|?||Summon a duplicate of yourself from a parallel world to aid another", "Alter Self|2|T|m||Assume form of a Small or Medium humanoid.", "Alter Summoned Monster|2|?|?||Swap one summoned creature with another.", "Amplify Stench|2|?|?||Amplify your natural stench ability.", "Angelic Aspect, Lesser|2|?|?||Gain some minor aspects of angelic creatures.", "Animal Aspect|2|?|?||You gain some of the beneficial qualities of an animal.", "Ant Haul, Communal|2|?|?||As ant haul, but you may divide the duration among creatures touched.", "Anticipate Thoughts|2|?|?||Gain increasing bonuses to AC and on attack rolls and damage rolls against one creature.", "Anti-Summoning Shield|2|?|?||Impede the use of summon spells.", "Apport Object|2|?|?||Send or receive a small object via teleportation.", "Aram Zey's Focus|2|?|?||Grant the trapfinding ability or a +5 Disable Device bonus.", "Arcane Disruption|2|?|?||Make it difficult for others to cast arcane spells.", "Arcane Lock|2|A|n||Magically locks a portal or chest.", "Arrow Eruption|2|?|?||Creates duplicates of killing arrow.", "Ashen Path|2|?|?||Allow one or more creatures to ignore airborne effects and see through magical smoke and fog", "Assumed Likeness|2|?|?||Cloak yourself in a phantasm that ellicits certain emotions from observing creatures", "Aura of Distraction|2|?|?||Aura of psychic noise makes concentration difficult", "Badger's Ferocity|2|?|?||Weapons are keen while you concentrate.", "Beacon of Guilt|2|?|?||Cursed object highlights creatures that attempt to take it.", "Bear's Endurance|2|T|m||Subject gains +4 to Con for 1 min./level.", "Bestow Insight|2|?|?||Grant the target a bonus on a skill check and consider them trained.", "Bestow Weapon Proficiency|2|?|?||Grants a creature proficiency in a single weapon for short period of time.", "Billowing Skirt|2|?|?||Enchanted skirt slows your fall and allows you to hover", "Blade Tutor's Spirit|2|?|?||Summon a spirit to help your more reckless attacks.", "Blindness/Deafness|2|N|n||Makes subject blinded or deafened.", "Blood Armor|2|?|?||Your blood hardens when you are wounded, increasing your AC.", "Blood Blaze|2|?|?||Ignite the blood of those who come near you.", "Blood in the Water|2|?|?||Enhance those with a blood frenzy.", "Blood Transcription|2|?|?||Learn a spell from the target's blood.", "Bloodbath|2|?|?||Cause yourself and enemies to bleed.", "Bloody Tears and Jagged Smile|2|?|?||Become more intimidating with black eyes that weep blood and turn your teeth into jagged fangs.", "Blur|2|I|m||Attacks miss subject 20% of the time.", "Body Double|2|?|?||Change one creature to look and act like another.", "Boiling Blood|2|?|?||Targets take fire damage; orcs get +2 Strength.", "Bone Fists|2|?|?||Gain armor spikes which provide +1 natural armor and a +2 damage with natural weapons.", "Boneshaker|2|?|?||Momentarily control a living or undead creature's skeleton.", "Book Ward|2|?|?||Protect a book from fire, acid, and water.", "Brittle Portal|2|?|?||Reduce the hardness of objects within the area.", "Brow Gasher|2|?|?||Slashing weapon deals bleed damage to an opponent's head.", "Bullet Shield|2|?|?||You gain a +4 deflection bonus to AC against firearm attacks.", "Bullet Ward|2|?|?||Adamantine bullets intercept firearm attacks.", "Bull's Strength|2|T|m||Subject gains +4 to Str for 1 min./level.", "Buoyancy|2|?|?||Targets easily float on water.", "Burning Arc (Keleshite)|2|?|?||Fire an arc of flame from your fingers which bounces from target to target.", "Burning Gaze|2|?|?||Inflict 1d6 fire damage to creature by looking at it.", "Burst of Radiance|2|?|?||Fill the area with a blinding light.", "Callback|2|?|?||Teleport a familiar or spirit animal to your side when it is injured", "Carrion Compass|2|?|?||Animate the target undead’s organs to lead you to its most recent controller or cause of undeath.", "Carry Companion|2|?|?||Shrink an animal or magical beast down to stone, ready to be enlarged again when summoned.", "Cat's Grace|2|T|m||Subject gains +4 to Dex for 1 min./level.", "Legal only for aasimar PCs Celestial Companion|2|?|?||Give your companion protections against evil creatures", "Certain Grip|2|?|?||You gain a +4 competence bonus on Acrobatics and Climb checks and to CMD.", "Cloud of Seasickness|2|?|?||Create a sickening cloud that mimics the effects of seasickness.", "Codespeak|2|?|?||Speak, read, and Write a new code language.", "Command Undead|2|N|o||Undead creature obeys your commands.", "Commune with Birds|2|?|?||Ask a question to all birds within a mile of your location.", "Companion Life Link|2|?|?||Sense whenever your companion is wounded and call out to it in a time of need.", "Compassionate Ally|2|?|?||Target is compelled to help injured ally.", "Compel Tongue|2|?|?||As share language, but target can only speak and write in the language imparted.", "Compulsive Liar|2|?|?||Prevent target from speaking the truth.", "Contact Entity I|2|?|?||Ask eldritch entities to find and converse with you", "Continual Flame|2|V|n||Makes a permanent, heatless light.", "Corpse Lanterns|2|?|?||Create a sickly version of dancing lights.", "Covetous Urge|2|?|?||Target is compelled to steal valuable objects", "Crafter's Nightmare|2|?|?||Create a poltergeist to disrupt crafting and spellcasting", "Create Pit|2|?|?||Creates an extradimensional pit.", "Create Treasure Map|2|?|?||Creates treasure map out of a creature's corpse.", "Crimson Confession|2|?|?||Touching the marked object or area turns one’s skin red.", "Curse Terrain, Lesser|2|?|?||Curse an area with three mild hazards", "Cushioning Bands|2|?|?||Force bands protect against crushing.", "Dark Whispers|2|?|?||Whisper through the shadows.", "Darkness|2|V|t||20-ft. radius of supernatural shadow.", "Darkvision|2|T|h||See 60 ft. in total darkness.", "Daze Monster|2|E|f1||Living creature of 6 HD or less loses next action.", "Death from Below|2|?|?||Target gains dodge bonus to AC against larger creatures.", "Defending Bone|2|?|?||Animate a bone to float near you and block physical attacks.", "Defensive Shock|2|?|?||Electricity damages your attackers.", "Defoliate|2|?|?||Hurl a tiny ball of negative energy to destroy plant life.", "Delay Pain|2|?|?||Ignore pain for 1 hour/level.", "Demand Offering|2|?|?||Make a creature give you an object it’s holding.", "Destabilize Powder|2|?|?||Ammunition in the targeted firearm is prone to misfire.", "Detect Magic, Greater|2|?|?||As detect magic, but learn more information.", "Detect Thoughts|2|D|o||Allows “listening” to surface thoughts.", "Determine Depth|2|?|?||Determine the exact thickness of a wall, ceiling, or other barrier.", "Diminish Resistance|2|?|?||Weaken a creature's resistance to one type of energy", "Diminished Detection|2|?|?||Reduce the areas of divination spells for the purpose of targeting you", "Disfiguring Touch|2|?|?||Target becomes disfigured.", "Disguise Other|2|?|?||As disguise self, but affects you or another.", "Disrupt Link|2|?|?||Sever the target’s link with her bonded creature.", "Dragonvoice|2|?|?||Emulate the vocal inflections of dragons.", "Drain Construct|2|?|?||Incapacitate a construct by draining its animating force", "Dress Corpse|2|?|?||Doctor the evidence on a corpse.", "Dust of Twilight|2|?|?||Black particles extinguish light sources within area.", "Eagle's Splendor|2|T|m||Subject gains +4 to Cha for 1 min./level.", "Eldritch Conduit|2|?|?||Create a conduit with which you can cast area effect spells from.", "Elemental Speech|2|?|?||Enables you to speak to elementals and some creatures.", "Elemental Touch|2|?|?||Gain energy damage touch attack.", "Embrace Destiny|2|?|?||Roll a single d20 and use its result later on.", "Enchantment Sight|2|?|?||See enchantment spells active on creatures", "Endure Elements, Communal|2|?|?||As endure elements, but you may divide the duration among creatures touched.", "Eroding Ray|2|?|?||ranged touch attack deals 2d6 to construct or object, +1 ray/four levels (max 3)", "Escape Alarm|2|?|?||As alarm, but alerts you when a creatuer leaves the area", "Escaping Ward|2|?|?||Gain maneuverability by avoiding the attacks of larger creatures.", "Euphoric Cloud|2|?|?||Fog obscures vision and fascinates living creatures.", "Extreme Flexibility|2|?|?||Gain a bonus to AC, on Escape Artist checks, and when grappling.", "False Age|2|?|?||Change to become one age category younger or older", "False Life|2|N|h||Gain 1d10 temporary hp + 1/level (max +10).", "Familiar Figment|2|?|?||Create an illusory duplicate of your familiar to fool enemies.", "Fear the Sun|2|?|?||Impose light blindness on your enemies.", "Fiery Runes|2|?|?||Charge a weapon with magical fiery runes.", "Fiery Shuriken|2|?|?||Calls forth several fiery projectiles ready to be flung at opponents.", "Fire Breath|2|?|?||Exhale a cone of flame at will.", "Only legal goblin PCs are allowed to choose anything from this book Fire Sneeze|2|?|?||Sneeze flame to set your enemies on fire and knock them prone.", "Flaming Sphere|2|V|r|F|Rolling ball of fire deals 3d6 fire damage.", "Fleeting Defect|2|?|?||Cause a single object to become broken. Can also disrupt a construct’s animating force.", "Fleshcurdle|2|?|?||Warp a creature's flesh, penalizing it in attack, defense, or movement.", "Fleshy Facade|2|?|?||Alter your appearance to appear living.", "Flickering Lights|2|?|?||Create an area of inconsistent lighting.", "Flurry of Snowballs|2|?|?||Cone-shaped blast of snowballs deals 4d6 cold damage.", "Fog Cloud|2|C|t||Fog obscures vision.", "Fool's Gold (AA)|2|?|?||Make someone who accepts one of your gold pieces more vulnerable to your magic.", "Force Sword|2|?|?||Create a magical longsword made entirely of force.", "Fox's Cunning|2|T|m||Subject gains +4 to Int for 1 min./level.", "Frigid Touch|2|?|?||Target takes cold damage and is staggered.", "Frost Fall|2|?|?||The area is covered in a chilling frost.", "Full Pouch|2|?|?||Divide a consumable alchemical item into two nearly identical copies.", "Fungal Blisters|2|?|?||Develop a small number of fungal growths which burst as you take damage, choking your enemies with harmful spores.", "Garden of Peril|2|?|?||Grow a group of poisonous mushrooms.", "Ghost Whip|2|?|?||Create a ghost touch whip that passes through objects.", "Ghostly Disguise|2|?|?||You look like a ghost of yourself.", "Ghoul Hunger|2|?|?||Awaken an unnatural hunger in the target, causing it to seek out humanoid flesh.", "Ghoul Touch|2|N|o||Paralyzes one subject, which exudes stench that makes those nearby sickened.", "Gird Ally|2|?|?||Grant your summoned creatures a deflection bonus to their AC.", "Glide|2|?|?||You take no falling damage and move 60 ft./round while falling.", "Glitterdust|2|C|r||Blinds creatures, outlines invisible creatures.", "Grasping Vine|2|?|?||Sprout a 20-ft long vine that can assist with numerous tasks.", "Greensight|2|?|?||Grant a target the ability to see through plant matter as if it were transparent", "Gust of Wind|2|V|f1||Blows away or knocks down smaller creatures.", "Gusting Sphere|2|?|?||Release a swirling ball of wind to move around and knock your enemies about.", "Harmless Form|2|?|?||Transform the target into a \"harmless\" animal.", "Haunting Mists|2|?|?||Creatures are shaken and take Wis damage.", "Haunting Reminder|2|?|?||After Intimidating a creature, make it afraid of your retribution", "Heckle|2|?|?||Shift the target’s attitude one step more hostile towards you and everyone else nearby. This also penalizes his attacks, saves, and certain skill checks.", "Hidden Blades|2|?|?||Turn weapon or ammunition invisible", "Hidden Knowledge|2|?|?||Remove one piece of information from your memory and turn it into a magical tattoo", "Hidden Presence|2|?|?||Prevent creatures from noticing your presence.", "Hideous Laughter|2|E|r||Subject loses actions for 1 round/ level.", "Hoodwink|2|?|?||Distort all of the targets senses", "Human Potential|2|?|?||Grant target a +2 enhancement bonus to an ability score.", "Hypnotic Pattern|2|I|o||Fascinates (2d4 + level) HD of creatures.", "Ice Slick|2|?|?||Coat an area with thin ice, dealing cold damage and causing creatures to fall prone.", "Identifier's Eye|2|?|?||As per detect magic, except affecting a creature you touch", "Illusory Maze|2|?|?||Create an illusion of an ever-changing maze of glass.", "Imbue with Elemental Might|2|?|?||As imbue with spell ability, except you transfer your elemental assault ability to the target.", "Influence Wild Magic|2|?|?||Stabilize an area of primal magic", "Instant Weapon|2|?|?||Summon a melee weapon to wield.", "Intensify Psyche|2|?|?||Amplify the targets emotions", "Investigative Mind|2|?|?||Roll twice and take the higher roll when using certain mental skills.", "Invisibility|2|I|m||Subject is invisible for 1 min./level or until it attacks.", "Invisibility Bubble|2|?|?||As invisibility, but altered to work better underwater", "Jitterbugs|2|?|?||Force a creature to become jittery, taking a penalty on Dexterity-related checks and being unable to delay, ready, or take a total defense action.", "Kinetic Reverberation|2|?|?||Channels the force of an enemy's attack back into its weapon.", "Knock|2|T|n||Opens locked or magically sealed door.", "Know Peerage|2|?|?||Target uses your Knowledge (nobility) ranks.", "Languid Venom|2|?|?||Delay a poison's onset and hide its presence.", "Lead Plating|2|?|?||Enclose the target in a thin sheath of lead.", "Levitate|2|T|m||Subject moves up and down at your direction.", "Life Pact|2|?|?||Affected creatures automatically donate hp to stabilize fallen ally.", "Light Prison|2|?|?||Surround a creature with a light prison, damaging and blinding it if it attempts to escape.", "Limp Lash|2|?|?||Paralyze an enemy from the neck down.", "Lipstitch|2|?|?||Sew the target's lips together.", "Locate Object|2|D|m||Senses direction toward object (specific or type).", "Locate Portal|2|?|?||Detect portals within range", "Mad Hallucination|2|?|?||Target takes penalties to mental actions.", "Mage's Crawl Space|2|?|?||Create a personal hideaway in a surface", "Magic Mouth|2|I|n||Objects speaks once when triggered.", "Magic Siege Engine|2|?|?||Siege gains +1 on targeting and damage rolls.", "Make Whole|2|?|?||Repairs an object.", "Mark of Blood|2|?|?||Imbue some of your life force into a creature, being able to permanently detect its location.", "Masterwork Transformation|2|?|?||Make a normal item into a masterwork one.", "Mathematical Curse|2|?|?||Use the Path of Numbers to place a mathematical curse on someone.", "Merge with Familiar|2|?|?||Merge the body of your familiar or spirit animal into your own", "Minor Image|2|I|o||As silent image, plus some sound.", "Mirror Hideaway|2|?|?||As many as eight creatures hide in an extradimensional space.", "Mirror Image|2|I|m||Creates decoy duplicates of you (1d4 + 1 per three levels, max 8).", "Misdirection|2|I|h||Misleads divinations for one creature or object.", "Miserable Pity|2|?|?||Opponents cannot attack a pathetic creature.", "Molten Orb|2|?|?||Molten metal splash weapon deals 2d6 fire damage plus ongoing damage.", "Mortal Terror|2|?|?||Frighten creature with an existential crisis", "Mount, Communal|2|?|?||As mount, but you may divide the duration among creatures touched.", "Legal only for Goblin PCs Mud Buddy|2|?|?||Create a small minion out of mud.", "Nondetection, Lesser|2|?|?||As nondetection, but only protects against spells that target an area", "Obscure Object|2|A|o||Masks object against scrying.", "Obscured Script|2|?|?||Make the text on a page more difficult to decipher", "Oppressive Boredom|2|?|?||Target loses its next action.", "Owl's Wisdom|2|T|m||Subject gains +4 to Wis for 1 min./level.", "Page-Bound Epiphany|2|?|?||Fill an empty book with knowledge on a topic from around the world.", "Painful Revelation|2|?|?||damage creature who recognize an illusion for what it is", "Paranoia|2|?|?||Target becomes hostile to all creatures.", "Passing Fancy|2|?|?||Control the topic of conversation", "Peerless Integrity|2|?|?||Conceal the alignment of creatures from divination magic.", "Pernicious Poison|2|?|?||Target takes a -4 penalty against poison.", "Phantom Trap|2|I|n||Makes item seem trapped.", "Pilfering Hand|2|?|?||You may seize an object or manipulate it from afar.", "Planetarium|2|?|?||Project a current image of the nighty sky in places you would normally be unable to view it.", "Pouncing Fury|2|?|?||Make a full attack with your claws after a charge", "Protection from Arrows|2|A|h||Subject gains DR 10/magic against ranged attacks.", "Protection from Chaos, Communal|2|?|?||As protection from chaos, but you may divide the duration among creatures touched.", "Protection from Evil, Communal|2|?|?||As protection from evil, but you may divide the duration among creatures touched.", "Protection from Good, Communal|2|?|?||As protection from good, but you may divide the duration among creatures touched.", "Protection from Law, Communal|2|?|?||As protection from law, but you may divide the duration among creatures touched.", "Protection from Technology|2|?|?||+2 to AC and saves, plus additional protection against technology.", "Protective Penumbra|2|?|?||Shadow protects the target from light.", "Psychic Reading|2|?|?||Read surface thoughts to learn information about a subject.", "Pyrotechnics|2|T|r|F|Turns fire into blinding light or choking smoke.", "Qualm|2|?|?||Target gains penalties on ability checks, skill checks, and concentration checks until it spends an entire round doing nothing.", "Quick Change|2|?|?||Use change shape as a swift action and surprise foes.", "Radiation Ward|2|?|?||Protect a creature against radiation", "Raiment of Command|2|?|?||Cloak yourself in an illusion of authority.", "Raven's Flight|2|?|?||Quickly turn into a tiny blurred shape with flight.", "Recoil Fire|2|?|?||Ammunition in the targeted firearm generates excessive recoil.", "Reinforce Armaments, Communal|2|?|?||As reinforce armaments, but you may divide the spell's duration among objects touched.", "Reloading Hands|2|?|?||Loads a single shot into your weapon every round.", "Remarkable Legerdemain|2|?|?||Conceal items with uncanny skill.", "Resist Energy|2|A|t||Ignores 10 (or more) points of damage/attack from specified energy type.", "Retrieve Item|2|?|?||Call a small item into your hand from anywhere.", "Returning Weapon|2|?|?||Grants a weapon the returning special weapon quality.", "Reveal True Shape|2|?|?||Reveal the true form of a magically disguised/transformed creature.", "Revealing Light|2|?|?||As light, but hampers Stealth checks", "Ricochet Shot|2|?|?||Imbues a projectile weapon to give its ammunition the ability to ricochet.", "River Whip|2|?|?||Create a whip of water that you wield as a weapon.", "Rock Whip|2|?|?||Create a whip that passes through unworked stone", "Rope Trick|2|T|h||As many as eight creatures hide in extradimensional space.", "Rovagug's Fury|2|?|?||Create a minor earthquake to trip creatures.", "Rune of Rule|2|?|?||Bestow upon a creature one of the seven runes of rule", "Scale Spikes|2|?|?||Enhance a target’s scales with jagged spikes.", "Scare|2|N|r||Panics creatures of less than 6 HD.", "Scorching Ray|2|V|n|F|Ranged touch attack deals 4d6 fire damage, + 1 ray/four levels (max 3).", "Sculpt Simulacrum|2|?|?||Alter a simulacrum's appearance.", "Searching Shadows|2|?|?||Shadows search for a creature or object in range", "Secret Sign|2|?|?||Invisibly inscribe a small mark or message on a creature or obejct.", "Secret Speech|2|?|?||Send secret messages to others within normal speech.", "Seducer's Eyes|2|?|?||Gain a bonus on Charisma-based skills towards those who find you attractive.", "See Invisibility|2|D|t||Reveals invisible creatures or objects.", "Semblance of Flesh|2|?|?||Disguise a construct as a creature of flesh.", "Sense Vitals|2|?|?||Gain the ability to sneak attack.", "Sensory Overload|2|?|?||Make concentrating difficult for a creautre, forcing a save to perform standard or full-round actions", "Sentry Skull|2|?|?||Create a grisly sentinel from the severed head of a humanoid or monstrous humanoid.", "Shackle|2|?|?||Summon manacles onto a target creature", "Shadow Anchor|2|?|?||Tether a creature to its shadow, preventing it from moving too far.", "Shadow Claws|2|?|?||Claws of shadow deal slashing damage and Strength damage", "Share Language|2|?|?||Subject understands chosen language.", "Share Memory|2|?|?||Share one memory with the target.", "Shared Suffering|2|?|?||Deal damage to another creature by harming yourself.", "Shatter|2|V|n||Sonic vibration damages objects or crystalline creatures.", "Shifted Steps|2|?|?||Make a target sound as if elsewhere.", "Silent Table|2|?|?||Give yourself privacy by muffling sound leaving the area.", "Silk To Steel|2|?|?||Use a scarf as a shield or whip.", "Skinsend|2|?|?||Animate and possess your own skin as if it were a separate creature.", "Slick Walls|2|?|?||Increase the DC of Climb checks in the area", "Slipstream|2|?|?||Wave boosts creature's speed.", "Snow Shape (Ulfen)|2|?|?||Form snow into any shape you wish, including hard ice weapons.", "Solidify Earth|2|?|?||Harden earth and stone, impeding burrowing creatures", "Sonic Scream|2|?|?||Create a cone of damaging sound at will.", "Spectral Hand|2|N|m||Creates disembodied glowing hand to deliver touch attacks.", "Spell Gauge|2|?|?||Discover some spells the target has prepared.", "Spider Climb|2|T|t||Grants ability to walk on walls and ceilings.", "Splinter Spell Resistance|2|?|?||Create an aura around a target weapon to weaken a foe’s magical defenses.", "Spontaneous Immolation|2|?|?||Target takes 3d6 points of fire damage and catches on fire.", "Squeeze|2|?|?||Increase the target’s flexibility, allowing it to move through tight spaces and squeeze with ease.", "Stabilize Powder|2|?|?||Ammunition in the targeted firearm is less likely to misfire.", "Staggering Fall|2|?|?||Make a falling creature hit the ground harder.", "Steal Breath|2|?|?||Steal the breath from a creature’s lungs.", "Steal Size|2|?|?||Reduce a creature’s size, enlarge your own.", "Steal Voice|2|?|?||Target gains the croaking spellblight.", "Stone Call|2|?|?||2d6 damage to all creatures in area.", "Stone Discus|2|?|?||Flying discus deals bludgeoning or slashing damage.", "Stone Throwing|2|?|?||Grant the subject the rock throwing and rock catching abilities.", "Storm of Blades|2|?|?||Create swords and propel them towards your target.", "Storm Sight|2|?|?||Spread your senses through a storm, learning about other creatures affected by the weather", "Stricken Heart|2|?|?||Touch attack deals 2d6 damage and staggers target.", "Summon Cacodaemon|2|?|?||Summon a cacodaemon.", "Summon Monster 2|2|C|r|L|Summons extraplanar creature to fight for you.", "Summon Swarm|2|C|o|L|Summons swarm of bats, rats, or spiders.", "Sun's Disdain|2|?|?||Curse a creature, giving it light blindness and making it susceptible to light spells", "Suppress Charms and Compulsions|2|?|?||Either grant a bonus to saves against, or suppress, charm and compulsion spells", "Symbol of Mirroring|2|?|?||Triggered rune creates mirror images.", "Sympathetic Aura|2|?|?||As magic aura, but affects all similar objects in a 5-foot radius", "Tactical Acumen|2|?|?||You gain an additional +1 on attack rolls or to AC due to battlefield positioning.", "Tattoo Potion|2|?|?||Mix a potion that creates a magical chest tattoo when drunk.", "Tears to Wine|2|?|?||Turn nonmagic liquids into special mead or wine, enhancing the intelligence and wisdom of those who drink.", "Telekinetic Assembly|2|?|?||Assembles a siege engine using 1 fewer worker for every two caster levels.", "Telekinetic Strikes|2|?|?||Imbue a creature's limbs with force, adding damage to unarmed strikes", "Telekinetic Volley|2|?|?||Touch a group of items, launching them as ranged attacks.", "Thunder Fire|2|?|?||Ammunition in the targeted firearm deafens opponents.", "Time Shudder|2|?|?||Nearby creatures are affected by haste or slow each round.", "Touch of Bloodletting|2|?|?||Cause any wounds the target has to bleed profusely.", "Touch of Idiocy|2|E|t||Subject takes 1d6 penalty to Int, Wis, and Cha.", "Touch of Mercy|2|?|?||Change the damage a creature can deal from lethal to nonlethal.", "Track Ship|2|?|?||Use a piece of a ship to track it on a nautical chart.", "Transmute Wine to Blood|2|?|?||Transform a bottle of fine wine into a pint of animal blood.", "Twilight Haze|2|?|?||Illusory fog obscures vision.", "Twisted Futures|2|?|?||Prevent creatures from taking advantage of \"roll twice, take better\" abiltiies.", "Twisted Space|2|?|?||Targeted creature's attacks target a random square instead of the intended target.", "Umbral Weapon|2|?|?||Create a shadowy afterimage that can damage enemies if the initial attack misses.", "Undeath Sense|2|?|?||As per detect undead, but affecting a creature you touch", "Unnatural Lust|2|?|?||Target is compelled to kiss or caress another.", "Unsettling Presence|2|?|?||Inflict creatures with paranoia and be repulsive to others", "Unshakable Chill|2|?|?||Target is afflicted with severe cold.", "3.5 MaterialVeil of Ash|2|?|?||Conjure a small cloud of burning ash in the target's face.", "Vine Strike|2|?|?||Enhance one of your natural or unarmed attacks with thorny vine growth", "Visualization of the Body|2|?|?||Gain a +5 bonus on checks with one physical ability score for 24 hours, discharge for a one-time physical boost", "Visualization of the Mind|2|?|?||Gain a +5 bonus on checks with one mental ability score for 24 hours, discharge for a one-time mental boost", "Warding Weapon|2|?|?||The weapon you use for the focus of this spell defends you, allowing you to cast spells without provoking attacks of opportunity.", "Web|2|C|t||Fills 20-ft.-radius spread with sticky spiderwebs that can grapple foes and impair movement.", "Web Shelter|2|?|?||Create a comfortable shelter made of webbing.", "Whip of Spiders|2|?|?||Create a whip made of poisonous spiders.", "Whispering Wind|2|T|h||Sends a short message 1 mile/level.", "Winged Sword|2|?|?||Grant a weapon the throwing special ability.", "With the Wind|2|?|?||Protect a target from being blown away by wind of less than windstorm force", "Ablative Barrier|3|?|?||Surrounds the target with layers of force.", "Ablative Sphere (Garundi)|3|?|?||Create a protective sphere around yourself, providing you with improved cover.", "Accursed Glare|3|?|?||Channel a fell curse through your gaze.", "Adjustable Disguise|3|?|?||As disguise self, but you can change the disguise as a swift action.", "Adroit Retrieval|3|?|?||Instill the target with the ability to withdraw items quickly.", "Air Breathing|3|?|?||Allow creatures to breathe air.", "Air Geyser|3|?|?||Blast of air deals 2d6 bludgeoning damage and knocks opponent upward.", "Allied Cloak|3|?|?||Enchanted cloak grants shield bonus to AC and can use aid another on you once per round", "Ancestral Regression|3|?|?||Conceal a drow’s appearance with that of a surface elf.", "Anchored Step|3|?|?||Vines beneath your feet stabilize you but slow you down.", "Animate Dead, Lesser|3|?|?||Create one skeleton or zombie.", "Anthropomorphic Animal|3|?|?||Animal becomes bipedal.", "Ape Walk|3|?|?||Enchant someone to climb as well as an ape.", "Appearance of Life|3|?|?||Undead appear to be alive", "Apport Animal|3|?|?||Send or receive a Tiny or smaller animal via teleportation.", "Apsu's Shining Scales|3|?|?||Gain +5 armor bonus to your AC, natural attacks are good and silver, and infuse your breath weapon with holy power.", "Aqueous Orb|3|?|?||Creates rolling sphere of water.", "Arcane Reinforcement|3|?|?||Add your Spellcraft to Craft when creating a magic item.", "Arcane Sight|3|D|m||Magical auras become visible to you.", "Aroden's Spellsword|3|?|?||Merge a melee weapon with a rod or staff.", "Ash Storm|3|?|?||Hamper vision and movement.", "Assume Appearance|3|?|?||Use a creature's corpse to adopt its form", "Audiovisual Hallucination|3|?|?||Create a phantasm with auditory and visual effects.", "Aura of Cannibalism|3|?|?||Sap the strength of those around you.", "Aura Sight|3|?|?||Alignment auras become visible to you.", "Aversion|3|?|?||Cause the target to avoid an object or location.", "Babble|3|?|?||Target becomes nauseated and causes nearby creatures to become fascinated.", "Barrow Haze|3|?|?||Fog obscures the vision of others and extends the range of your hexes.", "Battering Blast|3|?|?||Hurl a fist sized ball of force to damage your enemy and knock them back.", "Beast Shape IY|3|?|?||You take the form and some of the powers of a Small or Medium animal.", "Black Sword of War|3|?|?||Enchant a weapon to deal extra bleed damage.", "3.5 MaterialBlacklight|3|?|?||Create an area of total darkness.", "Blade Snare|3|?|?||Create an invisible snare to trap weapons.", "Blast Barrier|3|?|?||Create a rippling but unstable wall from the earth.", "Bleed for your Master|3|?|?||Compel a companion to take damage for you", "Bleed Glory|3|?|?||Increase the cost to use mythic power.", "Blink|3|T|r||You randomly vanish and reappear for 1 round per level.", "Blood Biography|3|?|?||Learn about a creature with its blood.", "Blood Rage|3|?|?||Inspire a number of creatures into a rage, increaing their strength but lowering their AC.", "Blood Scent|3|?|?||Magnify the target’s ability to smell the presence of blood.", "Blood Sentinel|3|?|?||Animate an animal sculpture to be your temporary familiar.", "Only legal goblin PCs are allowed to choose anything from this book Blot|3|?|?||Destroy all writing within an area.", "Bone Flense|3|?|?||Cause a target's bones to erupt in sharp, jagged spurs, inflicting bleed and sickened", "Burdened Thoughts|3|?|?||Force heavy encumberance onto a creature.", "Burrow|3|?|?||Target gains a burrow speed of 15.", "Business Booms|3|?|?||(Downtime Spell) Promote your business with magic and increase the amount of activity it receives.", "Calistria's Guardian Wasps|3|?|?||Summon a swarm of wasps to ward and area", "Call the Void|3|?|?||Surround yourself with an aura of nothingness.", "Campfire Wall|3|?|?||Creates a shelter around a campfire.", "Catatonia|3|?|?||Make a willing target appear to be dead.", "Cauterizing Weapon|3|?|?||Infuse a weapon with just enough energy to negate regeneration.", "Chain of Perdition|3|?|?||Creates a floating chain of force.", "Channel the Gift|3|?|?||Fuel a target’s spellcasting, spontaneously cast spells without expending the slot.", "Charitable Impulse|3|?|?||Compel a creature to aid others rather than use violence.", "Clairaudience/Clairvoyance|3|D|m||Hear or see at a distance for 1 min./level.", "Clay Skin|3|?|?||Grants DR 5/Adamantine", "Cleromancy|3|?|?||Use rolled dice to grant luck bonuses to future spells.", "Cloak of Winds|3|?|?||Creates a screen of wind around you.", "Collaborative Thaumaturgy|3|?|?||Apply a metamagic property to an ally’s spell.", "Conjure Carriage|3|?|?||Create a fine carriage.", "Contact Entity II|3|?|?||Ask more powerful entities to find and converse with you", "Contagious Zeal|3|?|?||Grant bonuses and temporary hit points that spread from creature to creature.", "Contingent Action|3|?|?||Set the condition for triggering a target’s readied standard, move, or swift action.", "Control Vermin|3|?|?||Control a number of vermin for you and your allies to ride.", "Countless Eyes|3|?|?||Extra eyes give all-around vision.", "Create Soul Gem|3|?|?||Draw a recently dead creature's soul into a gem.", "Daggermark's exchange can only create poisons that are legal in the organized play campaign. Daggermark's Exchange|3|?|?||Transmute one poison into another of equal or lesser value", "Dark-Light|3|?|?||Create a dazzling light that only affects those without light sensitivity.", "Darkvision, Communal|3|?|?||As darkvision, but you may divide the duration among creatures touched.", "Daylight|3|V|t||60-ft. radius of bright light.", "Dazzling Blade, Mass|3|?|?||As dazzling blade, except with multiple weapons.", "Deathwine|3|?|?||Turn a potion into a pool of necromantic energy.", "Deep Slumber|3|E|n||Puts 10 HD of creatures to sleep.", "Deflect Blame|3|?|?||Blame someone else for your actions.", "Deft Digits|3|?|?||Animate a glove or gauntlet from a distance.", "Detect Anxieties|3|?|?||Learn what makes a creautre anxious.", "Detect Desires|3|?|?||Learn what a creatures desire.", "Detect Mindscape|3|?|?||Sense the presence and attributes of mindscapes.", "Devolution|3|?|?||An eidolon temporarily loses 1 evolution +1/five levels.", "3.5 MaterialDiamond Spray|3|?|?||Fire a cone of slivers that deal 1d6 damage/level and bypass adamantine and cold iron DR.", "Disable Construct|3|?|?||Touch attack makes a construct helpless for 1 round/level.", "Discern Value|3|?|?||Quickly analyze the monetary value of objects and identify which are most valuable.", "Discharge|3|?|?||Dissipate the charges from a technical object or hamper a creature with the robot subtype.", "Dispel Magic|3|A|n||Cancels one magical spell or effect.", "Displacement|3|I|r||Attacks miss subject 50% of the time.", "Display Aversion|3|?|?||Create an illusion to repulse a vampire.", "Distracting Cacophony|3|?|?||Noise makes it difficult to cast.", "Domination Link|3|?|?||Read thought echoes of a creature mentally controlling another.", "Dongun Shaper's Touch|3|?|?||Temporarily reshape nonmagical materials", "Draconic Ally|3|?|?||Creates a semi-living intelligent draconic servant that loyally obeys and serves you.", "Draconic Malice|3|?|?||Cause living creatures to lose their immunity to fear or mind-affecting effects vs your spells.", "Draconic Reservoir|3|?|?||Subject can absorb energy damage and enhance melee attacks with it.", "Dragon Turtle Shell|3|?|?||Treat the natural attack damage of a creature attacking you as five sizes smaller.", "Dweomer Retaliation|3|?|?||Gain hit points and damage your opponent immediately after counterspelling a spell.", "Earth Tremor|3|?|?||Unleash a tremor that creates difficult terrain and can knock foes down and damage them", "Ectoplasmic Snare|3|?|?||Tendril of ectoplasm grapples a creature and tethers you to it.", "Eldritch Fever|3|?|?||Target gains the eldritch ague spellblight.", "Elemental Aura|3|?|?||Creates an aura of energy around you.", "Enter Image|3|?|?||Transfers your consciousness to an object bearing your likeness.", "Erode Defenses|3|?|?||Eat away at the damage reduction and natural armor of your opponent.", "Eruptive Pustules|3|?|?||Acid boils burst when you are attacked.", "Evaluator's Lens|3|?|?||Summon a lens of force to help protect yourself from figments/patterns or identify items.", "Excruciating Deformation|3|?|?||Target takes Dex and Con damage.", "Explosive Runes|3|A|n||Deals 6d6 damage when read.", "Fearsome Duplicate|3|?|?||Create a menacing duplicate of yourself to interact with others.", "Final Sacrifice|3|?|?||Cause a summoned creature to explode.", "Find Fault|3|?|?||Learn many of the target’s weaknesses and gain a +5 bonus on your next attack.", "Fins to Feet|3|?|?||Give a creature legs, allowing it to walk on land.", "Fire Trail|3|?|?||Leak a trail of flame that follows your every step.", "Fireball|3|V|n|F|1d6 damage per level, 20-ft. radius.", "Firestream|3|?|?||Spray a rushing stream of fire from your hand.", "First World Revisions|3|?|?||As ancestral regression but for disguising a wayang as a gnome.", "Flame Arrow|3|T|t|F|Arrows deal +1d6 fire damage.", "Flash Fire|3|?|?||Ammunition in the targeted firearm creates a tremendous flash capable of blinding the weapon's bearer and those around him.", "Fleshwarping Swarm (Drow)|3|?|?||As summon swarm, but the swarm makes creatures more susceptible to transmutation spells along with penalizing Dexterity.", "Fly|3|T|m||Subject flies at speed of 60 ft.", "Force Anchor|3|?|?||Skewer and anchor incorporeal targets with a force anchor.", "Force Punch|3|?|?||Target takes force damage and is pushed away.", "Forced Mutation|3|?|?||Warp a creature's flesh, inflicting deformaties and penalties to Constitution and Charisma", "Fortune's Path|3|?|?||Gain a glimpse of the future", "Fractions of Heal and Harm|3|?|?||Heal yourself with the next spell that also deals damage.", "Gaseous Form|3|T|p20||Subject becomes insubstantial and can fly slowly.", "Gentle Repose|3|N|o||Preserves one corpse.", "Gilded Whispers|3|?|?||Use a single coin as a conduit for eavesdropping.", "Glimpse the Hidden|3|?|?||As per see invisibility, except affecting a creature you touch", "Gloomblind Bolts|3|?|?||Create bolts of negative energy to harm the living or heal the undead, possibly blinding the target.", "Golden Guise|3|?|?||Cause an object to briefly transform into gold.", "Grasping Tentacles|3|?|?||Use a mass of tentacles to perform dirty tricks.", "Guardian Monument, Lesser|3|?|?||Bless a monument to imbue nearby humans with 2/magic damage reduction.", "Guarding Knowledge|3|?|?||Gain a +4 insight bonus on saving throws vs a creature's abilitiy you have identified with a Knowledge check", "Gullibility|3|?|?||Target takes a -10 penalty to Sense Motive and creatures using Bluff against them gain a +10 bonus on such checks", "Hallucinatory Decor|3|?|?||Change the appearance of a structure to suit your tastes", "Halt Undead|3|N|r||Immobilizes undead for 1 round/level.", "Harrowing|3|?|?||Use a Harrow deck to predict the future.", "Haste|3|T|r||One creature/level moves faster, receives +1 on attack rolls, AC, and Reflex saves.", "Legal only for tiefling PCs Healing Leak|3|?|?||Touched target only gains and grants half the benefits from magical healing", "Healing Thief|3|?|?||You siphon half of all magical healing that the targeted creature receives.", "Heart of the Metal|3|?|?||Enable weapons to overcome DR like adamantine, cold iron, or silver.", "Heatstroke|3|?|?||Fire a ray to give someone heatstroke, dealing 1d4 nonleathal damage and inducing exhaustion.", "Heroism|3|E|t||Gives +2 on attack rolls, saves, skill checks.", "Hold Fey|3|?|?||As hold person, but targets fey", "Hold Person|3|E|r||Paralyzes one humanoid for 1 round/level.", "Hollow Blades|3|?|?||Target’s weapons deal damage as if they were smaller.", "Horrifying Visage|3|?|?||Cause creatures to gain a phobia", "Hostile Levitation|3|?|?||Levitates the targeted creature up off the ground.", "Howling Agony|3|?|?||Screaming pain limits the target's actions.", "Hydraulic Torrent|3|?|?||Creates torrent of water that bull rushes any creature in its path.", "Hydrophobia|3|?|?||Make targets become deathly afraid of water.", "Ice Spears|3|?|?||Force a number of giant spears of ice from the ground.", "Illusory Poison|3|?|?||Create a phantasmal poison on a weapon.", "Illusory Script|3|I|o||Only select creatures can read text.", "Imbue With Addiction|3|?|?||Target becomes addicted to a drug.", "3.5 MaterialImpede Speech|3|?|?||Interfere with the target's ability to speak.", "Improve Trap|3|?|?||Increase a trap’s effectiveness.", "Infernal Challenger|3|?|?||Summon a bearded devil to preform a Hellknight initiation", "Inflict Pain|3|?|?||Target takes a –4 penalty on attack rolls, skill checks, and ability checks.", "Infuse Self|3|?|?||Assume the form of a native outsider", "Insect Scouts|3|?|?||Create insects to scout an area for you.", "Invisibility Bubble, Giant|3|?|?||As invisibility bubble, but capable of affecting larger creatures", "Invisibility Sphere|3|I|m||Makes everyone within 10 feet invisible.", "Iron Spine|3|?|?||Turn creatures skeleton into sharp iron, increased effect against creatures vulnerable to cold iron", "Iron Stake|3|?|?||Hurl a spike of cold iron at a foe", "Irradiate|3|?|?||Flood an area with dangerous radiation.", "Irriseni Mirror Sight|3|?|?||Look through a mirror and see out of another mirror.", "Isolate|3|?|?||Make a creature invisible and silent to their allies.", "Ja Noi Aspect|3|?|?||Take on the appearance and some qualities of a ja noi oni.", "Kalistocrat's Nightmare|3|?|?||Any coin a creature touches turns into a copper piece", "Keen Edge|3|T|t||Doubles normal weapon's threat range.", "Ki Leech|3|?|?||Add to your ki pool when you critically hit.", "Knell of the Depths|3|?|?||Imbue someone with a curse that causes them to sink quickly in water and suffer a -10 penalty to Swim checks.", "Leshy Swarm|3|?|?||Call for a leshy swarm to aid you.", "Lightning Bolt|3|V|n||Electricity deals 1d6/level damage.", "Lightning Conductor|3|?|?||Absorb electricity damage and discharge it with a touch, weapon, or ray", "Lissalan Snake Sigil|3|?|?||As sepia snake sigil, except using the Thassilonian schools of magic.", "Loathsome Veil|3|?|?||Nauseates and/or sickens weak creatures.", "Locate Weakness|3|?|?||You roll damage twice when you roll damage for a critical hit and take the best damage.", "Lover's Vengeance|3|?|?||Inspire yourself or a lover into a rage against someone who wronged you.", "Mad Monkeys|3|?|?||Summon a swarm of mischievous monkeys.", "Magic Circle against Chaos|3|A|t||As protection spells, but 10-ft. radius and 10 min./level.", "Magic Circle against Evil|3|A|t||As protection spells, but 10-ft. radius and 10 min./level.", "Magic Circle against Good|3|A|t||As protection spells, but 10-ft. radius and 10 min./level.", "Magic Circle against Law|3|A|t||As protection spells, but 10-ft. radius and 10 min./level.", "Magic Weapon, Greater|3|?|?||Weapon gains +1 bonus/four levels (max +5).", "Major Image|3|I|o||As silent image, plus sound, smell, and thermal effects.", "Malediction (Hero Points)|3|?|?||Curse a dying creature to finish it off and gain hero points from its life force.", "Marionette Possession|3|?|?||As magic jar, but limited to line of sight.", "Mark of Buoyancy|3|?|?||Make a touched object weightless", "Mark of Spite|3|?|?||Deal damage to yourself to damage the marked target", "Matchmaker|3|?|?||Cause two creatures to fall in love.", "Mindlocked Messenger|3|?|?||Target gains a message that can be given only to its intended recipient.", "Minor Dream|3|?|?||As the dream spell, except delivering a shorter message.", "Minor Reversion|3|?|?||Store a replica of yourself in the Akashic Record, end the spell when injured to be healed 1d8+1/level", "Monstrous Extremities|3|?|?||Mutate an extremity of the creature touched.", "Monstrous Physique IY|3|?|?||Take the form and some of the powers of a Small or Medium monstrous humanoid.", "Motes of Dusk and Dawn|3|?|?||Create up to four motes that shed light or darkness.", "Nauseating Trail|3|?|?||Creature leaves a trail of stinking cloud squares.", "Necromantic Burden|3|?|?||Make undead more difficult to control.", "Necrostasis|3|?|?||Stagger an undead creature", "Night of Blades|3|?|?||Create an immobile wall of tiny black blades.", "Nondetection|3|A|h||Hides subject from divination, scrying.", "Numerological Evocation|3|?|?||Use the Path of Numbers to fire rays of elemental energy.", "Numerological Resistance|3|?|?||Use the Path of Numbers to grant your allies resilience in the face of elemental dangers.", "Oneiric Horror|3|?|?||Distract and fatigue the target with a creature from its nightmares.", "Open Book|3|?|?||Make it permanently easier to learn more about a target.", "Outbreak|3|?|?||Diseased creatures in the area become extremely contagious", "Pack Empathy|3|?|?||Create an empathic bond with allies.", "Pain Strike|3|?|?||Inflicts 1d6 nonlethal damage 1 round/level.", "Paragon Surge|3|?|?||+2 enhancement to Dexterity and Intelligence, gain use of any one feat.", "Pellet Blast|3|?|?||Creates an explosion of conjured metal pellets.", "Penumbral Disguise|3|?|?||Mask your features with shadowy illumination.", "Perfect Placement|3|?|?||Grant tactical knowledge to your allies, increasing their AC and Reflex saves.", "Phantasmal Affliction|3|?|?||Convince a target hat it contracted an affliction.", "Phantasmal Reminder|3|?|?||Creature re-lives an injury, taking 1d6 damage/level", "Phantom Driver|3|?|?||Conjures a phantom to drive vehicles.", "Phantom Steed|3|C|h|L|Magic horse appears for 1 hour/level.", "Phase Step|3|?|?||As per dimension door, but with more restrictions and affecting a creature you touch", "Pierce Disguise|3|?|?||See through low-level magical disguises.", "Pillow Talk|3|?|?||Sleeping creature answers your questions", "Planar Inquiry|3|?|?||Call an outsider to answer questions", "Polymorph Familiar|3|?|?||Give your familiar the shape of another animal.", "Prehensile Pilfer|3|?|?||Allow the target’s tail to make Dirty Trick or Steal maneuvers.", "Prosperous Room|3|?|?||(Downtime Spell) Increase the appeal a targeted room has.", "Protection from Arrows, Communal|3|?|?||As protection from arrows, but you may divide the duration among creatures touched.", "Protection from Energy|3|A|t||Absorb 12 points/level of damage from one kind of energy.", "Psychic Leech|3|?|?||Leech a target’s strength, forcing them to become fatigued in order to grant you power.", "Pugwampi's Grace|3|?|?||Force the unluck effect of a pugwampi onto an unwilling creature.", "Pup Shape|3|?|?||Transforms a single animal or magical beast into a younger and cuter version of itself for a short period of time.", "Puzzle Box|3|?|?||Target forgets how to use commonly used objects.", "Quell Energy|3|?|?||Reduce the target’s ability to tap into a specific energy type", "Rage|3|E|r||Gives +2 to Str and Con, +1 on Will saves, –2 to AC.", "Raging Rubble|3|?|?||Animate an area of rocks to create a dangerous, rolling area of debris.", "Rain of Frogs|3|?|?||Summon a swarm of poisonous frogs.", "Ray of Exhaustion|3|N|m||Ray makes subject exhausted.", "Recharge|3|?|?||Restore charges to a technological item.", "Reckless Infatuation|3|?|?||Target is compelled to stay near another.", "Resinous Skin|3|?|?||You gain DR 5/piercing and +4 to CMD against disarm attempts.", "Resist Energy, Communal|3|?|?||As resist energy, but you may divide the duration among creatures touched.", "Resize Item|3|?|?||Resize a magical weapon or suit of armor to become larger or smaller.", "Restore Mythic Power|3|?|?||Transfer some of your mythic essence to another creature.", "Returning Weapon, Communal|3|?|?||As returning weapon, but you may divide the duration among weapons touched.", "Reveal Mirage|3|?|?||Discern illusory terrain from range.", "Revelation|3|?|?||Gain great insight into the inner workings of a puzzle, device, or trap.", "Rune of Durability|3|?|?||Inscribe a rune upon a weapon to double its hit points.", "Rune of Warding|3|?|?||Place a visible glyph of warding to protect a door or other entryway.", "Sands of Time|3|?|?||Target temporarily ages.", "Scale Spikes, Greater|3|?|?||As scale spikes, except with a higher enhancement bonus.", "Scales of Deflection|3|?|?||Treat your normal AC as your touch AC against the next touch attack that targets you.", "Sebaceous Twin|3|?|?||Extract a half-formed parasitic clone from the target, causing it to siphon blood and distract its host.", "Secret Coffer|3|?|?||As secret chest, except the coffer is smaller and can only remain on the Ethereal Plane for a short time.", "Secret Page|3|T|n||Changes one page to hide its real content.", "See Beyond|3|?|?||+5 Perception (+10 vs ethereal or invisible) for 24 hours, discharge to temporarily gain x-ray vision", "Seed Spies|3|?|?||Create a group of wafting seeds with magical intellect that can spy for you.", "Seek Thoughts|3|?|?||Detects thinking creatures' thoughts.", "Selective Alarm|3|?|?||As alarm, but only against selected creatures.", "Selective Invisibility|3|?|?||Allow one creature to see you while invisible.", "Sepia Snake Sigil|3|C|n||Creates a snake-shaped text symbol that immobilizes reader.", "Serren's Armor Lock|3|?|?||Cause the joints of an enemy's armor to stiffen and wrap around the wearer.", "A PC uses his own spell list to determine the level of the replicated spell. If the spell does not appear on his list, use the spell level that appears on the wizard's or psychic's list. Shadow Enchantment|3|?|?||Use material from the Shadow Plane to create an illusory version of an enchantment spell.", "Shadowmind|3|?|?||Force a target to see more darkness around them.", "Share Glory|3|?|?||Imbue targets with a fraction of your mythic nature.", "Share Language, Communal|3|?|?||As share language, but you may divide the duration among creatures touched.", "Shared Training|3|?|?||Share your teamwork feats with allies", "Sheet Lightning|3|?|?||Create an area of electricity that dazes all those within.", "Shield Companion (ACG)|3|?|?||As shield other, but affecting your companion creature.", "Shifting Sand|3|?|?||Creates difficult terrain and erases tracks, can carry along some creatures and objects.", "Shifting Shadows|3|?|?||Obscure the appearance of all creatures within the shifting shadows.", "Shrink Item|3|T|o||Object shrinks to one-sixteenth size.", "Shroud of Innocuity|3|?|?||Disguise creatures as ordinary", "Silt Sphere|3|?|?||Illusory silt hides creatures while underwater", "Silver Darts|3|?|?||Cone of silver darts deals 1d6 piercing damage/level, less against armored targets.", "Silverlight|3|?|?||Create a bright silver light that is harmful to those vulnerable to silver.", "Siphon Might|3|?|?||Drain strength from a creature and transfer it to another.", "Skyshroud|3|?|?||Unobstructed view of the sky from underground", "Slave to Sin|3|?|?||Draw out a creatures inner sin", "Sleet Storm|3|C|r||Hampers vision and movement.", "Slow|3|T|r||One subject/level takes only one action/round, –1 to AC, Reflex saves, and attack rolls.", "Spectral Scout|3|?|?||Summon a spectral animal to scout for you.", "Spherescry|3|?|?||Scry through a sphere of annihilation.", "Spider Climb, Communal|3|?|?||As spider climb, but you may divide the duration among creatures touched.", "Spiked Pit|3|?|?||As create pit, but filled with spikes.", "Spirit Bonds|3|?|?||Gain a bond with 1 creature/3 levels for 24 hours. End bond to send a message as Sending", "Spotlight|3|?|?||Create a mobile area of bright light while also suppressing light surrounding it.", "Stage Fright|3|?|?||Give the target a -4 penalty on ability checks, skill checks, and any checks requiring concentration.", "Steal Years|3|?|?||Temporarily steal youth and vitality from the target.", "Stinking Cloud|3|C|r||Nauseating vapors, 1 round/level.", "Stolen Light|3|?|?||Store images within a gem.", "Storm Step|3|?|?||Use lightning to quickly travel a short distance, harming all in your path.", "Strangling Hair|3|?|?||Your hair animates and grapples.", "Stunning Barrier, Greater|3|?|?||Magical field grants a +2 bonus to AC and on saves, and stuns multiple creatures attacking you.", "Suggestion|3|E|h||Compels subject to follow stated course of action.", "Summon Monster 3|3|C|r|L|Summons extraplanar creature to fight for you.", "Summon Totem Creature (Shoanti)|3|?|?||Summon animals sacred to your tribe.", "Sundered Serpent Coil|3|?|?||As black tentacles, except creating a decapitated snake to grapple your enemies.", "Sunstalker|3|?|?||Creature becomes invisible in sunlight", "Swarm of Fangs|3|?|?||Summon a swarm of animated, flying teeth.", "Swipe|3|?|?||Attempt to magically wrest an item from the target.", "Symbol of Exsanguination|3|?|?||Triggered rune causes nearby creatures to bleed.", "Tail Strike|3|?|?||Grow a tail and gain a tail slam attack.", "Threefold Face|3|?|?||Gain two more faces, which grant you bonuses to sight", "Threefold Sight|3|?|?||When rolling a d20, roll 3d20 and choose the middle result", "Thunderous Footfalls|3|?|?||Knock down smaller creatures by moving close to them.", "Thunderstomp, Greater|3|?|?||Trip multiple creatures within range.", "Tiny Hut|3|V|p1200||Creates shelter for 10 creatures.", "Tongues|3|D|t||Speak and understand any language.", "Touch Injection|3|?|?||You can deliver an infusion, elixir, poison, or potion as a touch attack.", "Toxic Blood|3|?|?||Turn your blood into venom, poisoning creatures that wound you", "Toxic Gift|3|?|?||Target suffers the effect of the poison in you.", "Toxic Rupture|3|?|?||Force a target to save against its own poison.", "Trial of Fire and Acid|3|?|?||Cover the target creature in burning acid.", "Twilight Knife|3|?|?||Floating knife attacks with you.", "Twine Double|3|?|?||Create a simulacrum of yourself out of cloth and twine.", "Twisted Innards|3|?|?||Avoid critical hits and sneak attacks by making your vital organs writhe around.", "Unadulterated Loathing|3|?|?||Target is compelled to avoid another creature.", "Undead Anatomy I|3|?|?||Take the form and some of the powers of a Small or Medium undead.", "Unflappable Mien|3|?|?||Protective barrier of force knocks creatures and deals force damage", "Unhallowed Blows, Greater|3|?|?||As per unhallowed blows, but a +1 bonus per 4 caster levels", "Unliving Rage|3|?|?||As rage, except affecting only undead.", "Unravel Destiny|3|?|?||Creature takes a penalty to rolls based on number of hero points possessed.", "Unseen Engineers|3|?|?||Conjure a small team of tiny engineers to construct a trap for you.", "Unspoken Name|3|?|?||Learn when a nearby creature refers to you with a particular name or title", "Urban Step|3|?|?||Step into one doorway and out another.", "Vampiric Hunger|3|?|?||Grant a target the fangs and hunger of a vampire.", "Vampiric Touch|3|N|n||Touch deals 1d6 damage per two levels; caster gains damage as temporary hp.", "Vengeful Comets|3|?|?||Create a group of orbiting comets that can immediately strike those who target you with spells.", "Versatile Weapon|3|?|?||Weapon bypasses some DR.", "Violent Misfire|3|?|?||Cause a firearm to misfire and explode", "Virulent Miasma|3|?|?||As fog cloud, but vapor is diseased", "Vision of Hell|3|?|?||Illusory hellscape makes creatures shaken.", "Voluminous Vocabulary|3|?|?||Grant ability to speak, read, and write one or more languages for 8 hours.", "Wall of Mist|3|?|?||Create a wall of mist that creates concealment", "Wall of Nausea|3|?|?||Creatures that pass through the wall are nauseated and might fall prone.", "Wall of Split Illumination|3|?|?||Create a wall of illumination, darkness on one side, light on the other.", "Water Breathing|3|T|p1200||Subjects can breathe underwater.", "Waves of Blood|3|?|?||A cone of blood pushes creatures, sickens them, and makes the ground slick.", "Wind Wall|3|V|r||Deflects arrows, smaller creatures, and gases.", "Absorb Rune IM|4|?|?||Absorb a magic rune up to 3rd level, which can be moved or dispelled", "Absorbing Barrier|4|?|?||Protect an area from ranged attacks", "Absorbing Inhalation|4|?|?||Completely inhale a cloud-like effect, keeping it stored harmlessly in your body.", "Abyssal Vermin|4|?|?||Infuse vermin with fiendish qualities.", "Acid Pit|4|?|?||Creates a pit with a layer of acid on the bottom.", "Adjustable Polymorph|4|?|?||As alter self, but you can change the shape as a swift action.", "Age Resistance, Lesser|4|?|?||Ignore penalties from middle age.", "Aggravate Affliction|4|?|?||Force ongoing afflictions to trigger.", "Aggressive Thundercloud, Greater|4|?|?||Flying storm cloud deals 6d6 electricity damage.", "Agonize|4|?|?||Pain encourages an outsider to obey you.", "Akashic Communion|4|?|?||Make 1 knowledge check /3 levels with a +10 bonus", "Amnesia|4|?|?||Target loses most of its memories", "Animal Aspect, Greater|4|?|?||As animal aspect, but you gain two animal qualities.", "Animate Dead|4|N|n||Creates undead skeletons and zombies.", "Antithetical Constraint|4|?|?||Constrain the target so they cannot make attack rolls against anyone except those of the opposite alignment.", "Anywhere but Here|4|?|?||Transport yourself and willing creatures to a random planar destination", "Apparent Treachery|4|?|?||Shroud creatures in an aura of suspicion and paranoia.", "Aram Zey's Trap Ward|4|?|?||Protect yourself against magical traps.", "Arcane Eye|4|D|m|L|Invisible floating eye moves 30 ft./round.", "Assume Appearance, Greater|4|?|?||Use a likeness to adopt a dead creature's form", "Aura of the Unremarkable|4|?|?||Make actions seem mundane to nearby creatures.", "Ball Lightning|4|?|?||Flying balls of lightning deal 3d6 electricity damage each.", "Baphomet's Blessing|4|?|?||Transmute the target’s head into that of a bull.", "Beanstalk|4|?|?||Create an enormous beanstalk that leads into the clouds.", "Beast Shape IIY|4|?|?||You take the form and some of the powers of a Tiny or Large animal.", "Bestow Curse|4|N|n||–6 to an ability score; –4 on attack rolls, saves, and checks; or 50% chance of losing each action.", "Bestow Planar Infusion II|4|?|?||Grants the target the benefits of an improved planar infusion", "Bind Sage|4|?|?||Summon a caulborn to answer questions", "Bit of Luck|4|?|?||Gain a pool of luck that can be used to add a luck bonus to any d20 rolls, which can turn a failure into a success", "Bite the Hand|4|?|?||Compel a summoned creature to attack its summoner.", "Black Tentacles|4|C|r||Tentacles grapple all creatures within a 20-ft. spread.", "Blast of Wind|4|?|?||As gust of wind, treat creatures in the area as smaller than they are for the effects of the wind", "Bloatbomb|4|?|?||Kill a weak creature and turn its corpse into an explosive trap.", "Bloody Arrows|4|?|?||Enhance ranged weaponry to deal bleed damage.", "Boneshatter|4|?|?||Create fractures and splinters in the bones/carapace of a creature.", "Brightest Light|4|?|?||As daylight, but lasts longer and can dispel darkness effects", "Calamitous Flailing|4|?|?||Cause the target’s attacks to gain a miss chance.", "Calcific Touch|4|?|?||Touch attack slows target, 1d4 Dex damage.", "Caustic Safeguard|4|?|?||Imbue an object with an acidic protective ward.", "Celestial Healing, Greater|4|?|?||As celestial healing, except target gains a stronger aura and fast healing 4 instead of 1.", "Charm Monster|4|E|o||Makes monster believe it is your ally.", "Charon's Dispensation|4|?|?||Protection from the River Styx.", "Claim Identity|4|?|?||Steal a creature's face", "Cloud Shape|4|?|?||Assume the appearance of a large cloud.", "Complex Hallucination|4|?|?||Create a phantasm with effects for all senses.", "Concealed Breath|4|?|?||Hold breath without negative effects", "Confusion|4|E|r||Subjects behave oddly for 1 round/level.", "Conjuration Foil|4|?|?||Interfere with nearby teleportation effects.", "Conjure Deadfall|4|?|?||Create a spiked falling block above the heads of your enemies.", "Contagion|4|N|n||Infects subject with chosen disease.", "Contingent Scroll|4|?|?||Transfer a scroll’s power to the target; the scroll is then triggered as contingency.", "Contingent Venom|4|?|?||As languid venom, but with a triggering condition.", "Control Summoned Creature|4|?|?||Direct a summoned monster as if you had summoned it.", "Controlled Fireball|4|?|?||As fireball, but secretly deals less damage to your allies.", "Conversing Wind|4|?|?||As whispering wind, except it can carry responses and multiple messages.", "Create Armaments|4|?|?||Create a nonmagical weapon, shield, or set of armor.", "Create Holds|4|?|?||Create handholds out of earth, plaster, stone, or wood.", "Creeping Ice|4|?|?||Sheet of ice slowly spreads outward on a horizontal surface.", "Crimson Breath|4|?|?||Spit poison at a creature", "Crushing Despair|4|E|m||Subjects take –2 on attack rolls, damage rolls, saves, and checks.", "Curse of Befouled Fortune|4|?|?||Target can't gain the benefit of any luck ability.", "Curse of Burning Sleep|4|?|?||Creature catches fire the next time it sleeps for an hour.", "Curse of Dragonflies|4|?|?||Target a creature with a curse that impacts its ability to fly.", "Curse of Magic Negation|4|?|?||Target gains the negated spellblight.", "Curse Terrain|4|?|?||Curse an area with four hazards", "Cursed Treasure|4|?|?||Target object curses the next creature to touch it", "Daemon Ward|4|?|?||As death ward, but against daemons.", "Darkvision, Greater|4|?|?||See 120 ft. in total darkness.", "Daze, Mass|4|?|?||As daze, but affecting multiple creatures.", "Deadman's Contingency|4|?|?||Set one of a list of contingencies for your demise.", "Death Knell Aura|4|?|?||Create an aura that feeds on the souls of those who die within it.", "Deathless|4|?|?||Prevent death from hit point damage so long as this spell persists.", "Debilitating Speech|4|?|?||Disparage your opponents, sapping their will to fight", "Demanding Message|4|?|?||Send messages as per message with a suggestion for one creature.", "Detect Scrying|4|D|o||Alerts you to magical eavesdropping.", "Detonate|4|?|?||Inflicts 1d8/level energy damage to all creatures within 15 ft.", "Dimension Door|4|C|n||Teleports you a short distance.", "Dimensional Anchor|4|A|m||Bars extradimensional movement.", "Dragon's Breath|4|?|?||Gives you a dragon's breath weapon.", "Dreadscape|4|?|?||Surroundings and unfamiliar creatures seem like something out of a nightmare.", "Dream Dalliance|4|?|?||Create a phantasm that leeches onto the psyche of a nearby creature.", "Dream Shield|4|?|?||Ward a target’s mind to protect them while unconscious.", "Earsend|4|?|?||Animate and send your ear to spy for you", "Earth Glide|4|?|?||Allow a target to swim through stone, dirt, and other earth.", "Elemental Body IY|4|?|?||Turns you into a Small elemental.", "Elemental Mastery|4|?|?||Gain mastery over your elemental essence, granting bonus movement and attack.", "Emergency Force Sphere|4|?|?||Create a quick hemispherical wall of force to protect you from falling debris.", "Enchantment Foil|4|?|?||Trick opponents who try to cast enchantments on you.", "Energy Hack|4|?|?||Change the energy of your spells to match an energy you were attacked with.", "Enervation|4|N|n||Subject gains 1d4 negative levels.", "Enlarge Person, Mass|4|?|?||1 humanoid creature/level doubles in size.", "Enticing Adulation|4|?|?||Force a creature to protect and care for you.", "Eyes of the Void|4|?|?||See 60 ft. in darkness, including magical darkness.", "Fair is Foul|4|?|?||Curse someone with a disfiguring or painful mutation.", "False Life, Greater|4|?|?||Gain 2d10 temporary hp + 1/level.", "Familiar Melding|4|?|?||Possess your familiar.", "Fear|4|N|r||Subjects within cone flee for 1 round/level.", "Fey Form I|4|?|?||Assume the form of a Small or Medium fey creature", "Legal only for tiefling PCs Fiendish Wrath|4|?|?||Targets gain a moral bonus to Strength, Constitution, and Will, as well as the rend ability with claws or unarmed strikes", "Film of Filth|4|?|?||Cause the target’s flesh to exude a layer of putrescent slime with a horrible stench.", "Fire Shield|4|V|r|F|Creatures attacking you take fire damage; you're protected from heat or cold.", "Fire Trap|4|A|n|F|Opened object deals 1d4 + 1/level damage.", "Firefall|4|?|?||Causes fire to burst up, dealing 2d6 fire damage.", "Firewalker's Meditation|4|?|?||resist fire 5, DR 5/magic, +4 to saves vs pain for 24 hours, discharge to temporarily increase to resist 30, DR 10, and immunity to pain", "Flaming Aura|4|?|?||Gain the fire subtype or enhance an already existing subtype.", "Flaming Sphere, Greater|4|?|?||Rolling ball of fire deals 6d6 fire damage and ignites targets.", "Fleeting Memory|4|?|?||Create a gap in the target’s memory.", "Flesh Puppet|4|?|?||Control a zombie in human guise.", "Fleshworm Infestation|4|?|?||Worms deal hp and Dex damage.", "Fool's Teleport|4|?|?||Become invisible, but appear as if you used teleportation magic to escape.", "Forgetful Slumber|4|?|?||As deeper slumber, but only on one creature. This also causes them to lose some memories.", "Freedom's Toast|4|?|?||Teleport the target a short distance while freeing them from restraints.", "Frigid Souls|4|?|?||Disrupt and dispel spells that protect against cold", "Frosty Aura|4|?|?||Gain the cold subtype or enhance an already existing subtype.", "Geas, Lesser|4|E|o|L|Commands subject of 7 HD or less.", "Geb's Hammer|4|?|?||Draw the remains of nearby destroyed undead, throwing them as a single mass of flesh at your enemy.", "Geomessage|4|?|?||Leave a message hidden on a surface", "Ghost Wolf|4|?|?||Summon a wolf mount made of black smoke which emanates fear.", "Globe of Invulnerability, Lesser|4|A|r||Stops 1st- through 3rd-level spell effects.", "Gravel Vortex|4|?|?||Create a hail of tiny pieces of rock and dust.", "Hallucinatory Terrain|4|I|p1200|L|Makes one type of terrain appear like another (field as forest, or the like).", "Harvest Knowledge|4|?|?||Sift through a creatures memories and make Knowledge checks with their modifier", "Hellmouth Lash|4|?|?||Transform your tongue into a whip made out of energy.", "Hollow Heroism|4|?|?||Provide a heroism effect that you can reverse at any time", "Homeward Bound|4|?|?||Return a creature to its home plane", "Horrific Doubles|4|?|?||Call forth disturbing mirror images", "Hunger for Flesh|4|?|?||Give a creature a bite attack and a hunger for its own kind's flesh.", "3.5 MaterialHurricane Blast|4|?|?||Create a severe blast of air bursting out from you.", "Hypercognition|4|?|?||Rapidly recall everything you know about a subject.", "Hypnotism, Greater|4|?|?||As hypnotism affecting more creatures and involving more requests", "Ice Storm|4|V|r||Hail deals 5d6 damage in cylinder 40 ft. across.", "Ignoble Form|4|?|?||Transform the target into a half-elf form.", "Illusion of Treachery|4|?|?||Make it seem like another is responsible for your attacks.", "Illusory Wall|4|I|n||Wall, floor, or ceiling looks real, but anything can pass through.", "Imbue with Flight|4|?|?||Grant creatures the ability to fly at your command.", "Infernal Healing, Greater|4|?|?||As infernal healing, except using fast healing 4.", "Infuse Decay|4|?|?||Imbue a corporeal undead's natural attacks with dangerous spells", "Infuse Effigy|4|?|?||Infuse an effigy with a powerful curse.", "Inhibiting Patterns|4|?|?||Create illusory pillars that block movement", "Innocuous Shape|4|?|?||Creatures actions are seen as innocent", "Insect Spies|4|?|?||Use magic beetles as spies.", "Instant Fake|4|?|?||Provide a short-term replica of an object.", "Inveigle Person|4|?|?||Humanoid becomes friendly to all other creatures.", "Invisibility, Greater|4|I|r||As invisibility, but subject can attack and stay invisible.", "Irregular Size|4|?|?||Creature's limb shrivels", "Liquefy|4|?|?||Transmute an object into a liquid version of itself.", "Locate Creature|4|D|t||Indicates direction to known creature.", "Lost Passage|4|?|?||Enchant an area to confuse those who travel within it.", "Mad Sultan's Melody|4|?|?||Bizarre cacohony fascinates eldritch creatures.", "Magic Aura, Greater|4|?|?||As magic aura, but also affects creatures and allows more options.", "Magic Circle Against Technology|4|?|?||Protects those in an area with protection from technology, and other effects that suppress or resist technology.", "Magic Siege Engine, Greater|4|?|?||Siege engine gains +1 on targeting and damage rolls for every four caster levels.", "Majestic Image|4|?|?||As enter image, but also gain bonuses on social skills while in the image.", "Make Whole, Greater|4|?|?||As make whole, but repairs 1d6+1/level damage to a max of 10d6+10.", "Malfunction|4|?|?||Construct behaves oddly for 1 round/level.", "Malicious Spite|4|?|?||Target is compelled to plot against another.", "Martial Telekinesis|4|?|?||As the combat maneuver version of telekinesis, with some additional changes", "Masochistic Shadow|4|?|?||Animate a target’s shadow, making it hunger for it’s owner’s life energy.", "Master's Escape|4|?|?||Create a link between you and a summoned creature, allowing you to switch places.", "Medusa's Bane|4|?|?||Become immune to gaze attacks and reflect them back on the creature using it", "Meticulous Match|4|?|?||Determine if two things are identical.", "Miasmatic Form|4|?|?||As gaseous form, except the form is dangerous to creatures who touch it.", "Mindscape Door|4|?|?||Create a portal allowing entry to and exit from a mindscape.", "Mindwipe|4|?|?||Erase a portion of the target’s mind and experiences, inflicting negative levels.", "Minor Creation|4|C|h|L|Creates one cloth or wood object.", "Minor Phantom Object|4|?|?||As minor creation, except the object created is a semi-real illusion.", "Mirror Transport|4|?|?||Mirror becomes a multiple-use dimension door.", "Mischievous Shadow|4|?|?||Curse a creature's shadow to disrupt their actions", "Mnemonic Enhancer|4|T|n|L|Prepare extra spells or retain one just cast.", "Mnemonic Siphon|4|?|?||Steal the spells of a creature carrying the affected object", "Monstrous Physique IIY|4|?|?||Take the form and some of the powers of a Tiny or Large monstrous humanoid.", "Moonstruck|4|?|?||Subject is enraged and confused.", "Mydriatic Spontaneity|4|?|?||Cause splitting headaches and an oversensitivity to light and darkness.", "Mythic Severance|4|?|?||Restrict target’s access to its mythic power.", "Only availaable to Nagaji and characters who have the naga bloodline Naga Shape IR|4|?|?||Take the form of a Large naga", "Named Bullet|4|?|?||Imbues ammunition with accuracy against a specific creature type.", "Nixie's Lure|4|?|?||Create a seductive song to lure all nearby creatures.", "Nondetection, Communal|4|?|?||As nondetection, but you may divide the duration among creatures touched.", "Object Possession, Lesser|4|?|?||Project your soul into an object, animating it.", "Obsidian Flow|4|?|?||Converts the surface of the ground into molten glass.", "Overwhelming Grief|4|?|?||Grieving target can take no actions and is denied its Dex bonus.", "Phantasmal Asphixiation|4|?|?||Trick a creature into thinking it can't breathe.", "Phantasmal Killer|4|I|n||Fearsome illusion kills subject or deals 3d6 damage.", "Phantom Chariot|4|?|?||Conjures a quasi-real heavy chariot pulled by four horses.", "Phantom Steed, Communal|4|?|?||As phantom steed, but you may divide the duration among creatures touched.", "Poisonous Cloud|4|?|?||As per fog cloud, but lethally poisonous", "Positive Pulse, Greater|4|?|?||A large pulse of positive enrgy damages undead and bolsters living creatures", "Probe History|4|?|?||Find answers to Knowledge questions by looking at alternate realities.", "Project Weakness|4|?|?||Curse the target with the weaknesses of your vampirism.", "Protection from Energy, Communal|4|?|?||As protection from energy, but you may divide the duration among creatures touched.", "Purge Spirit|4|?|?||Deal 1d6 points of damage per level to one haunt or spirit creature and stagger it.", "Pyrotechnic Eruption|4|?|?||Erupting flames burn a target several times.", "Questing Stone|4|?|?||Turn an ioun stone into a scrying sensor.", "Quieting Weapons|4|?|?||Weapons make no sound and quiet their victims.", "Rags to Riches|4|?|?||Enhance an object to function as if it were masterwork quality.", "Rainbow Pattern|4|I|o||Lights fascinate 24 HD of creatures.", "Rebuke Technology|4|?|?||Render a piece of technology inert.", "Reduce Person, Mass|4|?|?||As reduce person, but affects 1 humanoid creature/level.", "Remove Curse|4|A|n||Frees object or person from curse.", "Renovation|4|?|?||(Downtime Spell) Rearrange and resize rooms in a building you constructed.", "Resilient Reservoir|4|?|?||Store hit point damage as magical energy.", "Resilient Sphere|4|V|m||Force globe protects but traps one subject.", "Revenant Armor|4|?|?||Grant a suit of armor limited animation when its wearer falls unconcious or is killed", "Ride The Waves|4|?|?||Target can breathe water and swim.", "Riding Possession|4|?|?||As possession, but you observe instead of control the subject.", "Rigor Mortis|4|?|?||Painfully swell a targets joints.", "Rising Water|4|?|?||Create a pillar of water", "River of Wind|4|?|?||A stream of wind causes nonlethal damage and can knock down or push creatures.", "Rope Tornado|4|?|?||Tornado-force winds knock creatures prone or from the air", "Sacrifice|4|?|?||Make a sacrifice to aid conjuring and commanding a planar creature.", "Sadomasochism|4|?|?||Take more damage from opponents, but force them to become demoralized.", "Sand Table|4|?|?||Create a model of the surrounding land and the creatures nearby", "Scorching Ash Form|4|?|?||Change someone into a gaseous cloud of hot ash and smoke, dealing fire damage to those they move through.", "Scrying|4|D|m|L|Spies on subject from a distance.", "Secure Shelter|4|C|h|L|Creates sturdy cottage.", "Seeds of Influence|4|?|?||Weaken a creature to your divinations and enchantments", "Shadow Barbs|4|?|?||Create a vicious spiked chain enshrouded in shadow.", "Shadow Conjuration|4|I|r||Mimics conjuration below 4th level, but only 20% real.", "Shadow Dragon Aspect|4|?|?||Shroud yourself in a shadowy illusion of a dragon.", "Shadow Invasion|4|?|?||Create an area of darkness that strengthens shadow spells and attracts kytons", "Shadow Jaunt|4|?|?||Teleport, leaving an illusion of yourself in the space you left", "Shadow Projection|4|?|?||Temporarily become a shadow.", "Shadow Step|4|?|?||Teleport from one shadow to another.", "Shadowform|4|?|?||Replace the target’s body with mystic shadow material, causing them to take less damage from attacks.", "Shadowy Haven|4|?|?||Create a hidden room to conceal you on the edge of the Plane of Shadow.", "Share Senses|4|?|?||Perceive the world around your familiar.", "Share Shape|4|?|?||As beast shape II, but you may only assume the form of an animal type identical to your companion or familiar.", "3.5 MaterialShield Speech, Greater|4|?|?||Communicate freely with a group of nearby people without anyone else being able to overhear.", "Shocking Image|4|?|?||As mirror image, but the duplicates emit electrical damage when destroyed.", "Shout|4|V|n||Deafens all within cone and deals 5d6 sonic damage.", "Simulacrum, Lesser|4|?|?||Creates a double of a weak creature.", "Skeleton Crew|4|?|?||Turn corpses into obedient skeleton crew.", "Solid Fog|4|C|m||Blocks vision and slows movement.", "Soul Vault|4|?|?||Protect your soul from harmful effects after death", "Speak with Plane|4|?|?||Speak with a manifestation of a sentient plane", "Spellcrash, Lesser|4|?|?||Target loses a 3rd-level prepared spell or spell slot.", "Stone Shape|4|?|?||Sculpts stone into any shape.", "Stoneskin|4|A|t||Grants DR 10/adamantine.", "A player casting this spell must provide a legal copy of the source in which the summoned creature appears for GM review or the spell fails Summon Accuser|4|?|?||Summon an accuser devil to do your bidding.", "Summon Cacodaemon, Greater|4|?|?||Summon 1d4+1 cacodaemons.", "Summon Genie, Lesser|4|?|?||As summon monster I, except you can summon one janni.", "Summon Monster 4|4|C|r|L|Summons extraplanar creature to fight for you.", "Summon Ship|4|?|?||Conjure a ship out of extradimensional materials", "Suppress Primal Magic|4|?|?||Suppress the effects of primal magic.", "Suppressing Stone|4|?|?||Infuse arcane power into an ioun stone to protect you from mental attacks.", "Sword to Snake|4|?|?||Change an object into a venemous creature.", "Symbol of Laughter|4|?|?||Triggered rune makes nearby creatures lose actions for 1 round/level.", "Symbol of Revelation|4|?|?||Triggered symbol reveals illusions.", "Symbol of Slowing|4|?|?||Triggered rune slows creatures.", "Tail Current|4|?|?||Create a current in water to enhance or impede swimming", "Tailwind|4|?|?||Create a current of wind to enhance or impede flight", "Telekinetic Charge|4|?|?||Launches an ally through the air.", "Telekinetic Maneuver|4|?|?||Perform a telekinetic combat maneuver.", "Temporary Graft|4|?|?||Graft a body part onto yourself to gain one of several benefits", "Terrible Remorse|4|?|?||Creature is compelled to harm itself.", "Thanatotic Fury|4|?|?||Stifle other creatures’ abilities to cast divine spells by attacking them.", "Thaumaturgic Circle|4|?|?||As magic circle, but affecting a non-alignment subtype or outsider race.", "Tongues, Communal|4|?|?||As tongues, but you may divide the duration among creatures touched.", "Touch of Slime|4|?|?||Touch infests a target with green slime.", "Tough Crowd|4|?|?||Grant allies a +4 bonus to resist enchantments/illusions.", "Trade Items|4|?|?||Swap a focus object with a target object.", "Triggered Suggestion|4|?|?||As suggestion, but triggered only and target doesn’t remember the suggestion.", "True Form|4|?|?||Removes polymorph effects.", "Umbral Infusion|4|?|?||Infuse mindless undead with power from the Shadow Plane, increasing their power.", "Unbearable Brightness|4|?|?||Your glowing body dazzles or blinds others.", "Undeath Inversion|4|?|?||Alter an undead creature’s energy affinity so it takes damage from negative energy and heals from positive energy.", "Unholy Ward|4|?|?||Resist damage from holy sources, smite evil, etc.", "Vermin Shape IY|4|?|?||Take the form and some of the powers of a Small or Medium vermin.", "Vicarious View|4|?|?||Plant a scrying sensor that you can use to spy on a creature, object, or location.", "Vitriolic Mist|4|?|?||As fire shield, except acid damage.", "Volcanic Storm|4|?|?||Hot rocks deal 5d6 damage.", "Vomit Twin|4|?|?||Vomit an ooze copy of yourself that you can swap places with.", "Wall of Blindness/Deafness|4|?|?||Translucent wall blinds or deafens creatures that pass through it.", "Wall of Bone|4|?|?||Create a wall of bones that damages and grapples adjacent creatures", "Wall of Brine|4|?|?||Conjure a 5-foot-thick wall of seawater with a powerful current.", "Wall of Fire|4|V|o|F|Deals 2d4 fire damage out to 10 ft. and 1d4 out to 20 ft. Passing through wall deals 2d6 damage +1/level.", "Wall of Ice|4|V|m||Ice plane creates wall or hemisphere creates dome.", "Wandering Star Motes|4|?|?||Outlines subject and produces light as a sunrod.", "Ward Shield|4|?|?||Enchant a shield with Spell Resistance and a bonus against area-effect spells.", "Warp Metal|4|?|?||Warp wood, affecting metal objects", "Watchful Animal|4|?|?||Place a scrying sensor on your animal companion or familiar.", "3.5 MaterialWater Shield|4|?|?||Surround yourself with a protective spout of acid.", "Wave Form|4|?|?||Briefly turn into a huge wave that knocks down everything in your path", "Web Cloud|4|?|?||Create a cloud-like spread of flame-resistant webbing."].map(function (l) {
+    var p = l.split("|");
+    return { id: "b-" + p[0].toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""), name: p[0], lvl: +p[1], sch: p[2], dur: p[3], fire: /F/.test(p[4] || ""), slow: /L/.test(p[4] || ""), desc: p.slice(5).join("|") };
+  });
+  function ordinal(n) { return n + (n === 1 ? "st" : n === 2 ? "nd" : n === 3 ? "rd" : "th"); }
+  function bankDur(b) {
+    var d = b.dur, m;
+    if (d === "?") { var ud = DURS[ui.customDur] || DURS.none; return { per: ud.per || 0, text: ud.label }; }
+    if (d === "n") return { per: 0, text: "Instantaneous or permanent" };
+    if (d === "o") return { per: -1, text: "Open-ended, end it from the slot" };
+    if (d === "r") return { per: 1, text: "1 round per level" };
+    if (d === "m") return { per: 10, text: "1 min per level" };
+    if (d === "t") return { per: 100, text: "10 min per level" };
+    if (d === "h") return { per: 600, text: "1 hour per level" };
+    if ((m = /^p(\d+)$/.exec(d))) { var n = +m[1]; return { per: n, text: n % 600 === 0 ? (n / 600) + " hours per level" : (n / 10) + " min per level" }; }
+    if ((m = /^f(\d+)$/.exec(d))) return { per: 1, fixed: +m[1], text: m[1] + (m[1] === "1" ? " round" : " rounds") };
+    return { per: 0, text: "" };
+  }
+  function bankFind(name, lvl) {
+    var q = String(name || "").trim().toLowerCase();
+    if (!q) return null;
+    return BANK.filter(function (b) { return b.name.toLowerCase() === q && (!lvl || b.lvl === lvl); })[0] || null;
+  }
+  function bankSpell(b, extra) {
+    var bd = bankDur(b), unk = b.dur === "?";
+    var sp = { name: b.name, lvl: b.lvl, per: bd.per, fixed: bd.fixed, dtext: bd.text, fire: unk ? ui.unkFire : b.fire, sch: b.sch, slow: b.slow, unk: unk,
+      note: b.desc };
+    for (var k in extra) sp[k] = extra[k];
+    return sp;
+  }
+
+  var state = clone(DEFAULT);
+  var ui = {
+    tray: false, qOd: false, qBlood: true, trayMsg: "", dayArmed: false, blood: false, bmChoice: "det", bmGp: 100,
+    sel: "fireball", od: false, d8: false, wa: false, mode: "std", element: "fire",
+    customName: "", customLvl: 1, customDur: "none", unkFire: false
+  };
+  var readOnly = false, roLabel = "";
+  var saving = false, dirty = false, saveTimer = null, dayTimer = null;
+
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  function avg(n, f, flat) { return Math.round((n * (f + 1) / 2 + flat) * 10) / 10; }
+
+  function normalize(d) {
+    var s = Object.assign(clone(DEFAULT), d || {});
+    ["active", "pending", "log"].forEach(function (k) { if (!Array.isArray(s[k])) s[k] = []; });
+    s.burnout = Math.max(0, Math.floor(+s.burnout || 0));
+    s.overdrive = Math.min(10, Math.max(0, Math.floor(+s.overdrive || 0)));
+    s.mythic = Math.min(7, Math.max(0, Math.floor(+s.mythic || 0)));
+    s.vials = Math.max(0, Math.floor(+s.vials || 0));
+    s.strDmg = Math.min(16, Math.max(0, Math.floor(+s.strDmg || 0)));
+    s.round = Math.max(1, Math.floor(+s.round || 1));
+    if (!EXP.some(function (e) { return e.id === s.exp; }) && !BANK.some(function (b) { return b.id === s.exp && b.lvl <= 3; })) s.exp = "haste";
+    s.log = s.log.slice(0, 40);
+    return s;
+  }
+
+  /* ---------- spell data ---------- */
+  function expSpell() {
+    var e = EXP.filter(function (x) { return x.id === state.exp; })[0];
+    if (!e) {
+      var bb = BANK.filter(function (x) { return x.id === state.exp; })[0];
+      if (bb) return bankSpell(bb, { id: "exp-" + bb.id, exp: true, });
+      e = EXP[0];
+    }
+    return { id: "exp-" + e.id, name: e.name, lvl: e.lvl, per: e.per, note: e.note, exp: true };
+  }
+  function customSpell() {
+    var b = bankFind(ui.customName, ui.customLvl);
+    if (b) return bankSpell(b, { id: "custom", aid: "custom:" + b.id, custom: true });
+    var d = DURS[ui.customDur] || DURS.none;
+    return { id: "custom", name: ui.customName.trim() || "Unknown spell", lvl: ui.customLvl, per: d.per || 0, custom: true,
+      note: "A wizard spell she does not know. Track its details yourself." };
+  }
+  function allSpells() { return SPELLS.concat([expSpell(), customSpell()]); }
+  function getSpell(id) { return allSpells().filter(function (s) { return s.id === id; })[0]; }
+  function baseGain(sp) { return sp.lvl >= 1 ? Math.max(0, sp.lvl - 2) + (sp.exp ? 1 : 0) : 0; }
+  function isActive(id) { return state.active.some(function (a) { return a.id === id; }) || (id === "blood-money" && !!state.blood); }
+
+  function fmtRounds(r) {
+    if (r >= 600) return (Math.round(r / 60) / 10) + " h";
+    if (r >= 20) return Math.ceil(r / 10) + " min";
+    return r + (r === 1 ? " round" : " rounds");
+  }
+  function fmtDur(r) {
+    if (r >= 600) return r + " rounds (" + (Math.round(r / 60) / 10) + " h)";
+    if (r >= 10) return r + " rounds (" + (r / 10) + " min)";
+    return r + (r === 1 ? " round" : " rounds");
+  }
+
+  /* ---------- cast math ---------- */
+  function compute(sp) {
+    var s = state, lvl = sp.lvl;
+    var wa = ui.wa || !!sp.custom;
+    var fire = !!sp.fire || (sp.calc === "det" && ui.element === "fire");
+    var cl = Math.max(1, BASE_CL - s.burnout + (s.moon ? 2 : 0) + (wa ? 2 : 0) + (fire ? 2 : 0));
+    var dc = 10 + lvl + CHA - Math.floor(s.burnout / 2) + (s.moon ? 1 : 0);
+    var gain = baseGain(sp);
+    var rawCl = BASE_CL - s.burnout + (s.moon ? 2 : 0) + (wa ? 2 : 0) + (fire ? 2 : 0);
+    var odUseful = gain > 0;
+    var od = ui.od && s.overdrive > 0 && odUseful;
+    var d8 = !!sp.art && !!ui.d8 && (s.overdrive - (od ? 1 : 0)) >= 1;
+    var burn = od ? Math.max(0, gain - 4) : gain;
+    var rows = [], problems = [];
+    var bmStr = 0, bmName = "";
+    if (rawCl <= 0 && lvl >= 1) problems.push("Caster level is 0, so she can only cast orisons.");
+    var fireNote = fire ? " (fire +2 from Elemental Bond)" : "";
+
+    rows.push(["Caster level", cl + fireNote + (wa ? ", Wild Arcana +2" : "") + (s.moon ? ", moonlight +2" : "")]);
+    if (sp.save || (sp.art && ui.mode === "burst")) rows.push(["Save DC", (sp.save || "Reflex") + " " + dc]);
+
+    switch (sp.calc) {
+      case "art": {
+        var n = Math.max(0, 6 - Math.floor(s.burnout / 2)), f = d8 ? 8 : 6;
+        rows.push(["Damage", n + "d" + f + "+6 arcane, avg " + avg(n, f, 6) + (d8 ? " (artillery overdrive d8)" : "")]);
+        if (ui.mode === "std") rows.push(["Delivery", "Ranged touch +14, 30 ft, standard action"]);
+        if (ui.mode === "sniper") rows.push(["Delivery", "Ranged touch +14, 120 ft (Artillery Sniper)"]);
+        if (ui.mode === "burst") rows.push(["Delivery", "15 ft burst around her, Reflex half. She takes no damage (Artillery Burst)"]);
+        break;
+      }
+      case "fb": {
+        var nf = Math.min(10, cl);
+        rows.push(["Damage", nf + "d6 fire, avg " + avg(nf, 6, 0) + ", 20 ft burst, Reflex half"]);
+        break;
+      }
+      case "det": {
+        var nd = Math.min(10, cl);
+        rows.push(["Damage", nd + "d8 " + ui.element + " in 15 ft, avg " + avg(nd, 8, 0) + "; half from 15 to 30 ft (max 10d8)"]);
+        rows.push(["Timing", "Goes off 1 round after casting. She takes half with no save; resist energy can cancel it"]);
+        if (s.blood) {
+          rows.push(["Material", "Blood Money is paying the 50 gp this round. No vials spent"]);
+        } else {
+          rows.push(["Material", "1 vial pair (50 gp). " + s.vials + " cast" + (s.vials === 1 ? "" : "s") + " in the haversack"]);
+          if (s.vials < 1) problems.push("No detonate vials left. Pay with Blood Money or buy more.");
+        }
+        break;
+      }
+      case "bm": {
+        var gp = ui.bmChoice === "det" ? 50 : ui.bmChoice === "cheap" ? 1 : Math.max(0, Math.floor(+ui.bmGp || 0));
+        bmName = ui.bmChoice === "det" ? "Detonate" : ui.bmChoice === "cheap" ? "a cheap component" : "a " + gp + " gp component";
+        bmStr = gp > 1 ? 1 + Math.floor(gp / 500) : 0;
+        rows.push(["Cost", "1d6 damage to her" + (bmStr ? " and " + bmStr + " Strength damage" : ", no Strength damage")]);
+        rows.push(["Effect", "Her blood becomes one material component of the next spell she casts this round (" + bmName + ", " + gp + " gp)"]);
+        rows.push(["Action", "Swift action. It does not end the round, and it can be paired with Wild Arcana (a standard action)"]);
+        if (s.blood) problems.push("Blood Money is already active this round.");
+        break;
+      }
+      case "mm": {
+        var mm = Math.min(5, 1 + Math.floor((cl - 1) / 2));
+        rows.push(["Damage", mm + " missiles, 1d4+1 force each, avg " + avg(mm, 4, mm) + ", no attack roll"]);
+        break;
+      }
+      case "sr": {
+        var rays = cl >= 11 ? 3 : cl >= 7 ? 2 : 1;
+        rows.push(["Damage", rays + " ray" + (rays > 1 ? "s" : "") + ", 4d6 fire each, avg " + avg(4 * rays, 6, 0) + " total, ranged touch +14"]);
+        break;
+      }
+      case "dm": {
+        rows.push(["Dispel check", "1d20 + " + Math.min(cl, 10) + ", rolled twice, take the higher (Eldritch Breach)"]);
+        break;
+      }
+      case "re": {
+        rows.push(["Resistance", (cl >= 11 ? 30 : cl >= 7 ? 20 : 10) + " to one energy type"]);
+        break;
+      }
+      case "dd": {
+        rows.push(["Range", (400 + 40 * cl) + " ft, her and up to 1 other creature"]);
+        break;
+      }
+    }
+    if (sp.sch && sp.sch !== "?") rows.push(["School", SCHOOLS[sp.sch] + (FOCUS[sp.sch] ? ", a focus school" : ", outside her focus schools, confirm with the GM")]);
+    if (sp.unk) rows.push(["Check", "School, duration and casting time are not recorded. Read the spell." + (sp.custom ? " Wild Arcana needs a casting time of 1 standard action or less." : "")]);
+    if (sp.custom && sp.slow) problems.push("Casting time is longer than 1 standard action, so Wild Arcana cannot cast it.");
+    if (sp.note && !sp.calc) rows.push(["Effect", sp.note]);
+    else if (sp.note && (sp.calc === "re" || sp.calc === "dd")) { /* calc covers it */ }
+
+    var dur = 0;
+    if (sp.per) {
+      dur = sp.fixed ? sp.fixed : sp.per < 0 ? -1 : cl * sp.per;
+      rows.push(["Duration", sp.dtext ? (sp.dtext + (dur > 0 ? " = " + fmtDur(dur) : "") + ", uses a concentration slot") : (sp.fixed ? "1 round, then instantaneous" : dur < 0 ? "While she concentrates" : fmtDur(dur)) + ", uses a concentration slot until it goes off"]);
+    }
+
+    var odCost = od ? 1 : 0, mythCost = wa ? 1 : 0;
+    if (ui.wa && s.mythic < 1) problems.push("No mythic power left for Wild Arcana.");
+    if (sp.custom && s.mythic < 1) problems.push("No mythic power left for Wild Arcana.");
+    if (s.mythic < mythCost) { /* covered above */ }
+
+    return { cl: cl, dc: dc, gain: gain, burn: burn, od: od, d8: d8, blood: !!(sp.calc === "det" && s.blood), bmStr: bmStr, bmName: bmName, odCost: (od ? 1 : 0) + (d8 ? 1 : 0), wa: wa, odUseful: odUseful, dur: dur,
+      rows: rows, problems: problems, fire: fire };
+  }
+
+  /* ---------- state changes ---------- */
+  function log(text) {
+    state.log.unshift({ r: state.round, t: text });
+    state.log = state.log.slice(0, 40);
+  }
+  function mutate(fn) {
+    if (readOnly) return;
+    fn(state);
+    render();
+    scheduleSave();
+  }
+
+  function castBlood(c) {
+    mutate(function (s) {
+      s.strDmg = Math.min(16, s.strDmg + c.bmStr);
+      s.blood = { name: c.bmName };
+      log("Cast Blood Money for " + c.bmName + ": 1d6 damage" + (c.bmStr ? ", Strength damage +" + c.bmStr : ", no Strength damage"));
+    });
+    ui.od = false; ui.d8 = false; ui.wa = false;
+    render();
+  }
+
+  function doCast() {
+    var sp = getSpell(ui.sel);
+    if (!sp) return;
+    var c = compute(sp);
+    if (c.problems.length) return;
+    if (sp.calc === "bm") { castBlood(c); return; }
+    var nm = sp.custom ? sp.name : sp.name;
+    mutate(function (s) {
+      if (c.odCost) s.overdrive = Math.max(0, s.overdrive - c.odCost);
+      if (c.wa) s.mythic = Math.max(0, s.mythic - 1);
+      if (sp.calc === "det" && !c.blood) s.vials = Math.max(0, s.vials - 1);
+      if (c.burn > 0) { s.burnout += c.burn; s.gained = true; }
+      var bits = [];
+      bits.push(c.burn > 0 ? "+" + c.burn + " burnout" : "no burnout");
+      if (c.odCost) bits.push("overdrive −" + c.odCost);
+      if (c.wa) bits.push("mythic −1");
+      if (c.blood) bits.push("paid with Blood Money");
+      else if (sp.calc === "det") bits.push("vials −1");
+      bits.push("CL " + c.cl);
+      if (sp.art) bits.push(ui.mode === "burst" ? "burst" : ui.mode === "sniper" ? "sniper" : "touch");
+      if (sp.calc === "det") bits.push(ui.element);
+
+      if (c.dur !== 0) {
+        var aid = sp.aid || sp.id;
+        s.active = s.active.filter(function (a) { return a.id !== aid; });
+        if (s.active.length >= 2) {
+          var gone = s.active.shift();
+          log(gone.name + " ended: a third spell needs a slot");
+        }
+        s.active.push({ id: aid, name: nm, cast: s.round, end: c.dur > 0 ? s.round + c.dur : null, total: c.dur > 0 ? c.dur : 0 });
+      }
+      if (sp.calc === "det") {
+        s.pending.push({ id: "p" + Date.now(), name: "Detonate (" + ui.element + ")", fire: s.round + 1, text: Math.min(10, c.cl) + "d8, Reflex DC " + c.dc });
+      }
+      log("Cast " + nm + ": " + bits.join(", "));
+      passRound(s, c.burn > 0);
+    });
+    ui.od = false;
+    ui.d8 = false;
+    ui.wa = false;
+    ui.blood = false;
+    render();
+  }
+
+  function passRound(s, gainedBurn) {
+    s.round += 1;
+    if (!gainedBurn && s.burnout > 0) {
+      s.burnout -= 1;
+      log("Recovered 1 burnout: none gained");
+    }
+    s.gained = false;
+    s.blood = null;
+    s.active = s.active.filter(function (a) {
+      if (a.end !== null && a.end <= s.round) { log(a.name + " expired"); return false; }
+      return true;
+    });
+  }
+
+  function trayCast(value) {
+    var parts = value.split("|");
+    var sp = getSpell(parts[0]);
+    if (!sp) return;
+    ui.sel = sp.id;
+    ui.od = ui.qOd; ui.d8 = false; ui.wa = false;
+    if (sp.calc === "det" && parts[1]) ui.element = parts[1];
+    if (sp.art && parts[1]) ui.mode = parts[1];
+    var gp = sp.cost || 0;
+    var pay = gp > 1 && ui.qBlood && !state.blood;
+    var prevBlood = state.blood;
+    if (pay) state.blood = { name: sp.name };
+    var c = compute(sp);
+    if (pay) state.blood = prevBlood;
+    if (c.problems.length) {
+      ui.trayMsg = c.problems.join(" ");
+      render();
+      return;
+    }
+    ui.trayMsg = "";
+    if (pay) {
+      castBlood({ bmStr: 1 + Math.floor(gp / 500), bmName: sp.name });
+      ui.od = ui.qOd;
+    }
+    doCast();
+    ui.tray = false; ui.qOd = false;
+    render();
+  }
+
+  function resetRound() {
+    mutate(function (s) {
+      s.round = 1;
+      s.gained = false;
+      s.active = []; s.pending = [];
+      log("Round counter reset to 1, concentration cleared");
+    });
+  }
+
+  function newDay() {
+    mutate(function (s) {
+      s.round = 1; s.gained = false; s.blood = null;
+      s.burnout = 0; s.overdrive = 10; s.mythic = 7;
+      s.lightUsed = false; s.active = []; s.pending = [];
+      var healed = s.strDmg > 0;
+      if (healed) s.strDmg -= 1;
+      log("New day: overdrive 10, mythic power 7, burnout 0" + (healed ? ", Strength damage −1" : ""));
+    });
+    ui.tray = false;
+    render();
+  }
+
+  function noCast() {
+    mutate(function (s) {
+      var before = s.burnout;
+      s.round += 1;
+      if (before > 0) { s.burnout -= 1; log("No cast: burnout " + before + " → " + s.burnout); }
+      else log("No cast: no burnout to recover");
+      s.gained = false;
+      s.blood = null;
+      s.active = s.active.filter(function (a) {
+        if (a.end !== null && a.end <= s.round) { log(a.name + " expired"); return false; }
+        return true;
+      });
+    });
+  }
+
+  /* ---------- rendering ---------- */
+  function pips(kind, val, max) {
+    var h = "";
+    for (var i = 1; i <= max; i++) {
+      h += '<button class="pip ' + (kind === "overdrive" ? "od" : "my") + (i <= val ? " on" : "") +
+        '" data-act="setres" data-k="' + kind + '" data-n="' + i + '" aria-label="Set ' + kind + ' to ' + i + '"></button>';
+    }
+    return '<div class="pips">' + h + "</div>";
+  }
+
+  function renderBurn() {
+    var b = state.burnout, h = "";
+    for (var i = 1; i <= 12; i++) {
+      h += '<button class="cell' + (i <= b ? " on" : "") + '" data-act="setburn" data-n="' + i + '" aria-label="Set burnout to ' + i + '">' + i + "</button>";
+    }
+    var t = "";
+    for (var j = 1; j <= 6; j++) t += "<span" + (b >= j * 2 ? ' class="on"' : "") + ">−" + j + " DC</span>";
+    var dcPen = Math.floor(b / 2);
+    $("pBurn").innerHTML =
+      '<div class="ph"><h2>Eldritch burnout</h2><span class="hint">The cost of casting without spell slots</span></div>' +
+      '<div class="big"><div class="bignum num">' + b + '</div><div class="effects">' +
+      '<span class="chip' + (b ? " hot" : "") + '">CL ' + (BASE_CL - b) + "</span>" +
+      '<span class="chip' + (dcPen ? " hot" : "") + '">DC −' + dcPen + "</span>" +
+      '<span class="chip' + (dcPen ? " hot" : "") + '">Artillery ' + Math.max(0, 6 - dcPen) + "d6</span>" +
+      "</div></div>" +
+      '<div class="track">' + h + '</div><div class="tiers">' + t + "</div>" +
+      (b > 12 ? '<div class="over">Past the track: ' + b + "</div>" : "") +
+      '<div class="ctl"><button class="btn icon" data-act="burn" data-d="-1" aria-label="Burnout minus one">−</button>' +
+      '<button class="btn icon" data-act="burn" data-d="1" aria-label="Burnout plus one">+</button>' +
+      '<button class="btn" data-act="burn" data-d="clear">Clear</button></div>' +
+      '<div class="explain">' +
+      "<p><b>What it is.</b> Daerlieth has no spell slots. Burnout is the only limit on how much she casts, and it builds up as she does.</p>" +
+      "<p><b>When it goes up.</b> Each time she casts a spell of 1st level or higher. Press Cast spell in the top bar and choose a spell under its level, or cast one from the list. Either way the round advances. The + and − buttons are only for fixing a mistake.</p>" +
+      '<div class="costs">' +
+      '<span class="chip">Orisons: 0</span><span class="chip">1st and 2nd level: 0</span><span class="chip hot">3rd level: +1</span><span class="chip hot">4th level: +2</span><span class="chip hot">Experimental spell: +1 extra</span></div>' +
+      "<p>Arcane artillery is treated as a spell of half her level, so 4th level (+2). Haste as the experimental spell is 3rd level plus 1, so +2. Spending 1 overdrive on a cast ignores up to 4 burnout from it.</p>" +
+      "<p><b>When it goes down.</b> At the end of any round where she gained no burnout, she recovers 1. Press No cast to pass a round without casting. A cast that adds no burnout, such as an orison or a 1st or 2nd level spell, also lets her recover 1.</p>" +
+      "<p><b>What it does while it is up.</b> Each point lowers her caster level by 1, which shortens durations and cuts dice such as fireball's. Every 2 points also lower spell DCs by 1 and artillery damage by 1d6. The bar above marks each step.</p>" +
+      "</div>";
+  }
+
+  function renderOver() {
+    $("pOver").innerHTML =
+      '<div class="ph"><h2>Arcane overdrive</h2><span class="hint">Refills after 8 hours of sleep. Press New day</span></div>' +
+      '<div class="big"><div class="bignum num">' + state.overdrive + '<small>/10</small></div></div>' +
+      pips("overdrive", state.overdrive, 10) +
+      '<div class="ctl"><button class="btn icon" data-act="res" data-k="overdrive" data-d="-1" aria-label="Overdrive minus one">−</button>' +
+      '<button class="btn icon" data-act="res" data-k="overdrive" data-d="1" aria-label="Overdrive plus one">+</button></div>';
+  }
+
+  function renderMyth() {
+    $("pMyth").innerHTML =
+      '<div class="ph"><h2>Mythic power</h2><span class="hint">Wild Arcana costs 1</span></div>' +
+      '<div class="big"><div class="bignum num">' + state.mythic + '<small>/7</small></div></div>' +
+      pips("mythic", state.mythic, 7) +
+      '<div class="ctl"><button class="btn icon" data-act="res" data-k="mythic" data-d="-1" aria-label="Mythic power minus one">−</button>' +
+      '<button class="btn icon" data-act="res" data-k="mythic" data-d="1" aria-label="Mythic power plus one">+</button></div>';
+  }
+
+  function spellBtn(sp) {
+    var g = baseGain(sp);
+    var badge = sp.lvl === 0 ? "free" : g > 0 ? "+" + g : "0";
+    var cls = g > 0 ? "bg cost" : "bg";
+    return '<button class="spell" data-act="pick" data-id="' + sp.id + '" aria-pressed="' + (ui.sel === sp.id) + '">' +
+      '<span class="nm">' + (isActive(sp.id) ? '<span class="live" title="Active"></span>' : "") + esc(sp.name) + "</span>" +
+      '<span class="' + cls + '">' + badge + "</span></button>";
+  }
+
+  function renderSpells() {
+    var titles = ["Orisons · no burnout", "1st level", "2nd level", "3rd level", "4th level"];
+    var h = "";
+    for (var L = 0; L <= 4; L++) {
+      var items = SPELLS.filter(function (s) { return s.lvl === L; });
+      if (L === 4) items = items.filter(function (s) { return !s.art; }).concat(SPELLS.filter(function (s) { return s.art; }));
+      h += '<div class="group"><h3>' + titles[L] + '</h3><div class="spells">' + items.map(spellBtn).join("") + "</div></div>";
+    }
+    var expOpts = '<optgroup label="Common picks">' + EXP.map(function (e) { return '<option value="' + e.id + '"' + (e.id === state.exp ? " selected" : "") + ">" + e.name + " (" + ordinal(e.lvl) + ")</option>"; }).join("") + "</optgroup>";
+    var presetNames = EXP.map(function (e) { return e.name.toLowerCase(); });
+    for (var xl = 1; xl <= 3; xl++) {
+      expOpts += '<optgroup label="Spell bank, ' + ordinal(xl) + ' level">' + BANK.filter(function (b) { return b.lvl === xl && presetNames.indexOf(b.name.toLowerCase()) < 0; }).map(function (b) {
+        return '<option value="' + b.id + '"' + (b.id === state.exp ? " selected" : "") + ">" + esc(b.name) + (SCHOOLS[b.sch] ? " (" + SCHOOLS[b.sch] + ")" : "") + "</option>";
+      }).join("") + "</optgroup>";
+    }
+    h += '<div class="group"><h3>Experimental spell · +1 burnout</h3>' +
+      '<div class="fields"><label class="field">Today\'s pick<select id="expSel">' + expOpts + "</select></label></div>" +
+      '<div class="spells">' + spellBtn(expSpell()) + "</div></div>";
+    h += '<div class="group"><h3>Wild Arcana · any spell on her list</h3><div class="spells">' + spellBtn(customSpell()) + "</div></div>";
+    $("pSpells").innerHTML =
+      '<div class="ph"><h2>Spells</h2><span class="hint">Badge shows burnout before overdrive</span></div>' + h;
+  }
+
+  function renderCast() {
+    var sp = getSpell(ui.sel) || getSpell("fireball");
+    var c = compute(sp);
+    var opts = "";
+
+    if (sp.art) {
+      opts += '<div class="fields"><label class="field">Secret<select id="modeSel">' +
+        '<option value="std"' + (ui.mode === "std" ? " selected" : "") + ">Standard touch, 30 ft</option>" +
+        '<option value="sniper"' + (ui.mode === "sniper" ? " selected" : "") + ">Sniper, 120 ft</option>" +
+        '<option value="burst"' + (ui.mode === "burst" ? " selected" : "") + ">Burst, 15 ft</option></select></label></div>";
+    }
+    if (sp.calc === "det") {
+      opts += '<div class="fields"><label class="field">Energy<select id="elSel">' +
+        ["acid", "cold", "electricity", "fire"].map(function (e) { return '<option value="' + e + '"' + (ui.element === e ? " selected" : "") + ">" + e + (e === "fire" ? " (+2 CL)" : "") + "</option>"; }).join("") +
+        "</select></label></div>";
+    }
+    if (sp.calc === "bm") {
+      opts += '<div class="fields"><label class="field">Component to create<select id="bmSel">' +
+        [["det", "Detonate vials, 50 gp"], ["other", "Another spell, enter its value"], ["cheap", "Cheap component, 1 gp or less"]].map(function (o) { return '<option value="' + o[0] + '"' + (ui.bmChoice === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
+        "</select></label>" +
+        (ui.bmChoice === "other" ? '<label class="field">Component value, gp<input type="text" inputmode="numeric" id="bmGp" value="' + esc(ui.bmGp) + '"></label>' : "") +
+        "</div>";
+    }
+    if (sp.unk) {
+      opts += '<div class="fields">' + (sp.custom ? "" : "") +
+        '<label class="field">Duration<select id="cDur">' + Object.keys(DURS).map(function (k) { return '<option value="' + k + '"' + (ui.customDur === k ? " selected" : "") + ">" + DURS[k].label + "</option>"; }).join("") + "</select></label></div>" +
+        '<div class="opts"><label class="opt"><input type="checkbox" id="fireChk"' + (ui.unkFire ? " checked" : "") + '><span>Has the fire descriptor<small>Adds +2 caster level from Elemental Bond</small></span></label></div>';
+    }
+    if (sp.custom) {
+      var cb = bankFind(ui.customName, ui.customLvl);
+      opts += '<div class="fields">' +
+        '<label class="field">Level<select id="cLvl">' + [1, 2, 3, 4].map(function (n) { return '<option value="' + n + '"' + (ui.customLvl === n ? " selected" : "") + ">" + ordinal(n) + " level</option>"; }).join("") + "</select></label>" +
+        '<label class="field">Spell name, type to search ' + ordinal(ui.customLvl) + ' level<input type="text" id="cName" list="bankList" autocomplete="off" maxlength="60" value="' + esc(ui.customName) + '" placeholder="Search ' + ordinal(ui.customLvl) + ' level spells"></label>' +
+        (cb ? "" :
+          '<label class="field">Duration<select id="cDur">' + Object.keys(DURS).map(function (k) { return '<option value="' + k + '"' + (ui.customDur === k ? " selected" : "") + ">" + DURS[k].label + "</option>"; }).join("") + "</select></label>") +
+        "</div>" +
+        '<datalist id="bankList">' + BANK.filter(function (b) { return b.lvl === ui.customLvl; }).map(function (b) { return '<option value="' + esc(b.name) + '">' + (SCHOOLS[b.sch] || "") + "</option>"; }).join("") + "</datalist>" +
+        (cb || !ui.customName.trim() ? "" : '<p class="hint">Not in the ' + ordinal(ui.customLvl) + ' level bank. Set its duration here.</p>');
+    }
+
+    var odDis = state.overdrive < 1 || !c.odUseful;
+    var odHint = state.overdrive < 1 ? "Pool is empty" : !c.odUseful ? "No burnout to ignore" : "Free action. Ignores up to 4 burnout from this cast";
+    var d8Dis = !c.d8 && (state.overdrive - (c.od ? 1 : 0)) < 1;
+    var d8Hint = d8Dis ? "No overdrive left after the other spend" : "Damage die becomes d8";
+    var waDis = state.mythic < 1 || sp.custom;
+    var waHint = sp.custom ? "Always used for a spell outside her known list" : state.mythic < 1 ? "No mythic power left" : "Standard action, CL +2 for this spell";
+    opts += '<div class="opts">' +
+      '<label class="opt' + (odDis ? " dis" : "") + '"><input type="checkbox" id="odChk"' + (c.od ? " checked" : "") + (odDis ? " disabled" : "") + '><span>Spend 1 overdrive to ignore burnout<small>' + odHint + "</small></span></label>" +
+      (sp.art ? '<label class="opt' + (d8Dis ? " dis" : "") + '"><input type="checkbox" id="d8Chk"' + (c.d8 ? " checked" : "") + (d8Dis ? " disabled" : "") + '><span>Artillery overdrive, 1 more overdrive<small>' + d8Hint + "</small></span></label>" : "") +
+      '<label class="opt' + (waDis ? " dis" : "") + '"><input type="checkbox" id="waChk"' + (c.wa ? " checked" : "") + (waDis ? " disabled" : "") + '><span>Wild Arcana, 1 mythic power<small>' + waHint + "</small></span></label>" +
+      "</div>";
+
+    var gainCls = c.burn > 0 ? "gain" : "zero";
+    var gainTxt = c.burn > 0 ? "+" + c.burn : "0";
+    if (c.od && c.gain > 0) gainTxt += " (was +" + c.gain + ")";
+    var rows = '<dt>Burnout</dt><dd class="' + gainCls + '">' + gainTxt + " → " + (state.burnout + c.burn) + " total</dd>";
+    rows += c.rows.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("");
+
+    var lvlTxt = sp.lvl === 0 ? "Orison" : "Level " + sp.lvl + (sp.exp ? " · experimental" : "") + (sp.art ? " · treated as 4th" : "");
+    var willDrop = sp.per && state.active.length >= 2 && !isActive(sp.id) ? state.active[0].name : null;
+
+    $("pCast").innerHTML =
+      '<div class="ph"><div><h2 class="cast-name">' + esc(sp.name) + '</h2><span class="cast-lvl">' + lvlTxt + "</span></div></div>" +
+      opts + "<dl class=\"rows\">" + rows + "</dl>" +
+      (willDrop ? '<p class="warn-text">Both slots are full. Casting this ends ' + esc(willDrop) + ".</p>" : "") +
+      (c.problems.length ? '<p class="warn-text">' + esc(c.problems.join(" ")) + "</p>" : "") +
+      '<button class="btn primary" data-act="cast"' + (c.problems.length ? " disabled" : "") + ">Cast " + esc(sp.name) + "</button>";
+  }
+
+  function renderSlots() {
+    var h = "";
+    for (var i = 0; i < 2; i++) {
+      var a = state.active[i];
+      if (a) {
+        var open = a.end === null;
+        var left = open ? 0 : Math.max(0, a.end - state.round);
+        var pct = open ? 100 : Math.max(0, Math.min(100, Math.round(left / a.total * 100)));
+        h += '<div class="slot full"><div class="nm">' + esc(a.name) + '</div><div class="left">' + (open ? "Until ended" : fmtRounds(left) + " left") + '</div>' +
+          '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
+          '<div><button class="btn sm" data-act="endspell" data-i="' + i + '">End spell</button></div></div>';
+      } else {
+        h += '<div class="slot"><div class="lbl">Slot ' + (i + 1) + '</div><div class="empty">Open</div></div>';
+      }
+    }
+    var p = "";
+    state.pending.forEach(function (x, i) {
+      var left = x.fire - state.round;
+      var due = left <= 0;
+      p += '<div class="pend' + (due ? " due" : "") + '"><div class="t"><b>' + esc(x.name) + (due ? " goes off now" : "") + "</b>" +
+        (due ? esc(x.text) : "In " + left + (left === 1 ? " round. " : " rounds. ") + esc(x.text)) + "</div>" +
+        '<button class="btn sm" data-act="resolve" data-i="' + i + '">' + (due ? "Resolved" : "Cancel") + "</button></div>";
+    });
+    $("pSlots").innerHTML =
+      '<div class="ph"><h2>Concentration</h2><span class="hint">Expanded concentration: 2 durations at once</span></div>' +
+      '<div class="slots">' + h + "</div>" + (p ? '<div class="pending">' + p + "</div>" : "");
+  }
+
+  function renderStats() {
+    var b = state.burnout, dcP = Math.floor(b / 2), moon = state.moon ? 1 : 0;
+    var cl = BASE_CL - b + (state.moon ? 2 : 0);
+    var st = [
+      ["Caster level", cl, "8 − " + b + (state.moon ? " + 2 moon" : "")],
+      ["Concentration", "+" + (cl + CHA), "CL + Cha 6"],
+      ["Spell DC", (17 - dcP + moon) + " to " + (20 - dcP + moon), "1st to 4th level"],
+      ["Artillery", Math.max(0, 6 - dcP) + "d6+6", "DC " + (20 - dcP + moon) + " burst"],
+      ["Strength", 16 - state.strDmg, "mod " + (Math.floor((16 - state.strDmg - 10) / 2) >= 0 ? "+" : "") + Math.floor((16 - state.strDmg - 10) / 2) + ", damage " + state.strDmg],
+      ["AC", state.active.some(function (a) { return a.id === "shield"; }) ? 27 : 23, state.active.some(function (a) { return a.id === "shield"; }) ? "Shield up" : "27 with shield"]
+    ];
+    var h = st.map(function (x) { return '<div class="stat"><div class="lbl">' + x[0] + '</div><div class="v num">' + x[1] + '</div><div class="s">' + x[2] + "</div></div>"; }).join("");
+    $("pStats").innerHTML =
+      '<div class="ph"><h2>Right now</h2><span class="hint">Burnout and conditions applied</span></div>' +
+      '<div class="stats">' + h + "</div>" +
+      '<div class="conds">' + (state.blood ? '<span class="chip on">Blood Money active this round: ' + esc(state.blood.name) + "</span>" : "") +
+      '<button class="toggle" data-act="moon" aria-pressed="' + state.moon + '">Direct moonlight · CL +2, DC +1</button>' +
+      '<button class="toggle" data-act="light" aria-pressed="' + state.lightUsed + '">Racial light · ' + (state.lightUsed ? "used today" : "1/day ready") + "</button>" +
+      '<button class="toggle" data-act="str" data-d="1">Strength −1</button>' +
+      '<button class="toggle" data-act="str" data-d="-1">Strength +1</button></div>';
+  }
+
+  function renderLog() {
+    var h = state.log.length
+      ? '<ul class="log">' + state.log.map(function (e) { return '<li><span class="r">R' + e.r + '</span><span class="tx">' + esc(e.t) + "</span></li>"; }).join("") + "</ul>"
+      : '<p class="log-empty">Nothing cast yet. Casts, burnout recovery and expiries appear here.</p>';
+    $("pLog").innerHTML = '<div class="ph"><h2>Log</h2><button class="btn sm" data-act="clearlog"' + (state.log.length ? "" : " disabled") + ">Clear log</button></div>" + h;
+  }
+
+  function renderRules() {
+    $("pRules").innerHTML =
+      '<div class="ph"><h2>Rules at the table</h2></div>' +
+      "<details open><summary>How burnout works</summary><ul>" +
+      "<li>Casting a spell of 1st level or higher adds its level in burnout, minus 2 from arcane buffer (minimum 0), plus 1 for the experimental spell.</li>" +
+      "<li>Burnout points each give −1 caster level. Every 2 points give −1 DC and −1d6 artillery damage.</li>" +
+      "<li>At the end of any round where she gained no burnout, she recovers 1.</li>" +
+      "<li>Spending 1 overdrive point (a free action) ignores up to 4 burnout from one spell. A cast that ends at 0 burnout still counts as a clean round. The pool refills after 8 hours of sleep.</li>" +
+      "<li>At caster level 0 she can only cast orisons.</li></ul></details>" +
+      "<details><summary>Mythic</summary><ul>" +
+      "<li>Wild Arcana (per the Mythic Adventures FAQ): standard action, 1 mythic power. Cast any arcane spell from her list, known or not, with a casting time of 1 standard action or less, CL +2. Metamagic allowed if the adjusted level stays within her highest castable level.</li>" +
+      "<li>Eldritch Breach: roll twice and take the higher for dispel checks, spell resistance checks and effect checks.</li>" +
+      "<li>Elemental Bond (fire): fire descriptor spells get +2 caster level. Fire resistance 10.</li></ul></details>" +
+      "<details><summary>Confirm with the GM</summary><ul>" +
+      "<li>Whether detonate counts as a fire spell once she picks fire. Its text gives a duration of 1 round, so the tracker holds a concentration slot until it goes off.</li>" +
+      "<li>Blood Money: whether the blood replaces both of detonate's vials. Cast it first, in the same round and before the spell it pays for. It is a 1st-level spell, so one of her five known 1st-level spells would have to be swapped out to learn it.</li>" +
+      "<li>Concentration: the class says any spell with a duration other than instantaneous or permanent takes a slot. This tracker follows that, so feather fall, message, prestidigitation and mage hand use a slot too. Ask whether the GM rules cantrips differently.</li>" +
+      "<li>Artillery overdrive: the d6 to d8 upgrade and ignoring burnout are separate overdrive spends here, 2 points for both. Confirm that is how the GM reads it.</li></ul></details>";
+  }
+
+  function trayOptions(L) {
+    var out = [];
+    SPELLS.forEach(function (sp) {
+      if (sp.lvl !== L || sp.calc === "bm") return;
+      if (sp.calc === "det") {
+        ["fire", "acid", "cold", "electricity"].forEach(function (el) { out.push({ v: sp.id + "|" + el, t: "Detonate, " + el, g: baseGain(sp) }); });
+      } else if (sp.art) {
+        [["std", "touch"], ["sniper", "sniper"], ["burst", "burst"]].forEach(function (m) { out.push({ v: sp.id + "|" + m[0], t: "Arcane artillery, " + m[1], g: baseGain(sp) }); });
+      } else {
+        out.push({ v: sp.id, t: sp.name, g: baseGain(sp) });
+      }
+    });
+    var ex = expSpell();
+    if (ex.lvl === L) out.push({ v: ex.id, t: ex.name + " (experimental)", g: baseGain(ex) });
+    return out;
+  }
+
+  function renderTray() {
+    var tray = $("tray");
+    $("castBtn").setAttribute("aria-expanded", String(ui.tray));
+    tray.hidden = !ui.tray;
+    if (!ui.tray) return;
+    var h = '<span class="lbl">Cast a spell</span>';
+    for (var L = 0; L <= 4; L++) {
+      var opts = '<option value="">Choose a spell</option>' + trayOptions(L).map(function (o) {
+        return '<option value="' + o.v + '">' + esc(o.t) + (o.g > 0 ? " (+" + o.g + ")" : "") + "</option>";
+      }).join("");
+      h += '<label class="field">' + (L === 0 ? "Orison" : "Level " + L) + '<select class="traySel" data-l="' + L + '">' + opts + "</select></label>";
+    }
+    h += '<button class="toggle" data-act="qod" aria-pressed="' + ui.qOd + '"' + (state.overdrive < 1 ? " disabled" : "") + ">Spend 1 overdrive (" + state.overdrive + " left)</button>";
+    h += '<button class="toggle" data-act="qblood" aria-pressed="' + ui.qBlood + '">Pay costly components with Blood Money</button>';
+    if (ui.trayMsg) h += '<p class="warn-text">' + esc(ui.trayMsg) + "</p>";
+    tray.innerHTML = h;
+  }
+
+  function render() {
+    $("round").textContent = state.round;
+    $("dayBtn").textContent = ui.dayArmed ? "Confirm new day" : "New day";
+    $("dayBtn").classList.toggle("warn", ui.dayArmed);
+    renderTray();
+    renderBurn(); renderOver(); renderMyth(); renderSpells(); renderCast(); renderSlots(); renderStats(); renderLog();
+  }
+
+  /* ---------- events ---------- */
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-act]");
+    if (!t || readOnly) return;
+    var a = t.getAttribute("data-act");
+    if (a === "pick") {
+      ui.sel = t.getAttribute("data-id");
+      ui.od = false; ui.d8 = false; ui.wa = false; ui.blood = false;
+      render();
+      if (window.matchMedia("(max-width: 859px)").matches) {
+        var el = $("pCast");
+        if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
+    } else if (a === "cast") doCast();
+    else if (a === "tray") { ui.tray = !ui.tray; ui.trayMsg = ""; render(); }
+    else if (a === "qblood") { ui.qBlood = !ui.qBlood; render(); }
+    else if (a === "qod") { ui.qOd = !ui.qOd; render(); }
+    else if (a === "resetround") resetRound();
+    else if (a === "clearlog") mutate(function (s) { s.log = []; });
+    else if (a === "nocast") noCast();
+    else if (a === "newday") {
+      if (!ui.dayArmed) {
+        ui.dayArmed = true; render();
+        clearTimeout(dayTimer);
+        dayTimer = setTimeout(function () { ui.dayArmed = false; render(); }, 4000);
+      } else {
+        clearTimeout(dayTimer); ui.dayArmed = false; newDay();
+      }
+    }
+    else if (a === "burn") {
+      var d = t.getAttribute("data-d");
+      mutate(function (s) { s.burnout = d === "clear" ? 0 : Math.max(0, s.burnout + parseInt(d, 10)); if (d === "1") s.gained = true; });
+    } else if (a === "setburn") {
+      var n = parseInt(t.getAttribute("data-n"), 10);
+      mutate(function (s) { s.burnout = s.burnout === n ? n - 1 : n; });
+    } else if (a === "res") {
+      var k = t.getAttribute("data-k"), dd = parseInt(t.getAttribute("data-d"), 10), mx = k === "overdrive" ? 10 : 7;
+      mutate(function (s) { s[k] = Math.min(mx, Math.max(0, s[k] + dd)); });
+    } else if (a === "setres") {
+      var k2 = t.getAttribute("data-k"), n2 = parseInt(t.getAttribute("data-n"), 10);
+      mutate(function (s) { s[k2] = s[k2] === n2 ? n2 - 1 : n2; });
+    } else if (a === "endspell") {
+      var i = parseInt(t.getAttribute("data-i"), 10);
+      mutate(function (s) { var g = s.active.splice(i, 1)[0]; if (g) log(g.name + " ended"); });
+    } else if (a === "resolve") {
+      var j = parseInt(t.getAttribute("data-i"), 10);
+      mutate(function (s) {
+        s.pending.splice(j, 1);
+        if (!s.pending.length) s.active = s.active.filter(function (a) { return a.id !== "detonate"; });
+      });
+    } else if (a === "moon") mutate(function (s) { s.moon = !s.moon; });
+    else if (a === "light") mutate(function (s) { s.lightUsed = !s.lightUsed; });
+    else if (a === "str") {
+      var sd = parseInt(t.getAttribute("data-d"), 10);
+      mutate(function (s) { s.strDmg = Math.max(0, Math.min(16, s.strDmg + sd)); });
+    }
+  });
+
+  document.addEventListener("change", function (e) {
+    if (readOnly) return;
+    var id = e.target.id;
+    if (id === "odChk") { ui.od = e.target.checked; renderCast(); }
+    else if (id === "d8Chk") { ui.d8 = e.target.checked; renderCast(); }
+    else if (id === "bmSel") { ui.bmChoice = e.target.value; renderCast(); }
+    else if (id === "bmGp") { ui.bmGp = Math.max(0, parseInt(e.target.value, 10) || 0); renderCast(); }
+    else if (e.target.classList && e.target.classList.contains("traySel")) { if (e.target.value) trayCast(e.target.value); }
+    else if (id === "fireChk") { ui.unkFire = e.target.checked; renderCast(); }
+    else if (id === "waChk") { ui.wa = e.target.checked; renderCast(); }
+    else if (id === "modeSel") { ui.mode = e.target.value; renderCast(); }
+    else if (id === "elSel") { ui.element = e.target.value; renderCast(); }
+    else if (id === "cLvl") { ui.customLvl = parseInt(e.target.value, 10); renderSpells(); renderCast(); }
+    else if (id === "cDur") { ui.customDur = e.target.value; renderCast(); }
+    else if (id === "expSel") {
+      mutate(function (s) { s.exp = e.target.value; });
+      if (/^exp-/.test(ui.sel)) ui.sel = "exp-" + e.target.value;
+      render();
+    }
+  });
+  document.addEventListener("input", function (e) {
+    if (e.target.id === "cName") {
+      var before = bankFind(ui.customName, ui.customLvl), after = bankFind(e.target.value, ui.customLvl);
+      ui.customName = e.target.value;
+      renderSpells();
+      if ((before && before.id) !== (after && after.id)) {
+        renderCast();
+        var el = $("cName");
+        if (el) { el.focus(); var n = el.value.length; try { el.setSelectionRange(n, n); } catch (x) { /* not supported */ } }
+      }
+    }
+  });
+
+  /* ---------- storage ----------
+     Hosted: one row per character in the Supabase table public.trackers (id, state, owner).
+     Anyone with the link can read it; row level security lets only the owner write. Realtime
+     pushes every save to each open page. A copy in localStorage keeps the page usable offline;
+     the editor's offline changes are marked pending and pushed when the connection returns.
+     Without config.js values the page runs as before: editable, saved in this browser only. */
+  var CFG = window.TRACKER_CONFIG || {};
+  var PENDING = KEY + ":pending", OWNER = KEY + ":owner", WANTS_EDIT = KEY + ":edit";
+  var sb = null, user = null, canEdit = false, retryTimer = null;
+
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* storage unavailable */ } }
+
+  function setStatus(t) { var el = $("status"); if (el) el.textContent = readOnly ? roLabel : t; }
+
+  function setReadOnly(label) {
+    readOnly = true;
+    roLabel = label;
+    document.body.classList.add("ro");
+    ui.tray = false;
+    setStatus("");
+  }
+  function setEditable(label) {
+    readOnly = false;
+    roLabel = "";
+    document.body.classList.remove("ro");
+    setStatus(label);
+  }
+
+  function scheduleSave() {
+    dirty = true;
+    setStatus("Saving");
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(flush, 350);
+  }
+  async function flush() {
+    if (saving) return;
+    saving = true;
+    clearTimeout(retryTimer);
+    var failed = null;
+    try {
+      while (dirty) {
+        dirty = false;
+        var payload = clone(state);
+        lsSet(KEY, JSON.stringify(payload));
+        if (!sb) continue;
+        lsSet(PENDING, "1");
+        if (!navigator.onLine) { failed = { offline: true }; break; }
+        var res = await sb.from("trackers").update({ state: payload, updated_at: new Date().toISOString() }).eq("id", CFG.characterId).select("id");
+        if (res.error) throw res.error;
+        if (!res.data || !res.data.length) throw { denied: true };
+        if (!dirty) lsSet(PENDING, null);
+      }
+    } catch (err) { failed = err; }
+    saving = false;
+    if (!failed) { setStatus(sb ? "Saved" : "Saved on this device"); return; }
+    if (failed.denied) { await setUser(user, true); pull(); return; }
+    setStatus(failed.offline ? "Offline, saved on this device" : "Not synced yet, retrying");
+    if (!failed.offline) retryTimer = setTimeout(function () { dirty = true; flush(); }, 8000);
+  }
+
+  function applyRemote(data) {
+    if (dirty || saving || (canEdit && lsGet(PENDING))) return;
+    var incoming = normalize(clone(data || {}));
+    lsSet(KEY, JSON.stringify(incoming));
+    if (JSON.stringify(incoming) !== JSON.stringify(state)) { state = incoming; render(); }
+    setStatus(canEdit ? "Saved" : "Live");
+  }
+
+  async function pull() {
+    if (!sb) return;
+    if (canEdit && lsGet(PENDING)) { dirty = true; return flush(); }
+    var res = await sb.from("trackers").select("state").eq("id", CFG.characterId).maybeSingle();
+    if (res.error) { setStatus(navigator.onLine ? "Can't reach the server" : "Offline, last saved copy"); return; }
+    if (!res.data) { setReadOnly("Tracker not set up yet"); return; }
+    applyRemote(res.data.state);
+  }
+
+  async function setUser(u, recheck) {
+    user = u || null;
+    canEdit = false;
+    if (user) {
+      var r = await sb.from("trackers").select("owner").eq("id", CFG.characterId).maybeSingle();
+      if (!r.error) canEdit = !!(r.data && r.data.owner === user.id);
+      else if (!recheck) canEdit = lsGet(OWNER) === user.id; /* offline: trust the last check */
+      lsSet(OWNER, canEdit ? user.id : null);
+    }
+    if (canEdit) {
+      setEditable(lsGet(PENDING) ? "Offline, saved on this device" : "Saved");
+      if (lsGet(PENDING) && navigator.onLine) { dirty = true; flush(); }
+    } else {
+      setReadOnly(user ? "Signed in, view only" : navigator.onLine ? "Live" : "Offline, last saved copy");
+    }
+    render();
+    renderAcct();
+  }
+
+  /* sign-in link: shown to anyone who opened the page with ?edit or #edit once, or who is signed in */
+  function renderAcct() {
+    var b = $("acctBtn");
+    if (!b) return;
+    if (!sb) { b.hidden = true; return; }
+    b.hidden = !user && !lsGet(WANTS_EDIT);
+    b.textContent = user ? "Sign out" : "Sign in";
+  }
+  function hookAccount() {
+    if (/[?&#]edit\b/.test(location.search + location.hash)) lsSet(WANTS_EDIT, "1");
+    var sheet = $("signin"), err = $("siErr");
+    function close() { sheet.hidden = true; err.textContent = ""; }
+    $("acctBtn").addEventListener("click", function () {
+      if (user) { sb.auth.signOut(); return; }
+      sheet.hidden = false;
+      $("siEmail").focus();
+    });
+    $("siCancel").addEventListener("click", close);
+    sheet.addEventListener("click", function (e) { if (e.target === sheet) close(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !sheet.hidden) close(); });
+    $("signinForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      err.textContent = "";
+      $("siGo").disabled = true;
+      var res = await sb.auth.signInWithPassword({ email: $("siEmail").value.trim(), password: $("siPass").value });
+      $("siGo").disabled = false;
+      if (res.error) { err.textContent = res.error.message; return; }
+      $("siPass").value = "";
+      close();
+    });
+  }
+
+  async function initStore() {
+    var cached = lsGet(KEY);
+    if (cached) { try { state = normalize(JSON.parse(cached)); render(); } catch (e) { /* ignore a bad copy */ } }
+    if (!CFG.supabaseUrl || !CFG.supabaseAnonKey || !CFG.characterId || !window.supabase) {
+      setStatus("This device only");
+      return;
+    }
+    sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey);
+    setReadOnly("Loading");
+    hookAccount();
+    var got = await sb.auth.getSession();
+    await setUser(got.data && got.data.session ? got.data.session.user : null);
+    sb.auth.onAuthStateChange(function (ev, session) {
+      var u = session ? session.user : null;
+      if ((u && u.id) !== (user && user.id)) setUser(u).then(pull);
+    });
+    await pull();
+    sb.channel("tracker-" + CFG.characterId)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "trackers", filter: "id=eq." + CFG.characterId },
+        function (p) { if (p.new && p.new.state) applyRemote(p.new.state); })
+      .subscribe(function (st) { if (st === "SUBSCRIBED") pull(); });
+    window.addEventListener("online", function () { setUser(user).then(pull); });
+    window.addEventListener("offline", function () { if (readOnly) setReadOnly("Offline, last saved copy"); else setStatus("Offline, saved on this device"); });
+  }
+
+  renderRules();
+  render();
+  initStore();
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    navigator.serviceWorker.register("sw.js").catch(function () { /* offline install unavailable */ });
+  }
+})();
+</script>
+
+</body>
+</html>
