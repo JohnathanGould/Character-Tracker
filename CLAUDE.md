@@ -20,7 +20,7 @@ Keep the look (black background, silver-blue accent, Marcellus / Albert Sans / I
 - `data/spell-bank.json`: 1,192 wizard spells, levels 1 to 4 (names, levels, summaries). The same data is inlined in `index.html` as `BANK`. School and duration are recorded only for about 170 Core Rulebook spells; the rest are `?`. Filling those gaps from a source such as Archives of Nethys is a good follow-up.
 
 ## State (one JSON document)
-`v, round, burnout, gained, overdrive, mythic, moon, lightUsed, vials, strDmg, blood, exp, active[], pending[], log[]`
+`v, round, burnout, gained, overdrive, mythic, lightUsed, vials, strDmg, blood, exp, active[], pending[], log[]`
 - `active[]`: `{id, name, cast, end (null = open-ended), total}`, max 2 entries.
 - `pending[]`: Detonate reminders `{id, name, fire, text}`.
 - `exp`: experimental spell id (`haste` default, or a `b-...` bank id, level 3 or lower).
