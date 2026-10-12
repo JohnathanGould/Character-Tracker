@@ -1,9 +1,9 @@
 /* App shell cache so the tracker opens offline. Bump VERSION when shipping changes. */
-var VERSION = "daerlieth-v2";
+var VERSION = "daerlieth-v3";
 var SHELL = ["./", "index.html", "config.js", "vendor/firebase-app-compat.js", "vendor/firebase-auth-compat.js", "vendor/firebase-firestore-compat.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png"];
 
 self.addEventListener("install", function (e) {
-  e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
+  e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(SHELL.map(function (u) { return new Request(u, { cache: "no-cache" }); })); }).then(function () { return self.skipWaiting(); }));
 });
 
 self.addEventListener("activate", function (e) {
@@ -30,7 +30,9 @@ self.addEventListener("fetch", function (e) {
     return;
   }
   /* network first for the app itself, so updates show up; cache when offline */
-  e.respondWith(fetch(req).then(function (res) {
+  /* no-cache: revalidate with the server, so a new deploy shows up on the next load
+     instead of waiting out GitHub Pages' 10-minute browser cache */
+  e.respondWith(fetch(req, { cache: "no-cache" }).then(function (res) {
     if (res.ok) { var copy = res.clone(); caches.open(VERSION).then(function (c) { c.put(req, copy); }); }
     return res;
   }).catch(function () {
