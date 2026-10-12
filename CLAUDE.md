@@ -30,7 +30,7 @@ Keep the look (black background, silver-blue accent, Marcellus / Albert Sans / I
 - **Eldritch burnout.** A cast of 1st level or higher gains `spell level - 2` (arcane buffer, minimum 0), +1 if it is the experimental spell. Orisons gain none. Arcane artillery counts as 4th level (2). Each point is -1 CL. Every 2 points is -1 DC and -1d6 artillery damage. At the end of any round with no burnout gained, recover 1. At CL 0 only orisons can be cast. "No cast" passes a round and recovers 1.
 - **Arcane overdrive**, pool 10. Spend 1 (free action) to ignore up to 4 burnout from one cast. Artillery overdrive is a separate 1-point spend (d6 to d8). Refills after 8 hours of sleep ("New day").
 - **Limited concentration.** 2 durational spells at once. A third ends the oldest. Detonate holds a slot until it goes off.
-- **Experimental spell.** One pick per day, up to 3rd level, +1 burnout.
+- **Experimental spell.** One pick per day from the whole sorcerer/wizard list (any school, focus or not), any level below her highest castable (so up to 3rd at 8th level), +1 burnout. At 11th level it may be her highest level for +1 more burnout; at 17th she gets a second one.
 - **Mythic.** 7 power per day. Wild Arcana costs 1, is a standard action (per the Mythic Adventures FAQ), casts any spell on her list, known or not, with casting time 1 standard action or less, and gives +2 CL. Elemental Bond (fire) gives +2 CL to fire-descriptor spells and fire resistance 10. Eldritch Breach rolls caster level checks twice.
 - **Blood Money** is a swift action: 1d6 damage, and blood replaces one material component this round. Components over 1 gp cost 1 Strength damage plus 1 per full 500 gp.
 - **Detonate**: costs 50 gp in vials, max 10d8, holds a concentration slot for 1 round.
