@@ -18,8 +18,8 @@ It is plain static files with no build step. Opening `index.html` straight from 
 | `data/spell-bank.json` | The wizard spell bank (also inlined in `index.html` as `BANK`). |
 
 ## Setup (one time)
-1. **Create a Supabase project** (free tier is fine).
-2. **Turn off public sign-ups:** Authentication > Sign In / Providers > Email: leave Email enabled, turn off "Allow new users to sign up".
+1. **Pick a Supabase project.** A new one, or an existing project you already use: the tracker only adds one table, `public.trackers`, and touches nothing else.
+2. **Sign-ups:** in a project used only for this tracker, turn them off (Authentication > Sign In / Providers > Email > "Allow new users to sign up"). In a shared project that needs sign-ups for another app, leave them on. Writes are locked to the owner's account by row level security either way, so other accounts can only view.
 3. **Create the player's login:** Authentication > Users > Add user > Create new user, with her email and a password. Tick "Auto confirm user".
 4. **Run the SQL:** open SQL Editor, paste `supabase/schema.sql`, replace `PLAYER_EMAIL_HERE` with her email, and run it.
 5. **Fill in `config.js`** from Project Settings > API: the Project URL and the `anon` `public` key. The anon key is safe to publish; row level security means only her account can write.
