@@ -37,7 +37,7 @@ Keep the look (black background, silver-blue accent, Marcellus / Albert Sans / I
 - Top bar order: Reset, No cast, Cast spell, New day. Reset clears concentration. New day needs two taps.
 - Strength buttons act on the score: "Strength -1" adds Strength damage, "+1" heals it.
 
-## Open rulings for the GM (shown on the page)
+## Open rulings for the GM (no longer shown on the page)
 Whether Detonate counts as a fire spell, whether cantrips with durations use a concentration slot, whether Wild Arcana may use spells outside her focus schools (Evocation, Abjuration, Transmutation, plus Conjuration proposed), and whether Blood Money's blood replaces both Detonate vials.
 
 ## Suggested stack
