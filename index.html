@@ -422,6 +422,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   <form id="signinForm" autocomplete="on">
     <h2>Sign in to edit</h2>
     <label id="siEmailRow">Email<input id="siEmail" type="email" autocomplete="username" required></label>
+    <p class="sub" id="siAs" hidden>Signing in as <span id="siAsEmail"></span> · <button type="button" class="acct" id="siOther">use another email</button></p>
     <label>Password<input id="siPass" type="password" autocomplete="current-password" required></label>
     <p class="err" id="siErr" aria-live="polite"></p>
     <div class="row"><button type="button" class="acct" id="siForgot" style="margin-right:auto">Forgot password?</button><button type="button" class="btn" id="siCancel">Cancel</button><button type="submit" class="btn primary" id="siGo">Sign in</button></div>
@@ -1304,7 +1305,13 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     if (/[?&#]edit\b/.test(location.search + location.hash)) lsSet(WANTS_EDIT, "1");
     var sheet = $("signin"), err = $("siErr");
     /* shared editor account: ask only for the password */
-    if (CFG.editorEmail) { $("siEmail").value = CFG.editorEmail; $("siEmailRow").hidden = true; }
+    if (CFG.editorEmail) {
+      $("siEmail").value = CFG.editorEmail;
+      $("siEmailRow").hidden = true;
+      $("siAs").hidden = false;
+      $("siAsEmail").textContent = CFG.editorEmail;
+      $("siOther").addEventListener("click", function () { $("siAs").hidden = true; $("siEmailRow").hidden = false; $("siEmail").value = ""; $("siEmail").focus(); });
+    }
     function close() { sheet.hidden = true; err.textContent = ""; }
     $("acctBtn").addEventListener("click", function () {
       if (user) { auth.signOut(); return; }
@@ -1356,8 +1363,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       if (!email) { err.textContent = "Enter the email first."; return; }
       err.textContent = "Sending…";
       auth.sendPasswordResetEmail(email, { url: location.origin + location.pathname + "?edit" })
-        .then(function () { err.textContent = "Reset email sent. Open the newest one; the link works once."; })
-        .catch(function (x) { err.textContent = (x && x.message) || "Could not send the email."; });
+        .then(function () { err.textContent = "Reset email requested for " + email + ". Open the newest one; the link works once."; })
+        .catch(function (x) { err.textContent = ((x && x.message) || "Could not send the email.") + (x && x.code ? " [" + x.code + "]" : ""); });
     });
 
     var rs = $("rsSheet"), rsErr = $("rsErr");
@@ -1400,7 +1407,12 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       auth.signInWithEmailAndPassword($("siEmail").value.trim(), $("siPass").value)
         .then(function () { $("siPass").value = ""; close(); })
         .catch(function (x) {
-          err.textContent = /invalid-credential|wrong-password|user-not-found|invalid-email/.test(x && x.code) ? (CFG.editorEmail ? "Wrong password." : "Wrong email or password.") : (x && x.message) || "Could not sign in.";
+          var c = (x && x.code) || "";
+          var msg = /invalid-credential|wrong-password|user-not-found|invalid-email/.test(c) ? "Wrong email or password, or no account with that email."
+            : /too-many-requests/.test(c) ? "Too many tries. Wait a few minutes, or reset the password."
+            : /network-request-failed/.test(c) ? "Can't reach Firebase. Check the connection."
+            : (x && x.message) || "Could not sign in.";
+          err.textContent = msg + (c ? " [" + c + "]" : "");
         })
         .then(function () { $("siGo").disabled = false; });
     });
