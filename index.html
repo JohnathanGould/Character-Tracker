@@ -380,7 +380,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1 L13.76 7.75 L19.78 4.22 L16.25 10.24 L23 12 L16.25 13.76 L19.78 19.78 L13.76 16.25 L12 23 L10.24 16.25 L4.22 19.78 L7.75 13.76 L1 12 L7.75 10.24 L4.22 4.22 L10.24 7.75 Z"/></svg>
       <div>
         <h1>Daerlieth Nightstar</h1>
-        <p class="sub">Eternal Mage 8 · Artillery Expert · Archmage tier 2 · <span id="status" class="status" aria-live="polite">Loading</span><button type="button" id="acctBtn" class="acct" hidden></button></p>
+        <p class="sub">Eternal Mage 8 · Artillery Expert · Archmage tier 2 · <span id="status" class="status" aria-live="polite">Loading</span><button type="button" id="acctBtn" class="acct" hidden></button><button type="button" id="pwBtn" class="acct" hidden>Change password</button></p>
       </div>
     </div>
     <div class="clock">
@@ -425,6 +425,18 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     <label>Password<input id="siPass" type="password" autocomplete="current-password" required></label>
     <p class="err" id="siErr" aria-live="polite"></p>
     <div class="row"><button type="button" class="btn" id="siCancel">Cancel</button><button type="submit" class="btn primary" id="siGo">Sign in</button></div>
+  </form>
+</div>
+
+<div class="sheet" id="pwSheet" hidden>
+  <form id="pwForm" autocomplete="on">
+    <h2>Change password</h2>
+    <input type="text" id="pwUser" autocomplete="username" hidden>
+    <label>Current password<input id="pwOld" type="password" autocomplete="current-password" required></label>
+    <label>New password<input id="pwNew" type="password" autocomplete="new-password" minlength="6" required></label>
+    <label>New password again<input id="pwNew2" type="password" autocomplete="new-password" minlength="6" required></label>
+    <p class="err" id="pwErr" aria-live="polite"></p>
+    <div class="row"><button type="button" class="btn" id="pwCancel">Cancel</button><button type="submit" class="btn primary" id="pwGo">Change</button></div>
   </form>
 </div>
 
@@ -1274,6 +1286,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     if (!auth) { b.hidden = true; return; }
     b.hidden = !user && !lsGet(WANTS_EDIT);
     b.textContent = user ? "Sign out" : "Sign in";
+    $("pwBtn").hidden = !user || readOnly;
   }
   function hookAccount() {
     if (/[?&#]edit\b/.test(location.search + location.hash)) lsSet(WANTS_EDIT, "1");
@@ -1289,6 +1302,40 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     $("siCancel").addEventListener("click", close);
     sheet.addEventListener("click", function (e) { if (e.target === sheet) close(); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !sheet.hidden) close(); });
+    /* change password: Firebase wants a recent sign-in, so confirm the current one first */
+    var pw = $("pwSheet"), pwErr = $("pwErr");
+    function closePw() { pw.hidden = true; pwErr.textContent = ""; $("pwForm").reset(); }
+    $("pwBtn").addEventListener("click", function () {
+      if (!user) return;
+      $("pwUser").value = user.email || "";
+      pw.hidden = false;
+      $("pwOld").focus();
+    });
+    $("pwCancel").addEventListener("click", closePw);
+    pw.addEventListener("click", function (e) { if (e.target === pw) closePw(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !pw.hidden) closePw(); });
+    $("pwForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      pwErr.textContent = "";
+      var nw = $("pwNew").value;
+      if (nw !== $("pwNew2").value) { pwErr.textContent = "The new passwords don't match."; return; }
+      if (nw.length < 6) { pwErr.textContent = "Use at least 6 characters."; return; }
+      if (!navigator.onLine) { pwErr.textContent = "You need to be online to change the password."; return; }
+      $("pwGo").disabled = true;
+      var cred = firebase.auth.EmailAuthProvider.credential(user.email, $("pwOld").value);
+      user.reauthenticateWithCredential(cred)
+        .then(function () { return user.updatePassword(nw); })
+        .then(function () { closePw(); setStatus("Password changed"); })
+        .catch(function (x) {
+          var c = (x && x.code) || "";
+          pwErr.textContent = /invalid-credential|wrong-password/.test(c) ? "The current password is wrong."
+            : /weak-password/.test(c) ? "That password is too weak. Use at least 6 characters."
+            : /too-many-requests/.test(c) ? "Too many tries. Wait a few minutes and try again."
+            : (x && x.message) || "Could not change the password.";
+        })
+        .then(function () { $("pwGo").disabled = false; });
+    });
+
     $("signinForm").addEventListener("submit", function (e) {
       e.preventDefault();
       err.textContent = "";
