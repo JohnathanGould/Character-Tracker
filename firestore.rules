@@ -2,12 +2,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // Anyone with the link can read (the GM view needs no account).
-    // Only the player's account can write: her User UID from Authentication > Users,
-    // which must match ownerUid in config.js.
+    // Only the editor accounts can write: User UIDs from Authentication > Users,
+    // which must match ownerUids in config.js.
     match /trackers/{characterId} {
       allow read: if true;
       allow create, update: if request.auth != null
-        && request.auth.uid == "Voalc6lUMgTYTCT98CNHBmpcqwF2"
+        && request.auth.uid in ["ylay0C7drmWrjyewXRhb9rrNCRg1", "X2xaLzZNQgfcg5uaHfzeUsqnZAo1"]
         && request.resource.data.keys().hasOnly(["json", "updatedAt"])
         && request.resource.data.json is string
         && request.resource.data.json.size() < 200000;

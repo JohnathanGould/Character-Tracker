@@ -20,7 +20,7 @@ It is plain static files with no build step. Opening `index.html` straight from 
 ## Setup (one time, Firebase project `tracker-fe359`, free Spark plan)
 1. **Add a web app:** Project settings (gear) > General > Your apps > the `</>` web icon. Name it anything; skip Firebase Hosting. Copy the `firebaseConfig` values into `config.js`.
 2. **Turn on email sign-in:** Build > Authentication > Get started > Sign-in method > Email/Password > Enable (leave "Email link" off).
-3. **Create the player's login:** Authentication > Users > Add user, with her email and a password. Copy her **User UID** into `ownerUid` in `config.js`.
+3. **Create the player's login:** Authentication > Users > Add user, with her email and a password. Copy its **User UID** into `ownerUids` in `config.js` (a list; more than one account can edit).
 4. **Create the database:** Build > Firestore Database > Create database. Pick a location near you and start in **production mode**.
 5. **Set the rules:** Firestore > Rules: paste `firestore.rules` (her UID is already in it) and Publish.
 6. **Host it.** The included workflow deploys to GitHub Pages on every push to `main`: in the repo, Settings > Pages > Source: **GitHub Actions**. (Pages on a private repo needs a paid GitHub plan, so keep the repo public. Firebase Hosting or Netlify also work: they need no build step and serve `.` as the output folder.)
@@ -31,7 +31,7 @@ The config values are meant to be public. The rules are what keep everyone but h
 
 ## How it works
 - One Firestore document per character, `trackers/daerlieth`, holds the whole state as a JSON string.
-- Rules allow everyone to read and only her UID to write. The page compares the signed-in UID with `ownerUid` to unlock editing; everyone else gets the view-only mode (`.ro`).
+- Rules allow everyone to read and only the listed UIDs to write. The page checks the signed-in UID against `ownerUids` to unlock editing; everyone else gets the view-only mode (`.ro`).
 - Saves are debounced (350 ms), and `onSnapshot` pushes them to every open page within a second.
 - Firestore's offline cache (IndexedDB) keeps the last state on every device. Offline edits are queued and sent automatically when she reconnects, even after closing the app.
 - The service worker serves the app network-first and falls back to its cache offline. Bump `VERSION` in `sw.js` when shipping changes if you want old caches dropped at once.
