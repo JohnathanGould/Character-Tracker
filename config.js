@@ -1,6 +1,8 @@
 /* Firebase web config: Project settings > General > Your apps > the web app's config.
    These values are meant to be public; firestore.rules is what stops anyone but the owner
-   from writing. ownerUid is the player's User UID from Authentication > Users.
+   from writing. ownerUid is the editor account's User UID from Authentication > Users.
+   editorEmail: that account's email. When set, sign-in asks only for the password, so anyone
+   who knows the password can edit. Leave it empty to ask for email and password.
    Leave apiKey empty to run the tracker offline in one browser only. */
 window.TRACKER_CONFIG = {
   firebase: {
@@ -12,5 +14,6 @@ window.TRACKER_CONFIG = {
     appId: "1:382927212734:web:d62c5c2bef1c1050d58eef"
   },
   ownerUid: "bNp41HfYmMU2efGKCYmKGATCnE93",
+  editorEmail: "",
   characterId: "daerlieth"
 };
