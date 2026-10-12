@@ -13,7 +13,7 @@ window.TRACKER_CONFIG = {
     messagingSenderId: "382927212734",
     appId: "1:382927212734:web:d62c5c2bef1c1050d58eef"
   },
-  ownerUid: "bNp41HfYmMU2efGKCYmKGATCnE93",
-  editorEmail: "",
+  ownerUid: "Voalc6lUMgTYTCT98CNHBmpcqwF2",
+  editorEmail: "cormanthyr@gmail.com",
   characterId: "daerlieth"
 };

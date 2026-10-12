@@ -7,7 +7,7 @@ service cloud.firestore {
     match /trackers/{characterId} {
       allow read: if true;
       allow create, update: if request.auth != null
-        && request.auth.uid == "bNp41HfYmMU2efGKCYmKGATCnE93"
+        && request.auth.uid == "Voalc6lUMgTYTCT98CNHBmpcqwF2"
         && request.resource.data.keys().hasOnly(["json", "updatedAt"])
         && request.resource.data.json is string
         && request.resource.data.json.size() < 200000;
