@@ -1287,7 +1287,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   function setUser(u) {
     user = u || null;
     if (user && [].concat(CFG.ownerUids || CFG.ownerUid || []).indexOf(user.uid) >= 0) setEditable(navigator.onLine ? "Saved" : "Offline, saved on this device");
-    else setReadOnly(user ? "Signed in, view only" : navigator.onLine ? "Live" : "Offline, last saved copy");
+    else setReadOnly(user ? "Signed in as " + (user.email || "?") + " (UID " + user.uid + "), view only" : navigator.onLine ? "Live" : "Offline, last saved copy");
     render();
     renderAcct();
   }
