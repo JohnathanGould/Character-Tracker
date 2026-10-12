@@ -22,7 +22,7 @@ It is plain static files with no build step. Opening `index.html` straight from 
 2. **Turn on email sign-in:** Build > Authentication > Get started > Sign-in method > Email/Password > Enable (leave "Email link" off).
 3. **Create the player's login:** Authentication > Users > Add user, with her email and a password. Copy her **User UID** into `ownerUid` in `config.js`.
 4. **Create the database:** Build > Firestore Database > Create database. Pick a location near you and start in **production mode**.
-5. **Set the rules:** Firestore > Rules: paste `firestore.rules`, replace `PLAYER_UID` with her User UID, and Publish.
+5. **Set the rules:** Firestore > Rules: paste `firestore.rules` (her UID is already in it) and Publish.
 6. **Host it.** The included workflow deploys to GitHub Pages on every push to `main`: in the repo, Settings > Pages > Source: **GitHub Actions**. (Pages on a private repo needs a paid GitHub plan, so keep the repo public. Firebase Hosting or Netlify also work: they need no build step and serve `.` as the output folder.)
 7. **Allow the site to sign in:** Authentication > Settings > Authorized domains > Add domain: your Pages host, e.g. `<user>.github.io`.
 8. Send the GM the plain link. Open `<link>?edit` yourself, sign in, then Share > Add to Home Screen (iPhone) or Install app (Android).
