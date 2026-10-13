@@ -131,3 +131,22 @@ table.atk td:nth-child(2), table.atk th:nth-child(2) { white-space: nowrap; }
 .trk-fx .ph { margin-bottom: 8px; }
 .trk-fx .ph a { color: var(--moon); }
 .ro .trk-fx .ph .hint, .ro .trk-fx [data-act="fxdel"] { display: none; }
+
+/* level up */
+.lvbtns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.s-picks .pklvl { margin-bottom: 12px; }
+.pkrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 4px 12px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 0.88rem; }
+@media (max-width: 700px) { .pkrow { grid-template-columns: minmax(0, 1fr); } }
+.pkrow.open .pkl { color: var(--fg); }
+.pkg { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.pkrow input, .pkrow select { width: 100%; min-width: 0; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; padding: 7px 10px; color: var(--fg); }
+.pkrow.open input, .pkrow.open select { border-color: var(--gold); }
+.rks { display: inline-flex; align-items: center; gap: 6px; }
+.rks b { min-width: 1.4ch; text-align: center; }
+.btn.rk { min-width: 32px; padding: 0 8px; }
+.lvgain { margin: 0 0 10px; padding-left: 1.1em; font-size: 0.88rem; display: flex; flex-direction: column; gap: 3px; }
+.lvroll { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; }
+.lvroll input { width: 5em; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 10px; color: var(--fg); }
+/* dialogs taller than the screen (level up) scroll inside */
+.sheet form { max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; }
+.lvform { max-width: 520px !important; }
