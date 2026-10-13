@@ -1236,11 +1236,22 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       '<button class="toggle" data-act="str" data-d="-1">Strength +1</button></div>';
   }
 
+  /* the hover chart for the status chip; the current row is marked */
+  function hpStatusChart(st, max, dead, her) {
+    var q = Math.floor(max / 4);
+    return [
+      ["Up", "above " + q + ": fighting normally"],
+      ["Bloodied", q + " or less: still fighting, but in danger (a reminder, not a rule)"],
+      ["Disabled", "exactly 0: one move or standard action a turn; a standard action costs 1 hp"],
+      ["Dying", "−1 to −" + (dead - 1) + ": unconscious" + (her ? "; Hard to Kill: stabilizes on her own" : "; loses 1 hp a round until stabilized")],
+      ["Dead", "−" + dead + " or lower"]
+    ].map(function (r) { return (r[0] === st ? "▸ " : "   ") + r[0] + ": " + r[1]; }).join("\n");
+  }
   function hpBlock(k, name, cur, max, dead, note) {
     var st = cur > 0 ? (cur <= max / 4 ? "Bloodied" : "Up") : cur === 0 ? "Disabled" : cur > -dead ? "Dying" : "Dead";
     var btn = function (d) { return '<button class="btn sm" data-act="hp" data-k="' + k + '" data-d="' + d + '">' + (d > 0 ? "+" : "−") + Math.abs(d) + "</button>"; };
     return '<div class="hpb"><div class="lbl">' + esc(name) + '</div>' +
-      '<div class="big"><div class="bignum num">' + cur + "<small>/" + max + "</small></div><span class=\"chip" + (cur <= 0 ? " hot" : "") + '">' + st + "</span></div>" +
+      '<div class="big"><div class="bignum num">' + cur + "<small>/" + max + "</small></div><span class=\"chip tip tip-pre" + (cur <= 0 ? " hot" : "") + '" tabindex="0" data-tip="' + esc(hpStatusChart(st, max, dead, k === "hp")) + '">' + st + "</span></div>" +
       '<div class="ctl">' + [-10, -5, -1, 1, 5, 10].map(btn).join("") + "</div>" +
       '<p class="hint">' + note + "</p></div>";
   }
