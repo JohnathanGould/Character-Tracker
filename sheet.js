@@ -634,7 +634,7 @@
     var list = ((st.fx || {})[who] || []).slice();
     var rows = list.map(function (e) {
       return '<li class="fx ' + (e.kind === "bad" ? "bad" : "good") + '"><span class="fxk">' + (e.kind === "bad" ? "Harmful" : "Helpful") + "</span>" +
-        '<span class="fxn"><b>' + esc(e.name) + "</b>" + (e.from ? ' <span class="hint">from ' + esc(e.from) + "</span>" : "") +
+        '<span class="fxn">' + (e.spell ? '<button type="button" class="btn sm sinfo mini" data-spell="' + esc(e.spell) + '" aria-label="Spell text for ' + esc(e.spell) + '">i</button>' : "") + "<b>" + esc(e.name) + "</b>" + (e.from ? ' <span class="hint">from ' + esc(e.from) + "</span>" : "") +
         (e.note ? '<span class="fxt">' + esc(e.note) + "</span>" : "") + "</span>" +
         '<span class="fxd num">' + esc(fxLeft(e.left)) + "</span>" +
         (o.readOnly ? "" : '<button type="button" class="btn sm" data-act="fxdel" data-who="' + who + '" data-id="' + esc(e.id) + '" aria-label="Remove ' + esc(e.name) + '">End</button>') + "</li>";
@@ -642,17 +642,19 @@
     /* her duration spells live in the Tracker's concentration slots; show the ones on this creature */
     (st.active || []).forEach(function (a) {
       if ((a.on || "her") !== who) return;
-      rows.push('<li class="fx good mine"><span class="fxk">Her spell</span><span class="fxn"><b>' + esc(a.name) + '</b> <span class="hint">in a concentration slot, ends there</span></span>' +
+      rows.push('<li class="fx good mine"><span class="fxk">Her spell</span><span class="fxn"><button type="button" class="btn sm sinfo mini" data-spell="' + esc(a.name) + '" aria-label="Spell text for ' + esc(a.name) + '">i</button><b>' + esc(a.name) + '</b> <span class="hint">in a concentration slot, ends there</span></span>' +
         '<span class="fxd num">' + (a.end == null ? "open" : fxLeft(Math.max(0, a.end - (st.round || 1)))) + "</span></li>");
     });
     var form = o.readOnly ? "" :
       '<div class="fxform">' +
-      '<label class="field">Spell or effect<input type="text" id="fxName-' + who + '" maxlength="60" placeholder="e.g. Bless, Slow, Bull\'s strength"></label>' +
+      '<label class="field fxwide">Spell or effect<input type="text" id="fxName-' + who + '" list="codexList" autocomplete="off" maxlength="60" placeholder="Type to search any class\'s spells"></label>' +
       '<label class="field">Cast by<input type="text" id="fxFrom-' + who + '" maxlength="40" placeholder="Daerlieth, or the caster\'s name"></label>' +
+      '<label class="field">Caster level<input type="text" inputmode="numeric" id="fxCL-' + who + '" maxlength="2" placeholder="e.g. 8"></label>' +
       '<label class="field">Type<select id="fxKind-' + who + '"><option value="good">Helpful</option><option value="bad">Harmful</option></select></label>' +
       '<label class="field">Lasts<span class="fxdur"><input type="text" inputmode="numeric" id="fxN-' + who + '" maxlength="4" placeholder="8">' +
       '<select id="fxU-' + who + '">' + FX_UNITS.map(function (u) { return '<option value="' + u[0] + '">' + u[1] + "</option>"; }).join("") + "</select></span></label>" +
       '<label class="field fxwide">Effect (optional)<input type="text" id="fxNote-' + who + '" maxlength="120" placeholder="e.g. +1 attack, −2 AC, half speed"></label>' +
+      '<p class="hint fxwide" id="fxInfo-' + who + '" aria-live="polite"></p>' +
       '<button type="button" class="btn primary" data-act="fxadd" data-who="' + who + '">Add effect</button></div>';
     return '<div class="panel s-fx"' + (who === "her" ? ' id="herfx"' : "") + '><div class="ph"><h2>Status effects</h2><span class="hint">Spells and effects on ' + (who === "pet" ? "Gwathfaron" : "her") + ", helpful or harmful</span></div>" +
       (rows.length ? '<ul class="fxlist">' + rows.join("") + "</ul>" : '<p class="hint">None right now.</p>') + form +
