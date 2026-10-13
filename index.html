@@ -458,9 +458,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     <h2 id="lvlTitle">Level up</h2>
     <div id="lvlBody"></div>
     <div class="lvroll">
-      <label class="field">Hit points rolled (d10)<input id="lvlRoll" type="text" inputmode="numeric" maxlength="2" placeholder="1–10"></label>
-      <button type="button" class="btn sm" id="lvlRollBtn">Roll d10</button>
-      <button type="button" class="btn sm" id="lvlAvgBtn">Take 6 (average)</button>
+      <label class="field">Hit points rolled on RPoL (d10)<input id="lvlRoll" type="text" inputmode="numeric" maxlength="2" placeholder="1–10"></label>
     </div>
     <p class="err" id="lvlErr" aria-live="polite"></p>
     <div class="row"><button type="button" class="btn" id="lvlCancel">Cancel</button><button type="submit" class="btn primary" id="lvlGo">Level up</button></div>
@@ -1265,7 +1263,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       (g.features.length ? '<p class="hint">New class features:</p><ul class="lvgain">' + g.features.map(function (f) { return li(esc(f[0]) + ": " + esc(f[1])); }).join("") + "</ul>" : "") +
       (g.picks.length ? '<p class="hint">Picks to make afterwards (empty slots under Level-up picks on her tab):</p><ul class="lvgain">' + g.picks.map(function (c) { return li(esc(c.group) + ": " + esc(c.label)); }).join("") + "</ul>" : "") +
       '<p class="hint">Skill ranks: ' + (6 + dv().ab.int.mod + 1) + " adventuring (6 + Int " + (dv().ab.int.mod >= 0 ? "+" : "") + dv().ab.int.mod + ", +1 favored class bonus) and 2 background, to place on her tab. " +
-      "Hit points: the d10 roll + Con " + (conMod >= 0 ? "+" : "") + conMod + ".</p>";
+      "Hit points: her d10 roll from RPoL + Con " + (conMod >= 0 ? "+" : "") + conMod + ".</p>";
     $("lvlTitle").textContent = "Level up to " + L;
     $("lvlBody").innerHTML = body;
     $("lvlRoll").value = ""; $("lvlErr").textContent = "";
@@ -1277,12 +1275,10 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   $("lvlCancel").addEventListener("click", closeLevelUp);
   $("lvlSheet").addEventListener("click", function (e) { if (e.target === $("lvlSheet")) closeLevelUp(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("lvlSheet").hidden) closeLevelUp(); });
-  $("lvlRollBtn").addEventListener("click", function () { $("lvlRoll").value = String(1 + Math.floor(Math.random() * 10)); });
-  $("lvlAvgBtn").addEventListener("click", function () { $("lvlRoll").value = "6"; });
   $("lvlForm").addEventListener("submit", function (e) {
     e.preventDefault();
     var roll = parseInt($("lvlRoll").value, 10);
-    if (!(roll >= 1 && roll <= 10)) { $("lvlErr").textContent = "Enter the d10 roll (1 to 10), or use Roll or Take 6."; return; }
+    if (!(roll >= 1 && roll <= 10)) { $("lvlErr").textContent = "Enter her d10 roll from RPoL (1 to 10)."; return; }
     closeLevelUp();
     mutate(function (s) {
       var before = SheetEngine.derive(s), L = s.level + 1;
