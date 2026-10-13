@@ -563,7 +563,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   var state = clone(DEFAULT);
   var ui = {
     tray: false, qOd: false, qBlood: true, trayMsg: "", dayArmed: false, blood: false, bmChoice: "det", bmGp: 100,
-    sel: "fireball", od: false, d8: false, wa: false, myth: false, mode: "std", element: "fire",
+    sel: "fireball", od: false, d8: false, wa: false, myth: false, castOn: "her", mode: "std", element: "fire",
     customName: "", customLvl: 1, customDur: "none", unkFire: false
   };
   var readOnly = false, roLabel = "";
@@ -760,7 +760,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       s.blood = { name: c.bmName };
       log("Cast Blood Money for " + c.bmName + ": 1d6 damage" + (c.bmStr ? ", Strength damage +" + c.bmStr : ", no Strength damage"));
     });
-    ui.od = false; ui.d8 = false; ui.wa = false; ui.myth = false;
+    ui.od = false; ui.d8 = false; ui.wa = false; ui.myth = false; ui.castOn = "her";
     render();
   }
 
@@ -793,7 +793,9 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
           var gone = s.active.shift();
           log(gone.name + " ended: a third spell needs a slot");
         }
-        s.active.push({ id: aid, name: nm, cast: s.round, end: c.dur > 0 ? s.round + c.dur : null, total: c.dur > 0 ? c.dur : 0 });
+        var on = ui.castOn === "pet" || ui.castOn === "ally" ? ui.castOn : "her";
+        s.active.push({ id: aid, name: nm, cast: s.round, end: c.dur > 0 ? s.round + c.dur : null, total: c.dur > 0 ? c.dur : 0, on: on });
+        if (on !== "her") bits.push(on === "pet" ? "on Gwathfaron" : "on an ally");
       }
       if (sp.calc === "det") {
         s.pending.push({ id: "p" + Date.now(), name: "Detonate (" + ui.element + ")", fire: s.round + 1, text: Math.min(10, c.cl) + "d8, Reflex DC " + c.dc });
@@ -803,7 +805,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     });
     ui.od = false;
     ui.d8 = false;
-    ui.wa = false; ui.myth = false;
+    ui.wa = false; ui.myth = false; ui.castOn = "her";
     ui.blood = false;
     render();
   }
@@ -840,7 +842,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var sp = getSpell(parts[0]);
     if (!sp) return;
     ui.sel = sp.id;
-    ui.od = ui.qOd; ui.d8 = false; ui.wa = false; ui.myth = false;
+    ui.od = ui.qOd; ui.d8 = false; ui.wa = false; ui.myth = false; ui.castOn = "her";
     if (sp.calc === "det" && parts[1]) ui.element = parts[1];
     if (sp.art && parts[1]) ui.mode = parts[1];
     var gp = sp.cost || 0;
@@ -1037,6 +1039,11 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         (cb || !ui.customName.trim() ? "" : '<p class="hint">Not in the ' + ordinal(ui.customLvl) + ' level bank. Set its duration here.</p>');
     }
 
+    if (sp.per) {
+      opts += '<div class="fields"><label class="field">Cast on<select id="castOn">' +
+        [["her", "Daerlieth"], ["pet", "Gwathfaron (share spells or touch)"], ["ally", "An ally"]].map(function (o) { return '<option value="' + o[0] + '"' + (ui.castOn === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
+        "</select></label></div>";
+    }
     var odDis = state.overdrive < 1 || !c.odUseful;
     var odHint = state.overdrive < 1 ? "Pool is empty" : !c.odUseful ? "No burnout to ignore" : "Free action. Ignores up to 4 burnout from this cast";
     var d8Dis = !c.d8 && (state.overdrive - (c.od ? 1 : 0)) < 1;
@@ -1076,7 +1083,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         var open = a.end === null;
         var left = open ? 0 : Math.max(0, a.end - state.round);
         var pct = open ? 100 : Math.max(0, Math.min(100, Math.round(left / a.total * 100)));
-        h += '<div class="slot full"><div class="nm">' + esc(a.name) + '</div><div class="left">' + (open ? "Until ended" : fmtRounds(left) + " left") + '</div>' +
+        h += '<div class="slot full"><div class="nm">' + esc(a.name) + (a.on === "pet" ? ' <span class="hint">on Gwathfaron</span>' : a.on === "ally" ? ' <span class="hint">on an ally</span>' : "") + '</div><div class="left">' + (open ? "Until ended" : fmtRounds(left) + " left") + '</div>' +
           '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
           '<div><button class="btn sm" data-act="endspell" data-i="' + i + '">End spell</button></div></div>';
       } else {
@@ -1091,9 +1098,21 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         (due ? esc(x.text) : "In " + left + (left === 1 ? " round. " : " rounds. ") + esc(x.text)) + "</div>" +
         '<button class="btn sm" data-act="resolve" data-i="' + i + '">' + (due ? "Resolved" : "Cancel") + "</button></div>";
     });
+    /* status effects on her and Gwathfaron, counted down by the same rounds */
+    var fxRows = [];
+    [["her", "Daerlieth"], ["pet", "Gwathfaron"]].forEach(function (w) {
+      state.fx[w[0]].forEach(function (e) {
+        fxRows.push('<li class="fx ' + (e.kind === "bad" ? "bad" : "good") + '"><span class="fxk">' + w[1] + "</span>" +
+          '<span class="fxn"><b>' + esc(e.name) + "</b>" + (e.from ? ' <span class="hint">from ' + esc(e.from) + "</span>" : "") + (e.note ? '<span class="fxt">' + esc(e.note) + "</span>" : "") + "</span>" +
+          '<span class="fxd num">' + esc(SheetEngine.fxLeft(e.left)) + "</span>" +
+          '<button type="button" class="btn sm" data-act="fxdel" data-who="' + w[0] + '" data-id="' + esc(e.id) + '">End</button></li>');
+      });
+    });
+    var fx = '<div class="trk-fx"><div class="ph"><h2>Status effects</h2><span class="hint"><a href="#sheet">Add on Daerlieth</a> · <a href="#gwathfaron">Add on Gwathfaron</a></span></div>' +
+      (fxRows.length ? '<ul class="fxlist">' + fxRows.join("") + "</ul>" : '<p class="hint">None. Spells and effects from her or other casters, counted down here each round.</p>') + "</div>";
     $("pSlots").innerHTML =
       '<div class="ph"><h2>Concentration</h2><span class="hint">Expanded concentration: 2 durations at once</span></div>' +
-      '<div class="slots">' + h + "</div>" + (p ? '<div class="pending">' + p + "</div>" : "");
+      '<div class="slots">' + h + "</div>" + (p ? '<div class="pending">' + p + "</div>" : "") + fx;
   }
 
   function renderStats() {
@@ -1253,7 +1272,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var a = t.getAttribute("data-act");
     if (a === "pick") {
       ui.sel = t.getAttribute("data-id");
-      ui.od = false; ui.d8 = false; ui.wa = false; ui.myth = false; ui.blood = false;
+      ui.od = false; ui.d8 = false; ui.wa = false; ui.myth = false; ui.castOn = "her"; ui.blood = false;
       render();
       if (window.matchMedia("(max-width: 859px)").matches) {
         var el = $("pCast");
@@ -1351,6 +1370,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     else if (id === "fireChk") { ui.unkFire = e.target.checked; renderCast(); }
     else if (id === "waChk") { ui.wa = e.target.checked; renderCast(); }
     else if (id === "mythChk") { ui.myth = e.target.checked; renderCast(); }
+    else if (id === "castOn") { ui.castOn = e.target.value; renderCast(); }
     else if (id === "modeSel") { ui.mode = e.target.value; renderCast(); }
     else if (id === "elSel") { ui.element = e.target.value; renderCast(); }
     else if (id === "cLvl") { ui.customLvl = parseInt(e.target.value, 10); renderSpells(); renderCast(); }

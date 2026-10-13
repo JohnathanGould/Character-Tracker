@@ -125,3 +125,9 @@ table.t.sk td span { cursor: help; }
 }
 /* attack bonuses stay on one line ("+14 / +14 / +14 / +9 / +9") */
 table.atk td:nth-child(2), table.atk th:nth-child(2) { white-space: nowrap; }
+
+/* status effects inside the Tracker's concentration panel */
+.trk-fx { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.trk-fx .ph { margin-bottom: 8px; }
+.trk-fx .ph a { color: var(--moon); }
+.ro .trk-fx .ph .hint, .ro .trk-fx [data-act="fxdel"] { display: none; }

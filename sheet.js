@@ -153,7 +153,8 @@
     st = st || {};
     var eq = st.eq || {}, c = st.cond || {};
     var worn = function (k) { return eq[k] !== false; };
-    var act = function (id) { return (st.active || []).some(function (a) { return a.id === id; }); };
+    /* only her own spells on herself change her numbers (a.on is "pet" or "ally" for spells cast on others) */
+    var act = function (id) { return (st.active || []).some(function (a) { return a.id === id && (!a.on || a.on === "her"); }); };
     var burn = Math.max(0, st.burnout || 0), dcP = Math.floor(burn / 2);
     var haste = act("exp-haste"), er = act("expeditious-retreat"), cg = act("exp-cats-grace");
     var shieldSp = act("shield"), pfe = act("exp-protection-from-evil"), fly = act("exp-fly");
@@ -352,7 +353,7 @@
     var live = [];
     if (st.burnout) live.push("Burnout " + st.burnout + ": caster level " + sp.cl + ", spell DCs −" + sp.dcP + ", artillery " + sp.artDice + "d6");
     if (st.strDmg) live.push("Strength damage " + st.strDmg + ": Str " + d.ab.str.score);
-    (st.active || []).forEach(function (x) { live.push(x.name + " active"); });
+    (st.active || []).forEach(function (x) { live.push(x.name + (x.on === "pet" ? " on Gwathfaron" : x.on === "ally" ? " on an ally" : " active")); });
     var liveH = live.length ? live.map(function (x) { return '<span class="chip on">' + esc(x) + "</span>"; }).join("") : '<span class="hint">Nothing running. Spells, burnout and Strength damage come from the Tracker tab.</span>';
 
     h += '<div class="s-top">' +
@@ -523,8 +524,8 @@
   var FX_UNITS = [["r", "rounds", 1], ["m", "minutes", 10], ["h", "hours", 600], ["x", "until removed", 0]];
   function fxLeft(n) {
     if (n == null) return "until removed";
-    if (n >= 600 && n % 600 === 0) return (n / 600) + " h";
-    if (n >= 10 && n % 10 === 0) return (n / 10) + " min";
+    if (n >= 600) return (Math.round(n / 60) / 10) + " h";
+    if (n >= 100 || (n >= 10 && n % 10 === 0)) return Math.round(n / 10) + " min";
     return n + (n === 1 ? " round" : " rounds");
   }
   function fxPanel(who, st, o) {
@@ -537,7 +538,9 @@
         (o.readOnly ? "" : '<button type="button" class="btn sm" data-act="fxdel" data-who="' + who + '" data-id="' + esc(e.id) + '" aria-label="Remove ' + esc(e.name) + '">End</button>') + "</li>";
     });
     /* her own duration spells are tracked in the concentration slots; show them here too */
-    if (who === "her") (st.active || []).forEach(function (a) {
+    /* her duration spells live in the Tracker's concentration slots; show the ones on this creature */
+    (st.active || []).forEach(function (a) {
+      if ((a.on || "her") !== who) return;
       rows.push('<li class="fx good mine"><span class="fxk">Her spell</span><span class="fxn"><b>' + esc(a.name) + '</b> <span class="hint">concentration slot, ends from the Tracker</span></span>' +
         '<span class="fxd num">' + (a.end == null ? "open" : fxLeft(Math.max(0, a.end - (st.round || 1)))) + "</span></li>");
     });
@@ -664,7 +667,7 @@
     return h;
   }
 
-  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, FX_UNITS: FX_UNITS, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
+  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, FX_UNITS: FX_UNITS, fxLeft: fxLeft, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
   root.SheetEngine = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

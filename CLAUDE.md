@@ -25,11 +25,11 @@ Keep the look (black background, silver-blue accent, Marcellus / Albert Sans / I
 
 ## State (one JSON document)
 `v, round, burnout, gained, overdrive, mythic, lightUsed, hp, petHp, stun, eq, cond, fx, vials, strDmg, blood, exp, active[], pending[], log[]`
-- `active[]`: `{id, name, cast, end (null = open-ended), total}`, max 2 entries.
+- `active[]`: `{id, name, cast, end (null = open-ended), total, on}`, max 2 entries. `on` is who the spell is on: `her` (default), `pet` or `ally` (Cast on, in the cast panel). Only spells on her change her sheet numbers.
 - `pending[]`: Detonate reminders `{id, name, fire, text}`.
 - `cond.atk` (`std` | `charge` | `aoo`, absent = full attack) and `cond.hands` (`one`, absent = two weapons): the attack picker on her tab; the Attacks table shows only that combination.
 - `cond.flank` (flanking: +2 melee for both, turns on her stealth attack), `cond.art` (`sniper` | `burst`, absent = touch) and `cond.artD8` (artillery picker on her tab), `cond.petAtk` (`std` | `charge` | `aoo`, absent = full attack; Gwathfaron's picker).
-- `fx`: status effects `{her: [], pet: []}`, each `{id, name, from, kind: good|bad, left (rounds, null = until removed), note}`. Entered on the Daerlieth and Gwathfaron tabs; reminders only; `left` counts down each round and the effect drops at 0.
+- `fx`: status effects `{her: [], pet: []}`, each `{id, name, from, kind: good|bad, left (rounds, null = until removed), note}`. Entered on the Daerlieth and Gwathfaron tabs and listed (with End) under Concentration on the Tracker; reminders only; `left` counts down each round and the effect drops at 0.
 - `exp`: experimental spell id (`haste` default, or a `b-...` bank id, level 3 or lower).
 
 ## Rules the tracker encodes
