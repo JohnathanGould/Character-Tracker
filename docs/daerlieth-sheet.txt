@@ -1,0 +1,339 @@
+Name  : Daerlieth Nightstar  | Race  : Moon Elf         | Height: 5'10"
+Player: Balthazar            | Gender: Female           | Weight: 128 lbs
+Update: Oct 13 2026          | Age   : 142              | Eyes  : Blue, gold flecks
+Align : Chaotic Good         | Size  : Medium           | Hair  : Silver-white, blue sheen
+Deity : Sehanine Moonbow     | Speed : 35ft (45 forest) | Hand  : Right
+----------------------------------------------------------------------------
+       Ability    |   Temporary   | Class                 Level
+     Score   Mod  |  Score   Mod  |  Eternal Mage (A)       8
+STR   16      +3  |               |  Spell-less Ranger (B)  8
+DEX   22      +6  |               |
+CON   16      +3  |               |
+INT   18      +4  |               |
+WIS   18      +4  |               |Total Level: 8 gestalt (Mythic Tier 2)
+CHA   22      +6  |               |XP  : 34,000 (fast)  Next: 50,000
+                                   Extra Feats: 0
+- Dex 20 + 2 belt of incredible dexterity. Cha 20 + 2 headband of alluring charisma.
+- Int 16 + 2 mythic ability score (Tier 2).
+----------------------------------------------------------------------------
+        Total   Current   Subdual |         Total   Dex   Misc
+HP    :   82       82             | Init  :  +10  =  6  + 2 (Reactionary) + 2 (Amazing Initiative)
+- Hard to Kill: stabilizes automatically below 0, dies at -32.
+- Favored class bonus taken as skill ranks, not hit points.
+----------------------------------------------------------------------------
+          Total        Armr  Shld   Dex  Nat  Defl
+Full    :   23  =  10 +  5  +  0  +  6  + 2 +  0
+AC      :   23  =  10 +  5  +  0  +  6  + 2 +  0
+Touch   :   16  =  10 +  0  +  0  +  6  + 0 +  0
+FlatFoot:   17  =  10 +  5  +  0  +  0  + 2 +  0
+- +1 mithral chain shirt (max Dex +6)
+- +2 amulet of natural armor
+* Shield spell adds +4: AC 27.
+----------------------------------------------------------------------------
+SAVES                          Ability
+            Bonus    Base   Mod  Magic
+Fort (Con):  +12    =  6  +  3  +  3
+Ref  (Dex):  +15    =  6  +  6  +  3
+Will (Wis):  +13    =  6  +  4  +  3
+- Base 6 on every save by gestalt. Magic = cloak of resistance +3.
+- Cold resistance 5 (moon elf), fire resistance 10 (Elemental Bond).
+----------------------------------------------------------------------------
+Base    Total       Base   Str   Misc | Base    Total   Base   Dex   Misc
+Melee :  +11/+14  =  8  +  3  +  3    | Range :  +14  =  8  +  6  +  0
+- Melee +11 with Str; +14 with Weapon Finesse (Dex 6 replaces Str 3) for unarmed strikes.
+----------------------------------------------------------------------------
+Combat  Total  Base  Str  Misc    | Mnvr   Total  Base   Str   Dex  Misc
+Mnvr   : +11 =  8  +  3  +  0     | Defense: 27  = 10  +  8  +  3  +  6  +  0
+----------------------------------------------------------------------------
+
+Weapon: Unarmed Strike (+1 bodywrap of mighty strikes)   Weight: 1 lb
+Move Name         Type    Atk                 Damage   Crit   Range   Type    Special
+Single           |Melee | +15               | 1d8+3 | 20/x2 |   -   |   B   | Standard action, one strike. Bodywrap use: +16 for 1d8+4.
+Full, 2 weapons  |Melee | +13/+13/+8/+8     | 1d8+3 | 20/x2 |   -   |   B   | Main +13, off +13, main +8, off +8. Off hand 1d8+1 (half Str).
+Full, hasted     |Melee | +14/+14/+14/+9/+9 | 1d8+3 | 20/x2 |   -   |   B   | Haste: +1 on every attack and one extra main-hand strike.
+Full, 1 weapon   |Melee | +15/+10           | 1d8+3 | 20/x2 |   -   |   B   | Hasted: +16/+16/+11.
+Charge           |Melee | +17               | 1d8+3 | 20/x2 |   -   |   B   | -2 AC until next turn. Bodywrap use: +18 for 1d8+4.
+Attack of opp.   |Melee | +15               | 1d8+3 | 20/x2 |   -   |   B   | One a round (no Combat Reflexes).
+Stunning Fist    |Melee | +15               | 1d8+3 | 20/x2 |   -   |   B   | Declared on a strike; see below.
+
+Attack: BAB 8 + Dex 6 (Weapon Finesse) + 1 Weapon Focus = +15. Two-Weapon Fighting: -2 on every strike (unarmed strikes count as light).
+Damage: 1d8 unarmed (Monastic Legacy, effective monk level 4) + Str 3 main hand, +1 off hand (half Str).
+Flanking with Gwathfaron: +2 on every melee attack.
+
+Stunning Fist: 2 uses a day, 1 per round. Declare before the roll. Fort DC 18 (10 + 4 + Wis 4) or stunned until just before her next turn.
+
+Bodywrap of mighty strikes (body slot): once per round, add a +1 enhancement bonus to the attack and damage of one unarmed strike.
+         She gets 2 uses a round at BAB +6 (a third at +11). Not an action, and she can use it on attacks of opportunity too.
+
+Stealth attack +3d6     : only in a favored terrain or vs a favored enemy, and the target is denied its Dex bonus or flanked.
+                          Not multiplied on a critical. Ranged only within 30 ft. Light, medium or no armor only.
+Skirmishing Attack      : if she moves 10+ ft and attacks, the first attack counts as against a flat-footed target.
+Favored enemy bonus     : +4 humanoid (elf), which covers drow, +2 undead. (to attack and damage)
+Improved Unarmed Strike : her fists are armed (no attacks of opportunity) and deal lethal damage.
+
+Arcane Artillery (Eternal Mage, Artillery Adept)
+Move Name    Type    Atk   Damage    Crit      Range   Type    Special
+Artillery   |Touch | +14 | 6d6+6  |    -     | 30ft  | arcane | Ranged touch, std action. 1 overdrive: dice become d8 (6d8+6). Burnout cost 2.
+Sniper      |Touch | +14 | 6d6+6  |    -     | 120ft | arcane | Artillery Sniper secret
+Burst       |Burst |  -  | 6d6+6  |    -     | 15ft burst around her | arcane | Artillery Burst secret. Reflex half, DC 20. She takes no damage.
+- Only one secret per shot (sniper or burst). Each 2 burnout: -1d6 and -1 DC.
+- Burnout 2 a shot (a 4th-level spell minus arcane buffer 2), or 0 with 1 overdrive. The d8 upgrade is a separate 1-point spend.
+
+Armor: +1 Mithral Chain Shirt   Weight: 12.5 lbs
+ AC  MaxDex Pen. SplFail Speed  Special
+ +5 |  +6  |  0 |  10%  | 35ft | Light armor
+
+--------------------------------------------------------------------------
+ABILITIES/FEATS
+
+Racial (Moon elf, alternate features): Low-Light Vision; Keen Senses (+2 Perception); Silver-Tongued Diplomacy (+2 Diplomacy and Bluff, 1 extra language; replaces Elven Magic); Wanderer's Stride (+5 ft speed, ignores natural difficult terrain; replaces Elven Weapon Familiarity); Moonlight Resilience (cold resistance 5; light or dancing lights 1/day, no burnout; replaces Elven Immunities).
+
+Traits: Reactionary (Combat): +2 initiative. Friend in Every Town (Social): +1 trait bonus on Diplomacy and Knowledge (local) checks; Diplomacy is always a class skill.
+
+Feats (8 regular, 2 archetype teamwork, 2 combat style, 1 mythic):
+Regular (8) (the GM's extra feat plus the normal feat at L1, L3, L5 and L7)
+
+L1 – Weapon Finesse
+L1 – Improved Unarmed Strike
+L3 – Two-Weapon Fighting
+L3 – Weapon Focus (unarmed strike)
+L5 – Open (feat to be chosen later)
+L5 – Open (feat to be chosen later)
+L7 – Improved Two-Weapon Fighting
+L7 – Expanded Arcana (adds 1 spell known: detonate, 4th level)
+
+Archetype bonus (Companion-Bound Ranger, Teamwork, 4th level)
+
+L4 – Coordinated Companion: Gwathfaron counts as having any teamwork feat she has (within 30 ft, and he must see or hear her).
+L4 – Bonded Mind: silent messages, as the message spell, with an ally who has the feat while they can see each other. Gwathfaron can use it with her.
+
+Combat style (Unarmed, prerequisites waived)
+
+L2 – Monastic Legacy
+L6 – Stunning Fist
+
+Ranger talents
+
+L4 – Skirmishing Attack
+L7 – Improved Stealth Attack (+1d6 stealth attack)
+
+Ranger bonus feat (Enhanced Companion, 7th)
+
+L7 – Improved Animal Companion (Gwathfaron: +1d8 hp, +1 Dex, +2 natural armor)
+
+Mythic feat
+
+T1 – Mythic Spell Lore (mythic spells: fireball, dimension door)
+
+Spell-less Ranger 8 (Companion-Bound Ranger archetype):
+ - Favored enemy: humanoid (elf, covers drow) (+4, first), undead (+2, second). Bonus on weapon attack and damage, and on Bluff, Knowledge, Perception, Sense Motive, Survival checks against them.
+ - Favored terrain (single, Companion-Bound): forest (+4). Bonus on initiative, Knowledge (geography), Perception, Stealth, Survival in that terrain. No more terrains as she levels; the bonus grows instead.
+ - Track (+4 Survival to follow tracks), Wild Empathy (+14, +18 with Gwathfaron), Nature's Healing, Fast Movement (+10 ft in forest), Swift Tracker.
+ - Stealth attack 3d6 (2d6 base + 1d6 Improved Stealth Attack; see weapon lines above). Style feats work only in light or medium armor or none.
+ - Animal companion (Companion-Bound, 3rd; replaces Endurance): Gwathfaron, panther, effective druid level 8. +4 on wild empathy and Handle Animal checks with him. He shares her favored enemy and favored terrain bonuses.
+ - Enhanced Companion (7th; replaces woodland stride): Improved Animal Companion.
+ - Companion-Bound replaces Endurance, favored terrain (one terrain only), hunter's bond and woodland stride.
+
+Eternal Mage 8 (Artillery Expert archetype):
+ - Eternal spellcasting (Cha-based). No spell slots and no preparation. Limited only by eldritch burnout and limited concentration. Needs Cha 10 + spell level to learn or cast a spell.
+ - Artillery Adept (1st): free arcane artillery secret, costs no overdrive (the GM allows her to keep her cantrips). Artillery Overdrive (2nd): 1 overdrive turns d6 into d8.
+ - Arcane overdrive pool: 10 points (Cha 6 + half level 4). 1 point ignores up to 4 burnout from a spell. Refills after 8 hours of sleep.
+ - Eternal secrets (3rd, 6th): Artillery Burst, Artillery Sniper.
+ - Arcane buffer 2 (4th, 8th): every spell gives 2 less burnout.
+ - School focus: Evocation, Abjuration, Transmutation, plus an additional school at 5th: Conjuration.
+ - Experimental spell (6th). Expanded concentration (7th): she can keep 2 spells with a duration active at once. Casting a third ends the older one.
+
+Mythic: Archmage, Tier 2. Mythic power 3 + 2/tier = 7 per day.
+ - Ability score (Tier 2): +2 Int (16 to 18).
+ - Mythic power costs 1 each: Surge, the extra action from Amazing Initiative, Wild Arcana, and casting a mythic spell.
+ - Surge: immediate action, add 1d6 to a d20 roll she just made, after seeing the result.
+ - Amazing Initiative (Tier 2): +2 initiative. Once a round on her turn, 1 mythic power for an extra standard action (not a spell or artillery).
+ - Hard to Kill: stabilizes automatically below 0 hp; dies at -32 (twice Con).
+ - Archmage Arcana (Tier 1): Wild Arcana. As a standard action (Mythic Adventures FAQ) spending 1 mythic power she can cast any arcane spell from her class list without it being known, and her caster level counts as 2 higher for level-dependent effects. Burnout still applies.
+ - Path ability, Tier 1: Eldritch Breach (Su, passive). When she rolls a caster level check to dispel, to overcome spell resistance, or to see whether her magic affects a target, she rolls twice and takes the higher result.
+ - Path ability, Tier 2: Elemental Bond (Su), fire. Spells with the fire descriptor get her tier (+2) added to caster level, so fireball is 10d6 and detonate set to fire is 10d8. She also has fire resistance 10 (20 at Tier 6, 30 at Tier 9).
+ - Mythic Spell Lore: mythic fireball (1d10 per caster level, max 10d10, so 10d10 with Elemental Bond; a creature that fails its save catches fire for 2d6 a round) and mythic dimension door (a one-way portal in her square lasting 1 round per 2 levels; up to 8 creatures she picks can step through). +1 mythic power each.
+
+--------------------------------------------------------------------------
+SPELLBOOK:
+None. She casts without a spellbook or prepared slots.
+
+--------------------------------------------------------------------------
+SPELLS KNOWN/PREPARED (20 known: 8 orisons + 12 spells, wizard list, from her focus schools):
+0 (8 known, no burnout): acid splash, ray of frost, spark, mage hand (D), message (D), mending, open/close, prestidigitation (D)
+Racial light or dancing lights 1/day, no burnout.
+1: shield (D), expeditious retreat (D), feather fall (D), magic missile, blood money
+2: darkvision (D), resist energy (D), scorching ray
+3: dispel magic, fireball (mythic)
+4: dimension door (mythic), detonate (from Expanded Arcana)
+Detonate (Evocation, 4th, 30 ft radius spread centered on her, V S M 50 gp of acid and alkali vials per cast, Reflex half DC 20, SR yes): she chooses acid, cold, electricity or fire. The blast goes off 1 round after casting: 8d8 within 15 ft, half from 15 to 30 ft (10d8 as fire with Elemental Bond). She takes half the damage with no save, and her energy resistance (resist energy gives 20 at CL 8) can cancel it. Burnout 2. It hits allies within 30 ft too.
+Blood Money (Transmutation 1, swift action): she takes 1d6 damage and her blood becomes one material component of a spell she casts that round. Components over 1 gp also cost 1 Strength damage plus 1 per full 500 gp, so detonate's vials cost 1d6 and 1 Strength damage. Burnout 0.
+(D) = duration spell, so it counts against her limit of 2 active at once. Durations at CL 8: shield and expeditious retreat 8 min, darkvision 8 hours, resist energy 80 min, feather fall 8 rounds or until she lands.
+Magic missile: 4 missiles at CL 8, 1d4+1 force each, no attack roll.
+Fireball: 10d6 fire with Elemental Bond (CL 10), 20 ft radius spread, Reflex DC 19 for half. Mythic: 10d10 and burning.
+Dimension door: teleports her and up to 2 willing Medium or smaller creatures (1 per 3 caster levels), 400 ft + 40 ft/level (720 ft), 2 burnout. Mythic: the portal version above.
+Experimental spell (6th level, swap each day, +1 burnout): default haste (3rd, 8 rounds). Other days: fly, cat's grace, mirror image, protection from energy, protection from evil, or any wizard/sorcerer spell up to 3rd level (any school).
+Swap: at 8th level she may trade one spell known for another of the same level.
+Armor: the mithral chain shirt gives 10% arcane spell failure on spells with a somatic component.
+
+---------------------------------------------------------------------------
+SPELLS PER DAY / SAVE DC (Spell Level + Ability Mod + 10)
+No spells per day. Spells are cast freely and cost burnout instead.
+1:  unlimited / DC 17
+2:  unlimited / DC 18
+3:  unlimited / DC 19
+4:  unlimited / DC 20
+Arcane artillery burst DC 20 (10 + half level 4 + Cha 6). Eternal secret DC 20 (10 + half level 4 + Cha 6).
+Caster level 8 (10 for fire spells). Concentration +14 (CL 8 + Cha 6).
+
+Eldritch burnout: casting a spell of 1st level or higher adds burnout equal to its level, minus 2 for arcane buffer (minimum 0), +1 for the experimental spell. Arcane artillery counts as a 4th-level spell: 2 burnout each shot, or 0 if she spends 1 overdrive.
+Each burnout point: -1 caster level. Each 2 points: -1 DC, and -1d6 artillery damage.
+At caster level 0 she can use only cantrips.
+She recovers 1 burnout at the end of any round in which she gains none.
+
+---------------------------------------------------------------------------
+SKILLS (Max Rank = Level, Class Skills get +3 bonus with at least 1 Rank)
+
+ADVENTURING SKILLS (regular ranks: 6 + Int 4 = 10 per level, 80, + 8 favored class = 88 total)
+
+                 Key     Total Ability     Class  Misc
+                 Ability  Mod   Mod  Ranks Skill  Mod
+Acrobatics         (Dex) + 14  =  6  +  5  +  3  +  0
+Bluff              (Cha) +  8  =  6  +  0  +  0  +  2
+Climb              (Str) +  7  =  3  +  1  +  3  +  0
+Diplomacy          (Cha) + 20  =  6  +  8  +  3  +  3
+Disable Device^    (Dex) + 14  =  6  +  8  +  0  +  0
+Disguise           (Cha) +  6  =  6  +  0  +  0  +  0
+Escape Artist      (Dex) +  6  =  6  +  0  +  0  +  0
+Fly                (Dex) +  6  =  6  +  0  +  0  +  0
+Heal               (Wis) +  8  =  4  +  1  +  3  +  0
+Intimidate         (Cha) +  6  =  6  +  0  +  0  +  0
+Knowledge:Arcana^  (Int) + 11  =  4  +  4  +  3  +  0
+Knowledge:Dungeon.^(Int) + 11  =  4  +  4  +  3  +  0
+Knowledge:Nature^  (Int) + 11  =  4  +  4  +  3  +  0
+Knowledge:Religion^(Int) + 11  =  4  +  4  +  3  +  0
+Perception         (Wis) + 17  =  4  +  8  +  3  +  2
+Ride               (Dex) +  6  =  6  +  0  +  0  +  0
+Sense Motive       (Wis) + 15  =  4  +  8  +  3  +  0
+Spellcraft^        (Int) + 15  =  4  +  8  +  3  +  0
+Stealth            (Dex) + 17  =  6  +  8  +  3  +  0
+Survival           (Wis) + 15  =  4  +  8  +  3  +  0
+Swim               (Str) +  7  =  3  +  1  +  3  +  0
+Use Magic Device^  (Cha) + 17  =  6  +  8  +  3  +  0
+Knowledge (local) (+1 trait bonus) and (planes): no ranks, trained only, cannot be used.
+
+BACKGROUND SKILLS (2 ranks per level, Int does not add: 16 total)
+
+                 Key     Total Ability     Class  Misc
+                 Ability  Mod   Mod  Ranks Skill  Mod
+Appraise           (Int) +  4  =  4  +  0  +  0  +  0
+Artistry           (Int) +  4  =  4  +  0  +  0  +  0
+Craft:_____        (Int) +  4  =  4  +  0  +  0  +  0
+Handle Animal^     (Cha) + 17  =  6  +  8  +  3  +  0
+Knowledge:History^ (Int) + 11  =  4  +  4  +  3  +  0
+Linguistics        (Int) + 11  =  4  +  4  +  3  +  0
+Lore               (Int) +  4  =  4  +  0  +  0  +  0
+Perform:_____      (Cha) +  6  =  6  +  0  +  0  +  0
+Profession:_____^  (Wis) +  4  =  4  +  0  +  0  +  0   (trained only: can't be used)
+Sleight of Hand^   (Dex) +  6  =  6  +  0  +  0  +  0   (trained only: can't be used)
+Knowledge (engineering), (geography) and (nobility): no ranks, trained only, cannot be used.
+
+^Trained only
+Ranks spent: adventuring 88 of 88, background 16 of 16.
+Misc: Bluff +2 racial; Diplomacy +2 racial, +1 trait; Perception +2 Keen Senses.
+Favored bonuses not included above: forest +4 on Perception, Stealth, Survival, Knowledge (geography). Elf (drow) +4 / undead +2 on Bluff, Knowledge, Perception, Sense Motive, Survival against them. Track +4 Survival to follow tracks. Nature's Healing: Heal +2 in forest.
+Languages (11): Common, Elven, Sylvan, Orc, Goblin, Draconic, Gnoll, Celestial, Dwarven, Undercommon, Gnome
+
+----------------------------------------------------------------------------
+ANIMAL COMPANION: Gwathfaron, panther (full sheet on the Gwathfaron tab)
+Medium animal (Core Rulebook small cat, leopard), effective druid level 8, 7 HD. Str 18, Dex 22, Con 15, Int 3, Wis 12, Cha 6.
+HP 50 (dies at -15). AC 23, touch 16, flat-footed 17. Init +6. Speed 50 ft (sprint 500 ft charge, once an hour).
+Fort +7, Ref +11 (evasion), Will +3 (+4 vs enchantment). Bite +9 (1d6+4 plus trip), 2 claws +4 (1d3+2). CMB +9, CMD 25 (29 vs trip).
+Stealth +18, Perception +12 (+4 each in forest). Feats: Skill Focus (Stealth), Skill Focus (Perception), Stealthy, Alertness.
+Tricks: Attack (any creature), Come, Down, Guard, Heel, Seek, Stay, Track. Equipment: none.
+
+----------------------------------------------------------------------------
+MONEY: 100 gp 9 cp (of 33,000 gp)
+----------------------------------------------------------------------------
+GEAR (Weight):
+Worn: +1 mithral chain shirt (12.5), +1 bodywrap of mighty strikes (1), cloak of resistance +3, a hooded moon-gray cloak (1), belt of incredible dexterity (1), headband of alluring charisma (1), amulet of natural armor (0), silver eight-pointed star pin (0).
+Handy haversack (5 lb however full; central pack holds 80 lb / 8 cu ft, each of the two side pouches 20 lb / 2 cu ft). Contents about 90.5 lb:
+
+ Camp and travel (38 lb, 15.81 gp)
+  - bedroll: 5 lb, 1 sp
+  - winter blanket: 3 lb, 5 sp
+  - cold-weather outfit: 7 lb, 8 gp
+  - waterskin: 4 lb, 1 gp
+  - 7 days trail rations: 7 lb, 3 gp 5 sp
+  - hemp rope, 50 ft: 10 lb, 1 gp
+  - flint and steel: no weight, 1 gp
+  - mess kit: 1 lb, 2 sp
+  - soap: 0.5 lb, 1 cp
+  - waterproof bag: 0.5 lb, 5 sp
+
+ Light and tools (35.5 lb, 142 gp)
+  - hooded lantern: 2 lb, 7 gp
+  - 5 flasks of oil: 5 lb, 5 sp
+  - 4 sunrods: 4 lb, 8 gp
+  - 10 candles: no weight, 1 sp
+  - 10 pieces of chalk: no weight, 1 sp
+  - crowbar: 5 lb, 2 gp
+  - hammer: 2 lb, 5 sp
+  - 10 pitons: 5 lb, 1 gp
+  - grappling hook: 4 lb, 1 gp
+  - climber's kit: 5 lb, 80 gp
+  - thieves' tools: 1 lb, 30 gp
+  - small steel mirror: 0.5 lb, 10 gp
+  - signal whistle: no weight, 8 sp
+  - caltrops: 2 lb, 1 gp
+
+ Healing and alchemy (12 lb, 290 gp; potions are counted under magic items)
+  - healer's kit: 1 lb, 50 gp
+  - antitoxin: no weight, 50 gp
+  - 4 potions of cure light wounds (see magic items)
+  - 2 alchemist's fire: 2 lb, 40 gp
+  - 2 smokesticks: 1 lb, 40 gp
+  - tanglefoot bag: 4 lb, 50 gp
+  - 2 thunderstones: 2 lb, 60 gp
+
+ Writing and spellcasting (4 lb, 127.1 gp)
+  - ink vial: no weight, 8 gp
+  - ink pen: no weight, 1 sp
+  - 10 sheets of paper: no weight, 4 gp
+  - journal, 50 pages: 1 lb, 10 gp
+  - spell component pouch: 2 lb, 5 gp
+  - detonate vials, 2 casts: 1 lb, 100 gp
+
+ Faith (1 lb, 25 gp)
+  - silver holy symbol of Sehanine: 1 lb, 25 gp
+
+TOTAL WEIGHT: 21.5 lbs (haversack contents add nothing)
+----------------------------------------------------------------------------
+LOAD:  Light 76 lb   Medium (-3) 153 lb   Heavy/Max (-6) 230 lb   Lift (x 2) 460 lb   Push/Drag (x 5) 1150 lb
+        Carrying 21.5 lb: light load
+----------------------------------------------------------------------------
+MAGIC ITEMS
+ +1 mithral chain shirt            (2,100 gp)
+ +1 bodywrap of mighty strikes     (3,000 gp)
+ +3 Cloak of resistance            (9,000 gp)
+ +2 Belt of incredible dexterity   (4,000 gp)
+ +2 Headband of alluring charisma  (4,000 gp)
+ +2 Amulet of natural armor        (8,000 gp)
+    Handy haversack                (2,000 gp)
+    4 potions of cure light wounds (  200 gp)
+
+----------------------------------------------------------------------------
+DAILY RESOURCES
+ - Arcane overdrive: 10 points (refills after 8 hours of sleep)
+ - Mythic power: 7 uses a day
+ - Stunning Fist: 2 uses a day (1 per round)
+ - Racial light or dancing lights: 1 a day
+ - Detonate vials: 2 casts
+
+----------------------------------------------------------------------------
+DESCRIPTION
+Daerlieth is tall and lean even for an elf, with the long-fingered, quick hands of a lifelong skirmisher. Ivory-white skin with blue tints, silver-white hair with a faint blue sheen worn in a loose braid, blue eyes with gold flecks. She dresses for the road in a mithral chain shirt under a hooded moon-gray cloak, with her family's eight-pointed silver star on a simple pin. She never looks hurried, but her eyes are always moving, tracking the tree line, the exits and the people who aren't talking. No staff, wand or spellbook, which unsettles Cormanthyr's mages.
+
+----------------------------------------------------------------------------
+BACKGROUND
+House Nightstar (Teu'Tel'Quessir). Moon elf of a minor line. At twenty she cast her first spell untaught, and her magic has never needed a spellbook, preparation or prayer. Her aunt Gweyr, the house archmage, found no discipline in it, and the wizards called her lazy. She left for the border woods and spent decades with the green elf scouts, learning to track, fight bare-handed and live off the land, then returned to the City of Song as a ranger who can hurl raw arcane force. Her grandfather Seith, advisor to the Harpers at Twilight, recommended her for the Coronal's Defenders. Panther companion Gwathfaron (Sindarin, "shadow hunter"); scout mentor: name not yet chosen.
