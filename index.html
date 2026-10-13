@@ -137,7 +137,7 @@ h1 {
 /* view-only mode for anyone who cannot write */
 .ro .clock .btn, .ro .tray-wrap, .ro #pCast, .ro #pSpells .fields,
 .ro [data-act="str"], .ro [data-act="resolve"], .ro [data-act="endspell"], .ro [data-act="clearlog"],
-.ro [data-act="burn"], .ro [data-act="res"], .ro [data-act="hp"], .ro [data-act="mspend"] { display: none !important; }
+.ro [data-act="burn"], .ro [data-act="res"], .ro .passrow, .ro [data-act="hp"], .ro [data-act="mspend"] { display: none !important; }
 .ro .toggle, .ro .spell, .ro .cell, .ro .pip { pointer-events: none; }
 .ro .cols { grid-template-columns: 1fr; }
 .lv {
@@ -210,6 +210,8 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
   .gsec + .gsec { border-top: 0; border-left: 1px solid var(--line); }
 }
 .helpform { max-width: 560px !important; }
+.passrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.passrow .hint { flex-basis: 100%; }
 .sinfo { flex: none; }
 .sinfo.mini { min-height: 22px; width: 22px; padding: 0; margin-right: 6px; border-radius: 50%; font-family: var(--font-mono); font-size: 0.72rem; vertical-align: 1px; }
 .scard-rows { margin-top: 0; }
@@ -710,11 +712,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   }
   function isActive(id) { return state.active.some(function (a) { return a.id === id; }) || (id === "blood-money" && !!state.blood); }
 
-  function fmtRounds(r) {
-    if (r >= 600) return (Math.round(r / 60) / 10) + " h";
-    if (r >= 20) return Math.ceil(r / 10) + " min";
-    return r + (r === 1 ? " round" : " rounds");
-  }
+  function fmtRounds(r) { return SheetEngine.fxLeft(r); }
   function fmtDur(r) {
     if (r >= 600) return r + " rounds (" + (Math.round(r / 60) / 10) + " h)";
     if (r >= 10) return r + " rounds (" + (r / 10) + " min)";
@@ -901,11 +899,11 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   }
 
   /* status effects on her and Gwathfaron count down one round at a time */
-  function tickFx(s) {
+  function tickFx(s, n) {
     ["her", "pet"].forEach(function (who) {
       s.fx[who] = s.fx[who].filter(function (e) {
         if (e.left == null) return true;
-        e.left -= 1;
+        e.left -= n || 1;
         if (e.left <= 0) { log(e.name + " on " + (who === "pet" ? "Gwathfaron" : "Daerlieth") + " ended"); return false; }
         return true;
       });
@@ -981,6 +979,22 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     render();
   }
 
+  /* out of combat: let minutes or hours go by. Every round in them gains no burnout, so each recovers 1 */
+  function passTime(n) {
+    mutate(function (s) {
+      var before = s.burnout;
+      s.round += n;
+      tickFx(s, n);
+      s.burnout = Math.max(0, s.burnout - n);
+      log("Passed " + SheetEngine.fxLeft(n) + (before ? ": burnout " + before + " → " + s.burnout : ""));
+      s.gained = false;
+      s.blood = null;
+      s.active = s.active.filter(function (a) {
+        if (a.end !== null && a.end <= s.round) { log(a.name + " expired"); return false; }
+        return true;
+      });
+    });
+  }
   function noCast() {
     mutate(function (s) {
       var before = s.burnout;
@@ -1206,7 +1220,10 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       (fxRows.length ? '<ul class="fxlist">' + fxRows.join("") + "</ul>" : '<p class="hint">None. Spells and effects from her or other casters, counted down here each round.</p>') + "</div>";
     $("pSlots").innerHTML =
       '<div class="ph"><h2>Concentration</h2><span class="hint">Limited concentration: ' + LP().slots + ' durations at once</span></div>' +
-      '<div class="slots">' + h + "</div>" + (p ? '<div class="pending">' + p + "</div>" : "") + fx;
+      '<div class="slots">' + h + "</div>" + (p ? '<div class="pending">' + p + "</div>" : "") + fx +
+      '<div class="passrow"><span class="lbl">Pass time</span>' +
+      [[10, "1 min"], [100, "10 min"], [600, "1 hour"]].map(function (x) { return '<button type="button" class="btn sm" data-act="pass" data-n="' + x[0] + '">' + x[1] + "</button>"; }).join("") +
+      '<span class="hint">Out of combat. Counts down spells and effects; burnout recovers 1 per round.</span></div>';
   }
 
   /* daily and Strength controls, under hit points */
@@ -1510,6 +1527,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     else if (a === "resetround") resetRound();
     else if (a === "clearlog") mutate(function (s) { s.log = []; });
     else if (a === "nocast") noCast();
+    else if (a === "pass") passTime(parseInt(t.getAttribute("data-n"), 10) || 10);
     else if (a === "newday") {
       if (!ui.dayArmed) {
         ui.dayArmed = true; render();

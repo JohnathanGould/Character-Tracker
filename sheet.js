@@ -624,13 +624,16 @@
   /* ---------- status effects ----------
      state.fx = { her: [], pet: [] }, each {id, name, from, kind: "good" | "bad", left: rounds or null, note}.
      Entered by hand (from her or another caster). They are reminders: they don't change the numbers.
-     The tracker counts "left" down by 1 each round and drops an effect at 0. */
+     The tracker counts "left" down by 1 each round (or by 10 / 100 / 600 with Pass time) and drops an effect at 0. */
   var FX_UNITS = [["r", "rounds", 1], ["m", "minutes", 10], ["h", "hours", 600], ["x", "until removed", 0]];
   function fxLeft(n) {
     if (n == null) return "until removed";
-    if (n >= 600) return (Math.round(n / 60) / 10) + " h";
-    if (n >= 100 || (n >= 10 && n % 10 === 0)) return Math.round(n / 10) + " min";
-    return n + (n === 1 ? " round" : " rounds");
+    /* hours, minutes and rounds, e.g. "1 h 12 min 3 rounds" (10 rounds = 1 min, 600 = 1 h) */
+    var h = Math.floor(n / 600), m = Math.floor((n % 600) / 10), r = n % 10, out = [];
+    if (h) out.push(h + " h");
+    if (m) out.push(m + " min");
+    if (r || !out.length) out.push(r + (r === 1 ? " round" : " rounds"));
+    return out.join(" ");
   }
   function fxPanel(who, st, o) {
     var list = ((st.fx || {})[who] || []).slice();
