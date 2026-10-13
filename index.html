@@ -1313,18 +1313,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         if (ck === "exhausted" && s.cond[ck]) delete s.cond.fatigued;
         if (ck === "fatigued" && s.cond[ck]) delete s.cond.exhausted;
       });
-    } else if (a === "prank") {
-      var pk = t.getAttribute("data-k"), pd = parseInt(t.getAttribute("data-d"), 10);
-      mutate(function (s) {
-        var r = SheetEngine.petRanks(s), used = 0;
-        Object.keys(r).forEach(function (k) { used += r[k]; });
-        if (!(pk in r)) return;
-        if (pd > 0 && (used >= SheetEngine.PET_RANKS || r[pk] >= SheetEngine.PET.hd)) return;
-        if (pd < 0 && r[pk] < 1) return;
-        r[pk] += pd; s.petRanks = r;
-      });
-    } else if (a === "prankreset") {
-      mutate(function (s) { delete s.petRanks; });
     } else if (a === "fxadd") {
       var who = t.getAttribute("data-who"), fv = function (k) { var el = $(k + "-" + who); return el ? el.value.trim() : ""; };
       var fname = fv("fxName");

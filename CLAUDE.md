@@ -24,11 +24,10 @@ Keep the look (black background, silver-blue accent, Marcellus / Albert Sans / I
 - `data/spell-bank.json`: 1,192 wizard spells, levels 1 to 4 (names, levels, summaries). The same data is inlined in `index.html` as `BANK`. School and duration are recorded only for about 170 Core Rulebook spells; the rest are `?`. Filling those gaps from a source such as Archives of Nethys is a good follow-up.
 
 ## State (one JSON document)
-`v, round, burnout, gained, overdrive, mythic, lightUsed, hp, petHp, stun, eq, cond, fx, petRanks, vials, strDmg, blood, exp, active[], pending[], log[]`
+`v, round, burnout, gained, overdrive, mythic, lightUsed, hp, petHp, stun, eq, cond, fx, vials, strDmg, blood, exp, active[], pending[], log[]`
 - `active[]`: `{id, name, cast, end (null = open-ended), total}`, max 2 entries.
 - `pending[]`: Detonate reminders `{id, name, fire, text}`.
 - `fx`: status effects `{her: [], pet: []}`, each `{id, name, from, kind: good|bad, left (rounds, null = until removed), note}`. Entered on the Daerlieth and Gwathfaron tabs; reminders only; `left` counts down each round and the effect drops at 0.
-- `petRanks`: Gwathfaron's skill ranks `{skill: n}` once changed on his tab (7 total, max 7 each); absent = the build in `PET.skills`.
 - `exp`: experimental spell id (`haste` default, or a `b-...` bank id, level 3 or lower).
 
 ## Rules the tracker encodes

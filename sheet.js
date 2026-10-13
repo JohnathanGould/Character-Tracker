@@ -85,11 +85,11 @@
       ["Survival", "wis", 0, 1, []], ["Swim", "str", 0, 1, []]
     ]
   };
-  /* his skill ranks: state.petRanks {skill: ranks} once she changes them, else the build above. 7 ranks, max 7 per skill. */
+  /* his skill ranks are fixed: the build above (Stealth 4, Perception 3) */
   var PET_RANKS = 7;
-  function petRanks(st) {
-    var r = {}, saved = st && st.petRanks;
-    PET.skills.forEach(function (s) { r[s[0]] = saved && typeof saved === "object" ? Math.max(0, Math.min(PET.hd, Math.floor(+saved[s[0]] || 0))) : s[2]; });
+  function petRanks() {
+    var r = {};
+    PET.skills.forEach(function (s) { r[s[0]] = s[2]; });
     return r;
   }
   function derivePet(c, tgt, ranksBy) {
@@ -251,7 +251,7 @@
     d.track = 4 + 0; d.empathy = BAB + CH;
 
     /* panther: shares her favored enemy and forest bonuses */
-    d.pet = derivePet(c, tgt, petRanks(st));
+    d.pet = derivePet(c, tgt, petRanks());
     d.tgt = tgt;
     d.hasteOn = haste;
     d.flags = { haste: haste, er: er, cg: cg, shield: shieldSp, pfe: pfe, fly: fly };
@@ -471,7 +471,7 @@
   function renderPet(st, o) {
     o = o || {};
     var c = st.cond || {}, tgt = c.target === "elf" ? 4 : c.target === "undead" ? 2 : 0;
-    var p = derivePet(c, tgt, petRanks(st)), m = p.m, hp = st.petHp == null ? p.hpMax : st.petHp, h = "";
+    var p = derivePet(c, tgt, petRanks()), m = p.m, hp = st.petHp == null ? p.hpMax : st.petHp, h = "";
     var hpBtn = function (d) { return '<button class="btn sm" data-act="hp" data-k="petHp" data-d="' + d + '">' + (d > 0 ? "+" : "−") + Math.abs(d) + "</button>"; };
     var shared = '<div class="grp"><div class="gl">Shared with Daerlieth</div>' +
       tg("cond", "forest", CONDS.forest, c.forest, "+4 initiative, Perception, Stealth, Survival") +
@@ -518,17 +518,10 @@
       ["Sprint", "", "", "Once an hour, a charge at 10× speed (500 ft)"]
     ]) + '<p class="hint">BAB +5, Str +4 on attack and damage. Space 5 ft, reach 5 ft. He is built as a scout, not a fighter; he can still flank so her stealth attack and Skirmishing Attack land.' + (p.tgt ? " Favored enemy " + sg(p.tgt) + " counted." : "") + "</p>", true);
 
-    var left = PET_RANKS - p.ranksUsed;
-    var rankCell = function (s) {
-      if (o.readOnly) return String(s.ranks);
-      var b = function (d, dis, lbl) { return '<button type="button" class="btn sm rk" data-act="prank" data-k="' + esc(s.name) + '" data-d="' + d + '"' + (dis ? " disabled" : "") + ' aria-label="' + lbl + " " + esc(s.name) + '">' + (d > 0 ? "+" : "−") + "</button>"; };
-      return '<span class="rks">' + b(-1, s.ranks < 1, "One rank less in") + '<b class="num">' + s.ranks + "</b>" + b(1, left < 1 || s.ranks >= PET.hd, "One rank more in") + "</span>";
-    };
-    h += sec("Skills", '<p class="rkhead"><b>' + p.ranksUsed + " of " + PET_RANKS + "</b> ranks used" + (left ? " · " + left + " left to place" : "") +
-      (o.readOnly ? "" : ' <button type="button" class="btn sm" data-act="prankreset">Back to the scout build</button>') + "</p>" +
+    h += sec("Skills", '<p class="rkhead"><b>' + p.ranksUsed + " of " + PET_RANKS + "</b> ranks: Stealth 4, Perception 3</p>" +
       tbl(["Skill", "Ranks", "Ability", "Class", "Misc", "Total"], p.skills.map(function (s) {
         return ['<span title="' + esc(s.tip) + '">' + esc(s.name) + (s.ranks ? "" : ' <small class="hint">untrained</small>') + "</span>",
-          rankCell(s), sg(s.abil) + ' <small class="hint">' + s.key.toUpperCase() + "</small>", s.cls ? "+3" : "", s.misc ? sg(s.misc) : "", "<b>" + sg(s.total) + "</b>"];
+          String(s.ranks), sg(s.abil) + ' <small class="hint">' + s.key.toUpperCase() + "</small>", s.cls ? "+3" : "", s.misc ? sg(s.misc) : "", "<b>" + sg(s.total) + "</b>"];
       }), "sk pk") +
       '<p class="hint">7 ranks: the animal companion table fixes them at 7 for effective druid level 8 (Int would need to reach 10 to add more), at most 7 in one skill. Class skill +3 once a skill has a rank. All are animal companion class skills. Misc: Skill Focus and Stealthy on Stealth, Skill Focus and Alertness on Perception, Alertness on Sense Motive, Stealthy on Escape Artist, and her forest and favored enemy bonuses when those are on. Speed 50 ft gives +8 on Acrobatics checks to jump. Hover or tap a skill for the arithmetic.</p>', true);
 
@@ -565,7 +558,7 @@
     return h;
   }
 
-  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, PET_RANKS: PET_RANKS, petRanks: petRanks, FX_UNITS: FX_UNITS, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
+  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, FX_UNITS: FX_UNITS, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
   root.SheetEngine = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
