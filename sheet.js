@@ -406,11 +406,15 @@
     if (!a.canAttack) atkRows = [["Total defense", "—", "She can't attack this round."]];
     else atkRows = [
       ["Single attack", sg(a.single), dm(a.dmgM), "Bodywrap: " + sg(a.single + a.wrap) + ", " + dmW(a.dmgM)],
-      ["Full attack, main hand", sg(a.mainA) + " / " + sg(a.mainB), dm(a.dmgM), "Two-weapon fighting −2 each. Haste adds one more at " + sg(a.mainA) + (a.haste ? " (active)" : " (if hasted)")],
-      ["Full attack, off hand", sg(a.offA) + " / " + sg(a.offB), dm(a.dmgO), "Off hand adds half Str"],
+      ["<b>Full attack: " + (a.haste ? "5 strikes" : "4 strikes") + "</b>", "", "", "Full-round action, in this order. Two-Weapon Fighting: −2 on every strike (unarmed strikes count as light). BAB +8 gives the second main-hand strike at −5; Improved Two-Weapon Fighting gives the second off-hand strike at −5." + (a.haste ? "" : " Haste adds a 5th.")],
+      [" 1. Main hand", sg(a.mainA), dm(a.dmgM), "Full Str to damage"],
+      [" 2. Off hand", sg(a.offA), dm(a.dmgO), "Two-Weapon Fighting; half Str to damage"],
+      [" 3. Main hand", sg(a.mainB), dm(a.dmgM), "Second strike from BAB +8"],
+      [" 4. Off hand", sg(a.offB), dm(a.dmgO), "Improved Two-Weapon Fighting"]
+    ].concat(a.haste ? [[" 5. Main hand (haste)", sg(a.mainA), dm(a.dmgM), "Haste: one extra strike at her highest bonus"]] : []).concat([
       ["Charge" + (c.charge ? " (now)" : ""), d.noCharge ? "can't charge" : sg(a.charge), dm(a.dmgM), "−2 AC until her next turn. Bodywrap: " + sg(a.charge + a.wrap)],
-      ["Stunning Fist", sg(a.stun), dm(a.dmgM), "Fort DC " + a.stunDc + ", 2 a day (" + st.stun + " left)"]
-    ];
+      ["Stunning Fist", sg(a.stun), dm(a.dmgM), "Fort DC " + a.stunDc + ", 2 a day (" + (st.stun == null ? 2 : st.stun) + " left)"]
+    ]);
     var sneakTxt = c.sneak ? ((c.forest || a.tgt) ? "Stealth attack +3d6 applies now (the extra damage isn't multiplied on a critical)." : "Stealth attack needs forest or a favored enemy.") : "Stealth attack +3d6 when the target is flat-footed or flanked, in forest or against a favored enemy. Skirmishing Attack: move 10+ ft first and the first attack counts as against a flat-footed target.";
     var art = sp.artDice + "d6" + sg(sp.artFlat), art8 = sp.artDice + "d8" + sg(sp.artFlat);
     var spRows = [
