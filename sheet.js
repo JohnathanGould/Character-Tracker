@@ -266,195 +266,6 @@
       '<div class="panel s-cond"><div class="ph"><h2>Conditions</h2></div>' + cond + "</div>" +
       '<div class="panel s-live"><div class="ph"><h2>From the Tracker</h2></div><div class="chips">' + liveH + "</div></div></div>";
 
-    /* abilities */
-    var ab = {};
-    ["str", "dex", "con", "int", "wis", "cha"].forEach(function (k) {
-      var o = { base: BASE[k], item: 0, dmg: 0, pen: 0 };
-      if (k === "dex") { o.item = Math.max(worn("belt") ? 2 : 0, cg ? 4 : 0); }
-      if (k === "cha") { o.item = worn("band") ? 2 : 0; }
-      if (k === "str") { o.dmg = Math.max(0, st.strDmg || 0); }
-      if (k === "str" || k === "dex") o.pen = pen;
-      o.score = Math.max(0, o.base + o.item - o.dmg - o.pen);
-      o.mod = o.score === 0 ? -5 : mod(o.score);
-      ab[k] = o;
-    });
-    d.ab = ab;
-    var S = ab.str.mod, D = ab.dex.mod, CO = ab.con.mod, W = ab.wis.mod, CH = ab.cha.mod;
-
-    /* weight and load */
-    var wt = FIXED_WT;
-    ITEMS.forEach(function (i) { if (worn(i.k)) wt += i.wt; });
-    var mx = maxLoad(ab.str.score);
-    var light = Math.floor(mx / 3), med = Math.floor(mx * 2 / 3);
-    var cat = wt <= light ? 0 : wt <= med ? 1 : wt <= mx ? 2 : 3;
-    d.load = { wt: wt, light: light, med: med, max: mx, lift: mx * 2, push: mx * 5, cat: ["Light", "Medium", "Heavy", "Overloaded"][cat],
-      maxDex: [99, 3, 1, 0][cat], acp: [0, 3, 6, 6][cat] };
-
-    /* armor class */
-    var armor = worn("shirt") ? 5 : 0, spellFail = worn("shirt") ? 10 : 0;
-    var cap = Math.min(worn("shirt") ? 6 : 99, d.load.maxDex);
-    var dexAc = Math.min(D, cap);
-    var acroRanks = 5;
-    var dodge = (haste ? 1 : 0) + (c.defend === "fight" ? (acroRanks >= 3 ? 3 : 2) : c.defend === "total" ? (acroRanks >= 3 ? 6 : 4) : 0);
-    var shieldB = shieldSp ? 4 : 0, nat = worn("amulet") ? 2 : 0;
-    var defl = pfe && c.evil ? 2 : 0, chg = c.charge ? -2 : 0;
-    d.ac = { armor: armor, shield: shieldB, dex: dexAc, nat: nat, dodge: dodge, defl: defl, chg: chg, cap: cap, capped: D > cap };
-    d.ac.full = 10 + armor + shieldB + dexAc + nat + dodge + defl + chg;
-    d.ac.touch = 10 + dexAc + dodge + defl + chg;
-    d.ac.ffDex = Math.min(0, dexAc);
-    d.ac.ff = 10 + armor + shieldB + d.ac.ffDex + nat + defl + chg;
-    d.ac.now = c.ffoot ? d.ac.ff : d.ac.full;
-    d.ac.text = parts([["", 10], ["armor", armor], ["shield spell", shieldB], ["Dex", dexAc], ["natural", nat], ["dodge", dodge], ["deflection", defl], ["charging", chg]]).replace(/^10 /, "10 ");
-    d.spellFail = spellFail;
-
-    /* saves */
-    var cloak = worn("cloak") ? 3 : 0, sp2 = (c.shaken ? 2 : 0) + (c.sickened ? 2 : 0);
-    d.save = {
-      fort: 6 + CO + cloak - sp2, ref: 6 + D + cloak - sp2, will: 6 + W + cloak - sp2,
-      cloak: cloak, status: -sp2
-    };
-
-    /* initiative, speed */
-    d.init = D + 2 + 2 + (c.forest ? 4 : 0);
-    var spd = 35 + (c.forest ? 10 : 0) + (haste || er ? 30 : 0);
-    if (cat >= 1) spd = ceil5(spd * 2 / 3);
-    if (c.exhausted) spd = Math.floor(spd / 2 / 5) * 5;
-    d.speed = spd; d.fly = fly ? 60 : 0;
-    d.noCharge = !!(c.fatigued || c.exhausted);
-
-    /* attacks */
-    var fin = Math.max(S, D), stat = -sp2;
-    var defAtk = c.defend === "fight" ? -4 : 0;
-    var hasteAtk = haste ? 1 : 0;
-    var common = BAB + fin + 1 + tgt + hasteAtk + defAtk + stat;
-    var half = S > 0 ? Math.floor(S / 2) : S;
-    var dmgM = S + tgt - (c.sickened ? 2 : 0), dmgO = half + tgt - (c.sickened ? 2 : 0);
-    var wrap = worn("wrap") ? 1 : 0;
-    d.atk = {
-      canAttack: c.defend !== "total", fin: fin, tgt: tgt, wrap: wrap,
-      single: common, charge: common + 2, stun: common,
-      mainA: common - 2, mainB: common - 7, offA: common - 2, offB: common - 7,
-      dmgM: dmgM, dmgO: dmgO, haste: haste,
-      stunDc: 10 + Math.floor(LEVEL / 2) + W,
-      sneak: !!(c.sneak && (c.forest || tgt) && true)
-    };
-    var rtouch = BAB + D + hasteAtk + stat + defAtk;
-    d.rtouch = rtouch;
-    d.cmb = BAB + S;
-    d.cmd = 10 + BAB + S + D + dodge + defl;
-
-    /* spellcasting */
-    var cl = Math.max(0, LEVEL - burn);
-    var clF = Math.max(0, LEVEL + TIER - burn);
-    d.sp = {
-      cl: cl, clFire: clF, cha: CH, burn: burn, dcP: dcP,
-      dc: [1, 2, 3, 4].map(function (l) { return 10 + l + CH - dcP; }),
-      conc: cl + CH, secretDc: 10 + Math.floor(LEVEL / 2) + CH - dcP,
-      artDice: Math.max(0, 6 - dcP), artFlat: CH,
-      od: CH + Math.floor(LEVEL / 2),
-      rays: clF >= 3 ? Math.min(3, 1 + Math.floor((clF - 3) / 4)) : 1,
-      missiles: cl >= 1 ? Math.min(5, 1 + Math.floor((cl - 1) / 2)) : 0,
-      fbDice: Math.min(10, clF), detDice: Math.min(10, clF),
-      ddRange: 400 + 40 * cl, ddCarry: Math.floor(cl / 3), ddDoor: cl,
-      eldritch: 10 + 4 + CH - dcP
-    };
-
-    /* skills */
-    var acpAll = d.load.acp + 0; /* the mithral chain shirt has no armor check penalty */
-    var forest = c.forest ? 4 : 0;
-    var rows = [];
-    SKILLS.forEach(function (s) {
-      var name = s[0], key = s[1], ranks = s[2], cls = s[3], trained = s[4], bg = s[5], acpSk = s[6];
-      var mo = [];
-      var add = function (label, v) { if (v) mo.push([label, v]); };
-      if (name === "Bluff") { add("racial", 2); add("favored enemy", tgt); }
-      if (name === "Diplomacy") { add("racial", 2); add("trait", 1); }
-      if (name === "Perception") { add("Keen Senses", 2); add("forest", forest); add("favored enemy", tgt); }
-      if (name === "Sense Motive") add("favored enemy", tgt);
-      if (name === "Survival") { add("forest", forest); add("favored enemy", tgt); }
-      if (name === "Stealth") add("forest", forest);
-      if (name === "Heal") add("Nature's Healing", c.forest ? 2 : 0);
-      if (name === "Knowledge (religion)") add("undead", c.target === "undead" ? 2 : 0);
-      var ability = ab[key].mod;
-      var classB = ranks >= 1 && cls ? 3 : 0;
-      var miscV = 0; mo.forEach(function (m) { miscV += m[1]; });
-      var acp = acpSk ? -acpAll : 0;
-      var total = ranks + ability + classB + miscV + acp - sp2;
-      var usable = !(trained && ranks < 1);
-      var tip = parts([["ranks", ranks], [key[0].toUpperCase() + key.slice(1), ability], ["class skill", classB]].concat(mo).concat([["armor check", acp], ["status", -sp2]])).replace(/^ /, "");
-      rows.push({ name: name, key: key, ranks: ranks, total: total, usable: usable, bg: !!bg, trained: !!trained, tip: tip, misc: mo });
-    });
-    d.skills = rows;
-    d.track = 4 + 0; d.empathy = BAB + CH;
-
-    /* panther */
-    var pf = c.forest ? 4 : 0;
-    d.pet = {
-      init: 5 + pf, stealth: 16 + pf, perc: 9 + pf, forest: pf,
-      bite: 10 + tgt, biteD: 4 + tgt, claw: 4 + tgt, clawD: 2 + tgt
-    };
-    d.tgt = tgt;
-    d.hasteOn = haste;
-    d.flags = { haste: haste, er: er, cg: cg, shield: shieldSp, pfe: pfe, fly: fly };
-    return d;
-  }
-
-  /* ---------- markup ---------- */
-  function box(l, v, s) { return '<div class="sbox"><div class="lbl">' + esc(l) + '</div><div class="v num">' + v + (s ? '</div><div class="s">' + s : "") + "</div></div>"; }
-  function tg(act, k, label, on, extra, v) {
-    return '<button type="button" class="tg" data-act="' + act + '" data-k="' + k + '"' + (v ? ' data-v="' + v + '"' : "") + ' aria-pressed="' + (!!on) + '">' + '<span class="dot"></span><span class="tl">' + esc(label) + "</span>" + (extra ? '<span class="tx">' + esc(extra) + "</span>" : "") + "</button>";
-  }
-  function sec(title, body, open) {
-    return '<details class="sec"' + (open ? " open" : "") + "><summary>" + esc(title) + "</summary><div class=\"sb\">" + body + "</div></details>";
-  }
-  function tbl(head, rows, cls) {
-    return '<table class="t ' + (cls || "") + '"><thead><tr>' + head.map(function (h) { return "<th>" + esc(h) + "</th>"; }).join("") + "</tr></thead><tbody>" +
-      rows.map(function (r) { return "<tr>" + r.map(function (x, i) { return "<td" + (i ? ' class="num"' : "") + ">" + x + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table>";
-  }
-
-  function render(st, o) {
-    o = o || {};
-    var d = derive(st), eq = st.eq || {}, c = st.cond || {}, P = (root.SheetEngine && root.SheetEngine.PROSE) || {};
-    var worn = function (k) { return eq[k] !== false; };
-    var a = d.atk, sp = d.sp, h = "";
-    var HPMAX = 82, PETMAX = 45;
-
-    /* gear and conditions */
-    var gear = ITEMS.map(function (i) { return tg("eq", i.k, i.name, worn(i.k), i.fx); }).join("");
-    gear += '<div class="row"><button type="button" class="btn sm" data-act="eqall" data-v="off">Take everything off</button><button type="button" class="btn sm" data-act="eqall" data-v="on">Put everything on</button></div>' +
-      '<p class="hint">Off means set aside: it gives nothing and its weight leaves her load.</p>';
-    var cond = '<div class="grp"><div class="gl">Where and who</div>' +
-      tg("cond", "forest", CONDS.forest, c.forest, "+4 Perception, Stealth, Survival, initiative; +10 ft speed") +
-      '<div class="seg" role="group" aria-label="Target">' +
-      tg("cond", "target", "No favored enemy", !c.target, "", "") +
-      tg("cond", "target", "Elf or drow", c.target === "elf", "+4", "elf") +
-      tg("cond", "target", "Undead", c.target === "undead", "+2", "undead") + "</div></div>" +
-      '<div class="grp"><div class="gl">Stance</div>' +
-      tg("cond", "charge", CONDS.charge, c.charge, "−2 AC, charge attack +2") +
-      '<div class="seg" role="group" aria-label="Defense">' +
-      tg("cond", "defend", "Normal", !c.defend, "", "") +
-      tg("cond", "defend", "Fighting defensively", c.defend === "fight", "−4 attacks, +3 dodge AC", "fight") +
-      tg("cond", "defend", "Total defense", c.defend === "total", "+6 dodge AC, no attacks", "total") + "</div>" +
-      tg("cond", "ffoot", CONDS.ffoot, c.ffoot, "loses Dex and dodge to AC") +
-      tg("cond", "sneak", CONDS.sneak, c.sneak, "stealth attack +3d6 if forest or favored enemy") + "</div>" +
-      '<div class="grp"><div class="gl">Status</div>' +
-      tg("cond", "shaken", CONDS.shaken, c.shaken, "−2 attacks, saves, skills") +
-      tg("cond", "sickened", CONDS.sickened, c.sickened, "−2 attacks, damage, saves, skills") +
-      tg("cond", "fatigued", CONDS.fatigued, c.fatigued && !c.exhausted, "−2 Str and Dex, no charge") +
-      tg("cond", "exhausted", CONDS.exhausted, c.exhausted, "−6 Str and Dex, half speed") +
-      (d.flags.pfe ? tg("cond", "evil", CONDS.evil, c.evil, "protection from evil: +2 deflection AC") : "") + "</div>";
-
-    var live = [];
-    if (st.burnout) live.push("Burnout " + st.burnout + ": caster level " + sp.cl + ", spell DCs −" + sp.dcP + ", artillery " + sp.artDice + "d6");
-    if (st.strDmg) live.push("Strength damage " + st.strDmg + ": Str " + d.ab.str.score);
-    (st.active || []).forEach(function (x) { live.push(x.name + " active"); });
-    var liveH = live.length ? live.map(function (x) { return '<span class="chip on">' + esc(x) + "</span>"; }).join("") : '<span class="hint">Nothing running. Spells, burnout and Strength damage come from the Tracker tab.</span>';
-
-    h += '<div class="s-top">' +
-      '<div class="panel s-eq"><div class="ph"><h2>Gear worn</h2></div>' + gear + "</div>" +
-      '<div class="panel s-cond"><div class="ph"><h2>Conditions</h2></div>' + cond + "</div>" +
-      '<div class="panel s-live"><div class="ph"><h2>From the Tracker</h2></div><div class="chips">' + liveH + "</div></div></div>";
-
     /* headline numbers */
     var acLbl = c.ffoot ? "AC (flat-footed)" : "AC";
     h += '<div class="panel"><div class="ph"><h2>Daerlieth Nightstar</h2><span class="hint">Moon elf · Eternal Mage 8 (Artillery Expert) / Spell-less Ranger 8 (Companion-Bound) · Archmage tier 2</span></div>' +
@@ -541,15 +352,15 @@
 
     /* skills */
     var sk = function (bg) {
-      var rows = d.skills.filter(function (s) { return !!s.bg === bg && (s.ranks > 0 || o.allSkills); }).map(function (s) {
-        return ['<span title="' + esc(s.tip) + '">' + esc(s.name) + "</span>", s.ranks, s.usable ? sg(s.total) : "—"];
+      /* every skill she has on this side, ranked or not; trained-only skills without ranks show a dash */
+      var rows = d.skills.filter(function (s) { return !!s.bg === bg; }).map(function (s) {
+        return ['<span title="' + esc(s.tip) + '">' + esc(s.name) + (s.ranks ? "" : ' <small class="hint">untrained</small>') + "</span>", s.ranks, s.usable ? sg(s.total) : "— (needs ranks)"];
       });
       return tbl(["Skill", "Ranks", "Total"], rows, "sk");
     };
-    var lite = d.skills.filter(function (s) { return s.ranks === 0 && s.usable; }).map(function (s) { return esc(s.name) + " " + sg(s.total); }).join(", ");
     var bonusNote = "Hover or tap a skill name for the arithmetic. Track adds +4 to Survival to follow tracks. Wild Empathy " + sg(d.empathy) + " (+4 with Gwathfaron). Handle Animal with Gwathfaron +4.";
     h += sec("Skills", '<div class="two"><div><h3>Adventuring (88 ranks)</h3>' + sk(false) + '</div><div><h3>Background (16 ranks)</h3>' + sk(true) +
-      "</div></div><p class=\"hint\">Untrained, no ranks: " + lite + ".</p><p class=\"hint\">Can't be used without ranks: " + esc(UNUSABLE.join(", ")) + ". " + esc(bonusNote) + "</p>", true);
+      "</div></div><p class=\"hint\">Also trained only, no ranks, can't be used: " + esc(UNUSABLE.join(", ")) + ". " + esc(bonusNote) + "</p>", true);
 
     /* companion */
     var pet = d.pet;
