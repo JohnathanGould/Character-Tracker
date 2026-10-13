@@ -396,8 +396,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   </div>
   <div class="tray-wrap"><div class="tray" id="tray" hidden></div></div>
   <nav class="tabs" role="tablist" aria-label="View">
-    <button type="button" class="tab" role="tab" id="tabTracker" data-tab="tracker" aria-selected="true">Tracker</button>
-    <button type="button" class="tab" role="tab" id="tabSheet" data-tab="sheet" aria-selected="false">Daerlieth</button>
+    <button type="button" class="tab" role="tab" id="tabSheet" data-tab="sheet" aria-selected="true">Daerlieth</button>
     <button type="button" class="tab" role="tab" id="tabPet" data-tab="pet" aria-selected="false">Gwathfaron</button>
   </nav>
 </div>
@@ -418,16 +417,13 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     </div>
   </section>
 
-  <section class="panel" id="pStats"></section>
-
   <section class="panel" id="pBody"></section>
-
-  <section class="lower">
-    <div class="panel" id="pLog"></div>
-    <div class="panel" id="pRules"></div>
-  </section>
 </main>
 <section id="sheetView" aria-label="Character sheet"></section>
+<section class="lower" id="trkLower">
+  <div class="panel" id="pLog"></div>
+  <div class="panel" id="pRules"></div>
+</section>
 </div>
 
 <div class="sheet" id="signin" hidden>
@@ -1135,34 +1131,22 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
           '<button type="button" class="btn sm" data-act="fxdel" data-who="' + w[0] + '" data-id="' + esc(e.id) + '">End</button></li>');
       });
     });
-    var fx = '<div class="trk-fx"><div class="ph"><h2>Status effects</h2><span class="hint"><a href="#sheet">Add on Daerlieth</a> · <a href="#gwathfaron">Add on Gwathfaron</a></span></div>' +
+    var fx = '<div class="trk-fx"><div class="ph"><h2>Status effects</h2><span class="hint"><a href="#herfx" data-jump="herfx">Add for her</a> · <a href="#gwathfaron">Add on Gwathfaron</a></span></div>' +
       (fxRows.length ? '<ul class="fxlist">' + fxRows.join("") + "</ul>" : '<p class="hint">None. Spells and effects from her or other casters, counted down here each round.</p>') + "</div>";
     $("pSlots").innerHTML =
       '<div class="ph"><h2>Concentration</h2><span class="hint">Limited concentration: ' + LP().slots + ' durations at once</span></div>' +
       '<div class="slots">' + h + "</div>" + (p ? '<div class="pending">' + p + "</div>" : "") + fx;
   }
 
-  function renderStats() {
-    var b = state.burnout, D = dv(), sp = D.sp;
-    var smod = D.ab.str.mod;
-    var st = [
-      ["Caster level", sp.cl, "8 − " + b],
-      ["Concentration", "+" + sp.conc, "CL + Cha " + (sp.cha >= 0 ? "+" : "−") + Math.abs(sp.cha)],
-      ["Spell DC", sp.dc[0] + " to " + sp.dc[sp.dc.length - 1], "1st to " + Levels.ord(sp.maxSpell) + " level"],
-      ["Artillery", sp.artDice + "d6+" + sp.artFlat, "DC " + sp.secretDc + " burst"],
-      ["Strength", D.ab.str.score, "mod " + (smod >= 0 ? "+" : "−") + Math.abs(smod) + ", damage " + state.strDmg],
-      ["AC", D.ac.now, D.flags.shield ? "Shield up" : "+4 with shield"]
-    ];
-    var h = st.map(function (x) { return '<div class="stat"><div class="lbl">' + x[0] + '</div><div class="v num">' + x[1] + '</div><div class="s">' + x[2] + "</div></div>"; }).join("");
-    $("pStats").innerHTML =
-      '<div class="ph"><h2>Right now</h2><span class="hint">Burnout and conditions applied</span></div>' +
-      '<div class="stats">' + h + "</div>" +
-      '<div class="conds">' + (state.blood ? '<span class="chip on">Blood Money active this round: ' + esc(state.blood.name) + "</span>" : "") +
+  /* daily and Strength controls, under hit points */
+  function bodyConds() {
+    var D = dv();
+    return '<div class="conds bodyconds">' + (state.blood ? '<span class="chip on">Blood Money active this round: ' + esc(state.blood.name) + "</span>" : "") +
       '<button class="toggle" data-act="light" aria-pressed="' + state.lightUsed + '">Racial light · ' + (state.lightUsed ? "used today" : "1/day ready") + "</button>" +
+      '<span class="chip">Strength ' + D.ab.str.score + (state.strDmg ? " (" + state.strDmg + " damage)" : "") + "</span>" +
       '<button class="toggle" data-act="str" data-d="1">Strength −1</button>' +
       '<button class="toggle" data-act="str" data-d="-1">Strength +1</button></div>';
   }
-
 
   function hpBlock(k, name, cur, max, dead, note) {
     var st = cur > 0 ? (cur <= max / 4 ? "Bloodied" : "Up") : cur === 0 ? "Disabled" : cur > -dead ? "Dying" : "Dead";
@@ -1182,7 +1166,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       hpBlock("petHp", "Gwathfaron, panther", state.petHp, petMax(), petDead(), "Dies at −" + petDead() + ".") +
       '<div class="hpb"><div class="lbl">Stunning Fist</div><div class="big"><div class="bignum num">' + state.stun + '<small>/' + LP().stunUses + '</small></div></div>' +
       '<div class="pips">' + stun + '</div><p class="hint">Declare before the roll, 1 per round. Fort DC ' + dv().atk.stunDc + ' or stunned until just before her next turn.</p></div>' +
-      "</div>";
+      "</div>" + bodyConds();
   }
 
   function renderLog() {
@@ -1248,7 +1232,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     $("dayBtn").textContent = ui.dayArmed ? "Confirm new day" : "New day";
     $("dayBtn").classList.toggle("warn", ui.dayArmed);
     renderTray();
-    renderBurn(); renderOver(); renderMyth(); renderSpells(); renderCast(); renderSlots(); renderStats(); renderBody(); renderLog();
+    renderBurn(); renderOver(); renderMyth(); renderSpells(); renderCast(); renderSlots(); renderBody(); renderLog();
     renderSheet();
   }
 
@@ -1288,30 +1272,28 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       s.petHp += after.pet.hpMax - before.pet.hpMax;
       s.overdrive = Math.min(after.sp.od, s.overdrive + (after.sp.od - before.sp.od));
       s.stun = Math.min(Levels.prog(L).stunUses, s.stun + (Levels.prog(L).stunUses - Levels.prog(L - 1).stunUses));
-      log("Level " + L + "! Hit points +" + (after.hpMax - before.hpMax) + " (rolled " + roll + "), Gwathfaron +" + (after.pet.hpMax - before.pet.hpMax) + ". Make her picks on the Daerlieth tab.");
+      log("Level " + L + "! Hit points +" + (after.hpMax - before.hpMax) + " (rolled " + roll + "), Gwathfaron +" + (after.pet.hpMax - before.pet.hpMax) + ". Make her picks under Level-up picks.");
     });
     setView("sheet");
   });
 
   /* ---------- Sheet tab ---------- */
   var VIEW_KEY = "daerlieth-view";
-  var view = "tracker";
-  /* tabs: tracker, sheet (#sheet) and Gwathfaron (#gwathfaron); both sheets render into #sheetView */
-  var HASH = { sheet: "#sheet", pet: "#gwathfaron" };
-  function viewFromHash() { return location.hash === "#sheet" ? "sheet" : location.hash === "#gwathfaron" ? "pet" : null; }
+  var view = "sheet";
+  /* tabs: Daerlieth (tracker panels with her sheet below) and Gwathfaron (#gwathfaron); both sheets render into #sheetView */
+  function viewFromHash() { return location.hash === "#gwathfaron" ? "pet" : location.hash === "#sheet" ? "sheet" : null; }
   function setView(v, keep) {
-    view = v === "sheet" || v === "pet" ? v : "tracker";
-    document.body.classList.toggle("view-sheet", view !== "tracker");
-    $("tabTracker").setAttribute("aria-selected", view === "tracker");
+    view = v === "pet" ? "pet" : "sheet";
+    document.body.classList.toggle("view-pet", view === "pet");
     $("tabSheet").setAttribute("aria-selected", view === "sheet");
     $("tabPet").setAttribute("aria-selected", view === "pet");
     if (!keep) { try { localStorage.setItem(VIEW_KEY, view); } catch (e) {} }
-    if (HASH[view]) { if (location.hash !== HASH[view]) history.replaceState(null, "", HASH[view]); renderSheet(); }
-    else if (viewFromHash()) history.replaceState(null, "", location.pathname + location.search);
+    if (view === "pet") { if (location.hash !== "#gwathfaron") history.replaceState(null, "", "#gwathfaron"); }
+    else if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+    renderSheet();
     window.scrollTo(0, 0);
   }
   function renderSheet() {
-    if (view === "tracker") return;
     var host = $("sheetView");
     /* keep which sections are open across re-renders */
     var open = {};
@@ -1322,8 +1304,10 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-tab]");
     if (t) setView(t.getAttribute("data-tab"));
+    var j = e.target.closest("[data-jump]");
+    if (j && $(j.getAttribute("data-jump"))) { e.preventDefault(); $(j.getAttribute("data-jump")).scrollIntoView({ behavior: "smooth", block: "start" }); }
   });
-  window.addEventListener("hashchange", function () { setView(viewFromHash() || "tracker", true); });
+  window.addEventListener("hashchange", function () { setView(viewFromHash() || "sheet", true); });
   /* breakdown tooltips (.tip): open toward whichever side has room */
   function placeTip(e) {
     var t = e.target.closest && e.target.closest(".tip");

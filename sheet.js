@@ -413,16 +413,9 @@
       tg("cond", "exhausted", CONDS.exhausted, c.exhausted, "−6 Str and Dex, half speed") +
       (d.flags.pfe ? tg("cond", "evil", CONDS.evil, c.evil, "protection from evil: +2 deflection AC") : "") + "</div>";
 
-    var live = [];
-    if (st.burnout) live.push("Burnout " + st.burnout + ": caster level " + sp.cl + ", spell DCs −" + sp.dcP + ", artillery " + sp.artDice + "d6");
-    if (st.strDmg) live.push("Strength damage " + st.strDmg + ": Str " + d.ab.str.score);
-    (st.active || []).forEach(function (x) { live.push(x.name + (x.on === "pet" ? " on Gwathfaron" : x.on === "ally" ? " on an ally" : " active")); });
-    var liveH = live.length ? live.map(function (x) { return '<span class="chip on">' + esc(x) + "</span>"; }).join("") : '<span class="hint">Nothing running. Spells, burnout and Strength damage come from the Tracker tab.</span>';
-
     h += '<div class="s-top">' +
       '<div class="panel s-eq"><div class="ph"><h2>Gear worn</h2></div>' + gear + "</div>" +
-      '<div class="panel s-cond"><div class="ph"><h2>Conditions</h2></div>' + cond + "</div>" +
-      '<div class="panel s-live"><div class="ph"><h2>From the Tracker</h2></div><div class="chips">' + liveH + "</div></div></div>";
+      '<div class="panel s-cond"><div class="ph"><h2>Conditions</h2></div>' + cond + "</div></div>";
     h += fxPanel("her", st, o);
 
     /* headline numbers */
@@ -431,7 +424,7 @@
       (o.readOnly ? "" : '<div class="lvbtns">' + (L < LV().MAX ? '<button type="button" class="btn primary sm" data-act="lvlup">Level up to ' + (L + 1) + "</button>" : "") +
         (L > LV().MIN ? '<button type="button" class="btn sm" data-act="lvldown">Undo level ' + L + "</button>" : "") + "</div>") + "</div>" +
       '<div class="sgrid">' +
-      box("HP", st.hp + "<small>/" + HPMAX + "</small>", "dies at −32") +
+      box("Artillery", sp.artDice + "d6" + sg(sp.artFlat), "burst DC " + sp.secretDc) +
       box(acLbl, d.ac.now, "touch " + d.ac.touch + " · flat-footed " + d.ac.ff) +
       box("Initiative", sg(d.init), c.forest ? "forest +" + PR.forest + " included" : "+" + PR.forest + " in forest") +
       box("Speed", d.speed + " ft", d.fly ? "fly " + d.fly + " ft" : (35 + PR.fastMove) + " ft in forest") +
@@ -646,11 +639,10 @@
         '<span class="fxd num">' + esc(fxLeft(e.left)) + "</span>" +
         (o.readOnly ? "" : '<button type="button" class="btn sm" data-act="fxdel" data-who="' + who + '" data-id="' + esc(e.id) + '" aria-label="Remove ' + esc(e.name) + '">End</button>') + "</li>";
     });
-    /* her own duration spells are tracked in the concentration slots; show them here too */
     /* her duration spells live in the Tracker's concentration slots; show the ones on this creature */
     (st.active || []).forEach(function (a) {
       if ((a.on || "her") !== who) return;
-      rows.push('<li class="fx good mine"><span class="fxk">Her spell</span><span class="fxn"><b>' + esc(a.name) + '</b> <span class="hint">concentration slot, ends from the Tracker</span></span>' +
+      rows.push('<li class="fx good mine"><span class="fxk">Her spell</span><span class="fxn"><b>' + esc(a.name) + '</b> <span class="hint">in a concentration slot, ends there</span></span>' +
         '<span class="fxd num">' + (a.end == null ? "open" : fxLeft(Math.max(0, a.end - (st.round || 1)))) + "</span></li>");
     });
     var form = o.readOnly ? "" :
@@ -662,9 +654,9 @@
       '<select id="fxU-' + who + '">' + FX_UNITS.map(function (u) { return '<option value="' + u[0] + '">' + u[1] + "</option>"; }).join("") + "</select></span></label>" +
       '<label class="field fxwide">Effect (optional)<input type="text" id="fxNote-' + who + '" maxlength="120" placeholder="e.g. +1 attack, −2 AC, half speed"></label>' +
       '<button type="button" class="btn primary" data-act="fxadd" data-who="' + who + '">Add effect</button></div>';
-    return '<div class="panel s-fx"><div class="ph"><h2>Status effects</h2><span class="hint">Spells and effects on ' + (who === "pet" ? "Gwathfaron" : "her") + ", helpful or harmful</span></div>" +
+    return '<div class="panel s-fx"' + (who === "her" ? ' id="herfx"' : "") + '><div class="ph"><h2>Status effects</h2><span class="hint">Spells and effects on ' + (who === "pet" ? "Gwathfaron" : "her") + ", helpful or harmful</span></div>" +
       (rows.length ? '<ul class="fxlist">' + rows.join("") + "</ul>" : '<p class="hint">None right now.</p>') + form +
-      '<p class="hint">Reminders only: they don\'t change the numbers on the sheet. Rounds count down as the Tracker advances; minutes and hours count in rounds too (1 min = 10 rounds).</p></div>';
+      '<p class="hint">Reminders only: they don\'t change the numbers on the sheet. Rounds count down as the round advances; minutes and hours count in rounds too (1 min = 10 rounds).</p></div>';
   }
 
   /* ---------- Gwathfaron tab ---------- */
