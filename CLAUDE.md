@@ -15,7 +15,7 @@ Keep the look (black background, silver-blue accent, Marcellus / Albert Sans / I
 
 ## What exists
 - `sheet.js`: the Sheet tab. `SheetEngine.derive(state)` computes every sheet number (abilities, AC, saves, attacks, DCs, skills, load) from the tracker state plus `state.eq` (gear off when `eq[key] === false`) and `state.cond` (conditions). `SheetEngine.render` builds the markup. The tracker also calls `derive` for Cha, touch bonus, AC and the overdrive pool, so worn gear changes both tabs. Edit sheet numbers here, not in `index.html`.
-- Gwathfaron tab (`#gwathfaron`): `SheetEngine.renderPet`, built from `PET` and `derivePet` in `sheet.js` (small cat companion at effective druid level 8 with Improved Animal Companion; stealth build: Weapon Finesse, Improved Initiative, Skill Focus (Stealth), Stealthy). Renders into `#sheetView` like the Sheet tab.
+- Gwathfaron tab (`#gwathfaron`): `SheetEngine.renderPet`, built from `PET` and `derivePet` in `sheet.js` (small cat companion at effective druid level 8 with Improved Animal Companion; scout build, Stealth and Perception first: Int 3, Skill Focus (Stealth), Skill Focus (Perception), Stealthy, Alertness). Renders into `#sheetView` like the Sheet tab.
 - `sheet-prose.js`: generated static text for the Sheet tab. Rebuild with `python3 tools/make-prose.py <printed sheet>.txt > sheet-prose.js`.
 - `sheet.css`: styles for the tabs and the Sheet.
 - `index.html`: all HTML, CSS and JS in one file. Keeps a local copy in `localStorage` key `ilmadria-burnout-ledger-v1` (plus an `:edit` flag).

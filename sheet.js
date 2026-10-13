@@ -71,16 +71,17 @@
      Druid table at 8th: 7 HD, BAB +5, Fort +5 / Ref +5 / Will +2, 7 skill ranks, 4 feats, natural armor +4,
      Str/Dex +2, 3 bonus tricks, plus link, share spells, evasion, devotion, one ability score increase.
      Improved Animal Companion (Daerlieth's Enhanced Companion feat): +1d8 hp, +1 Dex, +2 natural armor.
-     Build choices (a stealthy stalker that flanks for her stealth attack): ability increase to Str, Improved
-     Animal Companion +1 to Dex; feats Weapon Finesse, Improved Initiative, Skill Focus (Stealth), Stealthy;
-     ranks Stealth 4, Perception 3. */
+     Build choices (a scout: Stealth and Perception first, not attacks): ability increase to Int (2 to 3, which
+     lets a companion take any feat it can use), Improved Animal Companion +1 to Dex; feats Skill Focus (Stealth),
+     Skill Focus (Perception), Stealthy, Alertness; ranks Stealth 4, Perception 3. The 7 ranks are fixed by the
+     companion table (Int would have to reach 10 to add any). */
   var PET = {
     hpMax: 50, dead: 15, hd: 7, bab: 5, fort: 5, ref: 5, will: 2, nat: 7, speed: 50,
-    ab: { str: 19, dex: 22, con: 15, int: 2, wis: 12, cha: 6 },
+    ab: { str: 18, dex: 22, con: 15, int: 3, wis: 12, cha: 6 },
     /* name, ability, ranks, class skill, misc [label, value] */
     skills: [
       ["Acrobatics", "dex", 0, 1, [["speed 50 ft, jumping only", 0]]], ["Climb", "str", 0, 1, []], ["Escape Artist", "dex", 0, 1, [["Stealthy", 2]]],
-      ["Intimidate", "cha", 0, 1, []], ["Perception", "wis", 3, 1, []], ["Stealth", "dex", 4, 1, [["Skill Focus", 3], ["Stealthy", 2]]],
+      ["Intimidate", "cha", 0, 1, []], ["Perception", "wis", 3, 1, [["Skill Focus", 3], ["Alertness", 2]]], ["Sense Motive", "wis", 0, 0, [["Alertness", 2]]], ["Stealth", "dex", 4, 1, [["Skill Focus", 3], ["Stealthy", 2]]],
       ["Survival", "wis", 0, 1, []], ["Swim", "str", 0, 1, []]
     ]
   };
@@ -96,11 +97,11 @@
     var m = {}; Object.keys(PET.ab).forEach(function (k) { m[k] = mod(PET.ab[k]); });
     var pf = c.forest ? 4 : 0;
     var p = { ab: PET.ab, m: m, forest: pf, tgt: tgt, hpMax: PET.hpMax, dead: PET.dead };
-    p.init = m.dex + 4 + pf;
+    p.init = m.dex + pf;
     p.ac = 10 + m.dex + PET.nat; p.touch = 10 + m.dex; p.ff = 10 + PET.nat;
     p.fort = PET.fort + m.con; p.ref = PET.ref + m.dex; p.will = PET.will + m.wis;
-    p.bite = PET.bab + m.dex + tgt; p.biteD = m.str + tgt;            /* Weapon Finesse: Dex to attack */
-    p.claw = PET.bab + m.dex - 5 + tgt; p.clawD = Math.floor(m.str / 2) + tgt; /* secondary attacks */
+    p.bite = PET.bab + m.str + tgt; p.biteD = m.str + tgt;
+    p.claw = PET.bab + m.str - 5 + tgt; p.clawD = Math.floor(m.str / 2) + tgt; /* secondary attacks */
     p.cmb = PET.bab + m.str; p.cmd = 10 + PET.bab + m.str + m.dex;
     p.skills = PET.skills.map(function (s) {
       var name = s[0], key = s[1], ranks = ranksBy[name] || 0, misc = s[4].slice();
@@ -498,7 +499,7 @@
 
     var abRow = function (k, label) { return [label, PET.ab[k], sg(m[k])]; };
     h += sec("Abilities", tbl(["", "Score", "Mod"], [abRow("str", "STR"), abRow("dex", "DEX"), abRow("con", "CON"), abRow("int", "INT"), abRow("wis", "WIS"), abRow("cha", "CHA")]) +
-      '<p class="hint">Small cat base Str 12, Dex 21, Con 13, Int 2, Wis 12, Cha 6. 4th-level advancement: Str +4, Dex −2, Con +2 (Medium). Companion bonus Str/Dex +2. Ability score increase +1 Str. Improved Animal Companion +1 Dex.</p>', true);
+      '<p class="hint">Small cat base Str 12, Dex 21, Con 13, Int 2, Wis 12, Cha 6. 4th-level advancement: Str +4, Dex −2, Con +2 (Medium). Companion bonus Str/Dex +2. Ability score increase +1 Int (2 to 3: at Int 3 a companion can take any feat it can use, which opens Alertness). Improved Animal Companion +1 Dex.</p>', true);
 
     h += sec("Defense", tbl(["", "Total", "How"], [
       ["AC", p.ac, "10 + " + m.dex + " Dex + " + PET.nat + " natural"],
@@ -515,7 +516,7 @@
       ["Claw", sg(p.claw), "1d3" + sg(p.clawD), "Secondary, two of them (−5, half Str)"],
       ["Full attack", "", "", "Bite " + sg(p.bite) + " and 2 claws " + sg(p.claw)],
       ["Sprint", "", "", "Once an hour, a charge at 10× speed (500 ft)"]
-    ]) + '<p class="hint">BAB +5. Weapon Finesse puts Dex (+6) on attack rolls; damage uses Str (+4). Space 5 ft, reach 5 ft. Built to flank with Daerlieth so her stealth attack and Skirmishing Attack land.' + (p.tgt ? " Favored enemy " + sg(p.tgt) + " counted." : "") + "</p>", true);
+    ]) + '<p class="hint">BAB +5, Str +4 on attack and damage. Space 5 ft, reach 5 ft. He is built as a scout, not a fighter; he can still flank so her stealth attack and Skirmishing Attack land.' + (p.tgt ? " Favored enemy " + sg(p.tgt) + " counted." : "") + "</p>", true);
 
     var left = PET_RANKS - p.ranksUsed;
     var rankCell = function (s) {
@@ -524,22 +525,22 @@
       return '<span class="rks">' + b(-1, s.ranks < 1, "One rank less in") + '<b class="num">' + s.ranks + "</b>" + b(1, left < 1 || s.ranks >= PET.hd, "One rank more in") + "</span>";
     };
     h += sec("Skills", '<p class="rkhead"><b>' + p.ranksUsed + " of " + PET_RANKS + "</b> ranks used" + (left ? " · " + left + " left to place" : "") +
-      (o.readOnly ? "" : ' <button type="button" class="btn sm" data-act="prankreset">Back to the stalker build</button>') + "</p>" +
+      (o.readOnly ? "" : ' <button type="button" class="btn sm" data-act="prankreset">Back to the scout build</button>') + "</p>" +
       tbl(["Skill", "Ranks", "Ability", "Class", "Misc", "Total"], p.skills.map(function (s) {
         return ['<span title="' + esc(s.tip) + '">' + esc(s.name) + (s.ranks ? "" : ' <small class="hint">untrained</small>') + "</span>",
           rankCell(s), sg(s.abil) + ' <small class="hint">' + s.key.toUpperCase() + "</small>", s.cls ? "+3" : "", s.misc ? sg(s.misc) : "", "<b>" + sg(s.total) + "</b>"];
       }), "sk pk") +
-      '<p class="hint">7 ranks (1 per Hit Die, Int 2), at most 7 in one skill. Class skill +3 once a skill has a rank. All are animal companion class skills. Misc: Skill Focus and Stealthy on Stealth, Stealthy on Escape Artist, and her forest and favored enemy bonuses when those are on. Speed 50 ft gives +8 on Acrobatics checks to jump. Hover or tap a skill for the arithmetic.</p>', true);
+      '<p class="hint">7 ranks: the animal companion table fixes them at 7 for effective druid level 8 (Int would need to reach 10 to add more), at most 7 in one skill. Class skill +3 once a skill has a rank. All are animal companion class skills. Misc: Skill Focus and Stealthy on Stealth, Skill Focus and Alertness on Perception, Alertness on Sense Motive, Stealthy on Escape Artist, and her forest and favored enemy bonuses when those are on. Speed 50 ft gives +8 on Acrobatics checks to jump. Hover or tap a skill for the arithmetic.</p>', true);
 
     h += sec("Feats", "<ul>" +
-      "<li><b>Weapon Finesse</b>: Dex instead of Str on bite and claw attacks.</li>" +
-      "<li><b>Improved Initiative</b>: +4 initiative, so he moves before the target and takes up a flanking spot.</li>" +
       "<li><b>Skill Focus (Stealth)</b>: +3 Stealth (+6 at 10 ranks).</li>" +
+      "<li><b>Skill Focus (Perception)</b>: +3 Perception (+6 at 10 ranks).</li>" +
       "<li><b>Stealthy</b>: +2 Stealth and Escape Artist.</li>" +
+      "<li><b>Alertness</b>: +2 Perception and Sense Motive. Not on the Animal Feats list; Int 3 makes it legal.</li>" +
       "<li><b>Bonded Mind</b> (teamwork, from Daerlieth through Coordinated Companion): silent messages between them while they can see each other.</li></ul>" +
-      '<p class="hint">4 feats at 7 HD, all from the Animal Feats list. Next feat at 9 HD.</p>', false);
+      '<p class="hint">4 feats at 7 HD. Next feat at 9 HD; Greater Animal Companion (Daerlieth, later) adds one more.</p>', false);
 
-    h += sec("Tricks", "<p>9 tricks (6 from Int 2, 3 bonus):</p><ul>" +
+    h += sec("Tricks", "<p>9 tricks (6 from Int, 3 bonus):</p><ul>" +
       "<li><b>Attack</b>, any creature (counts as 2 tricks)</li><li><b>Come</b></li><li><b>Down</b></li><li><b>Guard</b></li>" +
       "<li><b>Heel</b></li><li><b>Seek</b></li><li><b>Stay</b></li><li><b>Track</b></li></ul>" +
       '<p class="hint">Handle Animal +21 with him (+4 bond). Bonded Mind lets her give these silently.</p>', false);
