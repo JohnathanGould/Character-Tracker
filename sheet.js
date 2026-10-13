@@ -303,6 +303,7 @@
       '<div class="panel s-eq"><div class="ph"><h2>Gear worn</h2></div>' + gear + "</div>" +
       '<div class="panel s-cond"><div class="ph"><h2>Conditions</h2></div>' + cond + "</div>" +
       '<div class="panel s-live"><div class="ph"><h2>From the Tracker</h2></div><div class="chips">' + liveH + "</div></div></div>";
+    h += fxPanel("her", st, o);
 
     /* headline numbers */
     var acLbl = c.ffoot ? "AC (flat-footed)" : "AC";
@@ -416,6 +417,46 @@
   }
 
 
+
+  /* ---------- status effects ----------
+     state.fx = { her: [], pet: [] }, each {id, name, from, kind: "good" | "bad", left: rounds or null, note}.
+     Entered by hand (from her or another caster). They are reminders: they don't change the numbers.
+     The tracker counts "left" down by 1 each round and drops an effect at 0. */
+  var FX_UNITS = [["r", "rounds", 1], ["m", "minutes", 10], ["h", "hours", 600], ["x", "until removed", 0]];
+  function fxLeft(n) {
+    if (n == null) return "until removed";
+    if (n >= 600 && n % 600 === 0) return (n / 600) + " h";
+    if (n >= 10 && n % 10 === 0) return (n / 10) + " min";
+    return n + (n === 1 ? " round" : " rounds");
+  }
+  function fxPanel(who, st, o) {
+    var list = ((st.fx || {})[who] || []).slice();
+    var rows = list.map(function (e) {
+      return '<li class="fx ' + (e.kind === "bad" ? "bad" : "good") + '"><span class="fxk">' + (e.kind === "bad" ? "Harmful" : "Helpful") + "</span>" +
+        '<span class="fxn"><b>' + esc(e.name) + "</b>" + (e.from ? ' <span class="hint">from ' + esc(e.from) + "</span>" : "") +
+        (e.note ? '<span class="fxt">' + esc(e.note) + "</span>" : "") + "</span>" +
+        '<span class="fxd num">' + esc(fxLeft(e.left)) + "</span>" +
+        (o.readOnly ? "" : '<button type="button" class="btn sm" data-act="fxdel" data-who="' + who + '" data-id="' + esc(e.id) + '" aria-label="Remove ' + esc(e.name) + '">End</button>') + "</li>";
+    });
+    /* her own duration spells are tracked in the concentration slots; show them here too */
+    if (who === "her") (st.active || []).forEach(function (a) {
+      rows.push('<li class="fx good mine"><span class="fxk">Her spell</span><span class="fxn"><b>' + esc(a.name) + '</b> <span class="hint">concentration slot, ends from the Tracker</span></span>' +
+        '<span class="fxd num">' + (a.end == null ? "open" : fxLeft(Math.max(0, a.end - (st.round || 1)))) + "</span></li>");
+    });
+    var form = o.readOnly ? "" :
+      '<div class="fxform">' +
+      '<label class="field">Spell or effect<input type="text" id="fxName-' + who + '" maxlength="60" placeholder="e.g. Bless, Slow, Bull\'s strength"></label>' +
+      '<label class="field">Cast by<input type="text" id="fxFrom-' + who + '" maxlength="40" placeholder="Daerlieth, or the caster\'s name"></label>' +
+      '<label class="field">Type<select id="fxKind-' + who + '"><option value="good">Helpful</option><option value="bad">Harmful</option></select></label>' +
+      '<label class="field">Lasts<span class="fxdur"><input type="text" inputmode="numeric" id="fxN-' + who + '" maxlength="4" placeholder="8">' +
+      '<select id="fxU-' + who + '">' + FX_UNITS.map(function (u) { return '<option value="' + u[0] + '">' + u[1] + "</option>"; }).join("") + "</select></span></label>" +
+      '<label class="field fxwide">Effect (optional)<input type="text" id="fxNote-' + who + '" maxlength="120" placeholder="e.g. +1 attack, −2 AC, half speed"></label>' +
+      '<button type="button" class="btn primary" data-act="fxadd" data-who="' + who + '">Add effect</button></div>';
+    return '<div class="panel s-fx"><div class="ph"><h2>Status effects</h2><span class="hint">Spells and effects on ' + (who === "pet" ? "Gwathfaron" : "her") + ", helpful or harmful</span></div>" +
+      (rows.length ? '<ul class="fxlist">' + rows.join("") + "</ul>" : '<p class="hint">None right now.</p>') + form +
+      '<p class="hint">Reminders only: they don\'t change the numbers on the sheet. Rounds count down as the Tracker advances; minutes and hours count in rounds too (1 min = 10 rounds).</p></div>';
+  }
+
   /* ---------- Gwathfaron tab ---------- */
   function renderPet(st, o) {
     o = o || {};
@@ -444,6 +485,7 @@
       "</div>" +
       (o.readOnly ? "" : '<div class="ctl">' + [-10, -5, -1, 1, 5, 10].map(hpBtn).join("") + "</div>") +
       shared + "</div>";
+    h += fxPanel("pet", st, o);
 
     var abRow = function (k, label) { return [label, PET.ab[k], sg(m[k])]; };
     h += sec("Abilities", tbl(["", "Score", "Mod"], [abRow("str", "STR"), abRow("dex", "DEX"), abRow("con", "CON"), abRow("int", "INT"), abRow("wis", "WIS"), abRow("cha", "CHA")]) +
@@ -503,7 +545,7 @@
     return h;
   }
 
-  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
+  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, FX_UNITS: FX_UNITS, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
   root.SheetEngine = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

@@ -479,7 +479,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
   var DEFAULT = {
     v: 1, round: 1, burnout: 0, gained: false,
-    overdrive: 10, mythic: 7, eq: {}, cond: {}, lightUsed: false, hp: 82, petHp: 50, stun: 2,
+    overdrive: 10, mythic: 7, eq: {}, cond: {}, fx: { her: [], pet: [] }, lightUsed: false, hp: 82, petHp: 50, stun: 2,
     vials: 2, strDmg: 0, blood: null, exp: "haste", active: [], pending: [], log: []
   };
 
@@ -585,6 +585,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     s.overdrive = Math.min(10, Math.max(0, Math.floor(+s.overdrive || 0)));
     s.eq = s.eq && typeof s.eq === "object" && !Array.isArray(s.eq) ? s.eq : {};
     s.cond = s.cond && typeof s.cond === "object" && !Array.isArray(s.cond) ? s.cond : {};
+    var fx = s.fx && typeof s.fx === "object" ? s.fx : {};
+    s.fx = { her: Array.isArray(fx.her) ? fx.her : [], pet: Array.isArray(fx.pet) ? fx.pet : [] };
     s.mythic = Math.min(7, Math.max(0, Math.floor(+s.mythic || 0)));
     s.hp = isFinite(+s.hp) && s.hp !== null ? Math.min(HP_MAX, Math.max(-HP_DEAD, Math.round(+s.hp))) : HP_MAX;
     s.petHp = isFinite(+s.petHp) && s.petHp !== null ? Math.min(PET_MAX, Math.max(-PET_DEAD, Math.round(+s.petHp))) : PET_MAX;
@@ -806,8 +808,21 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     render();
   }
 
+  /* status effects on her and Gwathfaron count down one round at a time */
+  function tickFx(s) {
+    ["her", "pet"].forEach(function (who) {
+      s.fx[who] = s.fx[who].filter(function (e) {
+        if (e.left == null) return true;
+        e.left -= 1;
+        if (e.left <= 0) { log(e.name + " on " + (who === "pet" ? "Gwathfaron" : "Daerlieth") + " ended"); return false; }
+        return true;
+      });
+    });
+  }
+
   function passRound(s, gainedBurn) {
     s.round += 1;
+    tickFx(s);
     if (!gainedBurn && s.burnout > 0) {
       s.burnout -= 1;
       log("Recovered 1 burnout: none gained");
@@ -877,6 +892,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     mutate(function (s) {
       var before = s.burnout;
       s.round += 1;
+      tickFx(s);
       if (before > 0) { s.burnout -= 1; log("No cast: burnout " + before + " → " + s.burnout); }
       else log("No cast: no burnout to recover");
       s.gained = false;
@@ -1297,6 +1313,18 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         if (ck === "exhausted" && s.cond[ck]) delete s.cond.fatigued;
         if (ck === "fatigued" && s.cond[ck]) delete s.cond.exhausted;
       });
+    } else if (a === "fxadd") {
+      var who = t.getAttribute("data-who"), fv = function (k) { var el = $(k + "-" + who); return el ? el.value.trim() : ""; };
+      var fname = fv("fxName");
+      if (!fname) { var fe = $("fxName-" + who); if (fe) fe.focus(); return; }
+      var unit = SheetEngine.FX_UNITS.filter(function (u) { return u[0] === fv("fxU"); })[0] || SheetEngine.FX_UNITS[0];
+      var num = parseInt(fv("fxN"), 10);
+      var left = unit[2] && num > 0 ? num * unit[2] : null;
+      var entry = { id: "fx" + Date.now().toString(36), name: fname.slice(0, 60), from: fv("fxFrom").slice(0, 40), kind: fv("fxKind") === "bad" ? "bad" : "good", left: left, note: fv("fxNote").slice(0, 120) };
+      mutate(function (s) { s.fx[who].push(entry); log(entry.name + " on " + (who === "pet" ? "Gwathfaron" : "Daerlieth") + (entry.from ? " (from " + entry.from + ")" : "")); });
+    } else if (a === "fxdel") {
+      var dw = t.getAttribute("data-who"), did = t.getAttribute("data-id");
+      mutate(function (s) { s.fx[dw] = s.fx[dw].filter(function (e) { if (e.id === did) { log(e.name + " on " + (dw === "pet" ? "Gwathfaron" : "Daerlieth") + " ended"); return false; } return true; }); });
     } else if (a === "str") {
       var sd = parseInt(t.getAttribute("data-d"), 10);
       mutate(function (s) { s.strDmg = Math.max(0, Math.min(16, s.strDmg + sd)); });

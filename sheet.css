@@ -62,3 +62,20 @@ table.t.sk td span { cursor: help; }
 .ro .tg, .ro [data-act="eqall"] { pointer-events: none; }
 .ro [data-act="eqall"] { display: none; }
 @media (prefers-reduced-motion: no-preference) { .tg { transition: background 0.15s, border-color 0.15s, box-shadow 0.15s; } }
+
+/* status effects */
+.fxlist { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.fx { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 10px; border: 1px solid var(--line); border-left-width: 3px; border-radius: 8px; background: var(--surface-2); }
+.fx.good { border-left-color: var(--good); }
+.fx.bad { border-left-color: var(--heat); }
+.fx.mine { border-left-color: var(--moon); }
+.fxk { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--muted); min-width: 6ch; }
+.fx.good .fxk { color: var(--good); } .fx.bad .fxk { color: var(--heat); } .fx.mine .fxk { color: var(--moon); }
+.fxn { flex: 1 1 160px; min-width: 0; }
+.fxt { display: block; font-size: 0.8rem; color: var(--muted); }
+.fxd { font-size: 0.8rem; color: var(--fg); white-space: nowrap; }
+.fxform { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); align-items: end; margin-bottom: 8px; }
+.fxform .fxwide { grid-column: 1 / -1; }
+.fxform input, .fxform select { width: 100%; min-width: 0; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 10px; color: var(--fg); }
+.fxdur { display: flex; gap: 6px; }
+.fxdur input { flex: 0 0 4.5em; }
