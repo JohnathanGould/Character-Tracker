@@ -15,6 +15,7 @@ Keep the look (black background, silver-blue accent, Marcellus / Albert Sans / I
 
 ## What exists
 - `sheet.js`: the Sheet tab. `SheetEngine.derive(state)` computes every sheet number (abilities, AC, saves, attacks, DCs, skills, load) from the tracker state plus `state.eq` (gear off when `eq[key] === false`) and `state.cond` (conditions). `SheetEngine.render` builds the markup. The tracker also calls `derive` for Cha, touch bonus, AC and the overdrive pool, so worn gear changes both tabs. Edit sheet numbers here, not in `index.html`.
+- Gwathfaron tab (`#gwathfaron`): `SheetEngine.renderPet`, built from `PET` and `derivePet` in `sheet.js` (small cat companion at effective druid level 8 with Improved Animal Companion; stealth build: Weapon Finesse, Improved Initiative, Skill Focus (Stealth), Stealthy). Renders into `#sheetView` like the Sheet tab.
 - `sheet-prose.js`: generated static text for the Sheet tab. Rebuild with `python3 tools/make-prose.py <printed sheet>.txt > sheet-prose.js`.
 - `sheet.css`: styles for the tabs and the Sheet.
 - `index.html`: all HTML, CSS and JS in one file. Keeps a local copy in `localStorage` key `ilmadria-burnout-ledger-v1` (plus an `:edit` flag).
@@ -38,7 +39,7 @@ Keep the look (black background, silver-blue accent, Marcellus / Albert Sans / I
 - **Blood Money** is a swift action: 1d6 damage, and blood replaces one material component this round. Components over 1 gp cost 1 Strength damage plus 1 per full 500 gp.
 - **Detonate**: costs 50 gp in vials, max 10d8, holds a concentration slot for 1 round.
 - Top bar order: Reset, No cast, Cast spell, New day. Reset clears concentration. New day needs two taps.
-- **Hit points.** Daerlieth 82 max; Hard to Kill: stabilizes below 0, dies at -32 (twice Con 16). Gwathfaron (panther companion) 45 max, dies at -15. New day heals 8 and 7 (natural healing).
+- **Hit points.** Daerlieth 82 max; Hard to Kill: stabilizes below 0, dies at -32 (twice Con 16). Gwathfaron (panther companion) 50 max, dies at -15. New day heals 8 and 7 (natural healing).
 - **Stunning Fist** 2/day, refills on New day. **Mythic Surge** (+1d6 to a d20) and **Amazing Initiative** (extra standard action, no spells or artillery) each cost 1 mythic power.
 - **Mythic spells** (Mythic Spell Lore): fireball (d10s, burning 2d6/round on a failed save) and dimension door (one-way portal for up to CL allies), +1 mythic power each.
 - Ranged touch +14 (BAB 8 + Dex 6). Dimension door carries 1 willing Medium or smaller creature per 3 CL (2 at CL 8).

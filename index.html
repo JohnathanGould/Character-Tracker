@@ -398,6 +398,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   <nav class="tabs" role="tablist" aria-label="View">
     <button type="button" class="tab" role="tab" id="tabTracker" data-tab="tracker" aria-selected="true">Tracker</button>
     <button type="button" class="tab" role="tab" id="tabSheet" data-tab="sheet" aria-selected="false">Sheet</button>
+    <button type="button" class="tab" role="tab" id="tabPet" data-tab="pet" aria-selected="false">Gwathfaron</button>
   </nav>
 </div>
 
@@ -473,12 +474,12 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 <script>
 (function () {
   /* hit points: 82 max; Hard to Kill means she dies only at -32 (twice Con 16). Gwathfaron the panther: 45 max, Con 15, dies at -15. */
-  var HP_MAX = 82, HP_DEAD = 32, PET_MAX = 45, PET_DEAD = 15;
+  var HP_MAX = 82, HP_DEAD = 32, PET_MAX = 50, PET_DEAD = 15;
   var BASE_CL = 8, KEY = "ilmadria-burnout-ledger-v1";
 
   var DEFAULT = {
     v: 1, round: 1, burnout: 0, gained: false,
-    overdrive: 10, mythic: 7, eq: {}, cond: {}, lightUsed: false, hp: 82, petHp: 45, stun: 2,
+    overdrive: 10, mythic: 7, eq: {}, cond: {}, lightUsed: false, hp: 82, petHp: 50, stun: 2,
     vials: 2, strDmg: 0, blood: null, exp: "haste", active: [], pending: [], log: []
   };
 
@@ -1191,30 +1192,34 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   /* ---------- Sheet tab ---------- */
   var VIEW_KEY = "daerlieth-view";
   var view = "tracker";
+  /* tabs: tracker, sheet (#sheet) and Gwathfaron (#gwathfaron); both sheets render into #sheetView */
+  var HASH = { sheet: "#sheet", pet: "#gwathfaron" };
+  function viewFromHash() { return location.hash === "#sheet" ? "sheet" : location.hash === "#gwathfaron" ? "pet" : null; }
   function setView(v, keep) {
-    view = v === "sheet" ? "sheet" : "tracker";
-    document.body.classList.toggle("view-sheet", view === "sheet");
+    view = v === "sheet" || v === "pet" ? v : "tracker";
+    document.body.classList.toggle("view-sheet", view !== "tracker");
     $("tabTracker").setAttribute("aria-selected", view === "tracker");
     $("tabSheet").setAttribute("aria-selected", view === "sheet");
+    $("tabPet").setAttribute("aria-selected", view === "pet");
     if (!keep) { try { localStorage.setItem(VIEW_KEY, view); } catch (e) {} }
-    if (view === "sheet") { if (location.hash !== "#sheet") history.replaceState(null, "", "#sheet"); renderSheet(); }
-    else if (location.hash === "#sheet") history.replaceState(null, "", location.pathname + location.search);
+    if (HASH[view]) { if (location.hash !== HASH[view]) history.replaceState(null, "", HASH[view]); renderSheet(); }
+    else if (viewFromHash()) history.replaceState(null, "", location.pathname + location.search);
     window.scrollTo(0, 0);
   }
   function renderSheet() {
-    if (view !== "sheet") return;
+    if (view === "tracker") return;
     var host = $("sheetView");
     /* keep which sections are open across re-renders */
     var open = {};
     Array.prototype.forEach.call(host.querySelectorAll("details.sec"), function (d) { open[d.firstChild.textContent] = d.open; });
-    host.innerHTML = SheetEngine.render(state, { readOnly: readOnly });
+    host.innerHTML = view === "pet" ? SheetEngine.renderPet(state, { readOnly: readOnly }) : SheetEngine.render(state, { readOnly: readOnly });
     Array.prototype.forEach.call(host.querySelectorAll("details.sec"), function (d) { var k = d.firstChild.textContent; if (k in open) d.open = open[k]; });
   }
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-tab]");
     if (t) setView(t.getAttribute("data-tab"));
   });
-  window.addEventListener("hashchange", function () { setView(location.hash === "#sheet" ? "sheet" : "tracker", true); });
+  window.addEventListener("hashchange", function () { setView(viewFromHash() || "tracker", true); });
 
   /* ---------- events ---------- */
   document.addEventListener("click", function (e) {
@@ -1557,7 +1562,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   renderRules();
   render();
   (function () {
-    var v = location.hash === "#sheet" ? "sheet" : null;
+    var v = viewFromHash();
     if (!v) { try { v = localStorage.getItem(VIEW_KEY); } catch (e) {} }
     setView(v, true);
   })();

@@ -65,6 +65,48 @@
   ];
   var UNUSABLE = ["Knowledge (local)", "Knowledge (planes)", "Knowledge (engineering)", "Knowledge (geography)", "Knowledge (nobility)"];
 
+
+  /* ---------- Gwathfaron ----------
+     Core Rulebook "Cat, small" (leopard) companion at effective druid level 8, Medium after its 4th-level advancement.
+     Druid table at 8th: 7 HD, BAB +5, Fort +5 / Ref +5 / Will +2, 7 skill ranks, 4 feats, natural armor +4,
+     Str/Dex +2, 3 bonus tricks, plus link, share spells, evasion, devotion, one ability score increase.
+     Improved Animal Companion (Daerlieth's Enhanced Companion feat): +1d8 hp, +1 Dex, +2 natural armor.
+     Build choices (a stealthy stalker that flanks for her stealth attack): ability increase to Str, Improved
+     Animal Companion +1 to Dex; feats Weapon Finesse, Improved Initiative, Skill Focus (Stealth), Stealthy;
+     ranks Stealth 4, Perception 3. */
+  var PET = {
+    hpMax: 50, dead: 15, hd: 7, bab: 5, fort: 5, ref: 5, will: 2, nat: 7, speed: 50,
+    ab: { str: 19, dex: 22, con: 15, int: 2, wis: 12, cha: 6 },
+    /* name, ability, ranks, class skill, misc [label, value] */
+    skills: [
+      ["Acrobatics", "dex", 0, 1, [["speed 50 ft, jumping only", 0]]], ["Climb", "str", 0, 1, []], ["Escape Artist", "dex", 0, 1, [["Stealthy", 2]]],
+      ["Intimidate", "cha", 0, 1, []], ["Perception", "wis", 3, 1, []], ["Stealth", "dex", 4, 1, [["Skill Focus", 3], ["Stealthy", 2]]],
+      ["Survival", "wis", 0, 1, []], ["Swim", "str", 0, 1, []]
+    ]
+  };
+  function derivePet(c, tgt) {
+    var m = {}; Object.keys(PET.ab).forEach(function (k) { m[k] = mod(PET.ab[k]); });
+    var pf = c.forest ? 4 : 0;
+    var p = { ab: PET.ab, m: m, forest: pf, tgt: tgt, hpMax: PET.hpMax, dead: PET.dead };
+    p.init = m.dex + 4 + pf;
+    p.ac = 10 + m.dex + PET.nat; p.touch = 10 + m.dex; p.ff = 10 + PET.nat;
+    p.fort = PET.fort + m.con; p.ref = PET.ref + m.dex; p.will = PET.will + m.wis;
+    p.bite = PET.bab + m.dex + tgt; p.biteD = m.str + tgt;            /* Weapon Finesse: Dex to attack */
+    p.claw = PET.bab + m.dex - 5 + tgt; p.clawD = Math.floor(m.str / 2) + tgt; /* secondary attacks */
+    p.cmb = PET.bab + m.str; p.cmd = 10 + PET.bab + m.str + m.dex;
+    p.skills = PET.skills.map(function (s) {
+      var name = s[0], key = s[1], ranks = s[2], misc = s[4].slice();
+      if (name === "Perception" || name === "Stealth" || name === "Survival") { if (pf) misc.push(["forest", pf]); }
+      if ((name === "Perception" || name === "Survival") && tgt) misc.push(["favored enemy", tgt]);
+      var cls = ranks && s[3] ? 3 : 0, mv = 0; misc.forEach(function (x) { mv += x[1]; });
+      return { name: name, ranks: ranks, total: ranks + m[key] + cls + mv,
+        tip: parts([["ranks", ranks], [key[0].toUpperCase() + key.slice(1), m[key]], ["class skill", cls]].concat(misc)).replace(/^ /, "") };
+    });
+    p.stealth = p.skills.filter(function (s) { return s.name === "Stealth"; })[0].total;
+    p.perc = p.skills.filter(function (s) { return s.name === "Perception"; })[0].total;
+    return p;
+  }
+
   function derive(st) {
     st = st || {};
     var eq = st.eq || {}, c = st.cond || {};
@@ -198,12 +240,8 @@
     d.skills = rows;
     d.track = 4 + 0; d.empathy = BAB + CH;
 
-    /* panther */
-    var pf = c.forest ? 4 : 0;
-    d.pet = {
-      init: 5 + pf, stealth: 16 + pf, perc: 9 + pf, forest: pf,
-      bite: 10 + tgt, biteD: 4 + tgt, claw: 4 + tgt, clawD: 2 + tgt
-    };
+    /* panther: shares her favored enemy and forest bonuses */
+    d.pet = derivePet(c, tgt);
     d.tgt = tgt;
     d.hasteOn = haste;
     d.flags = { haste: haste, er: er, cg: cg, shield: shieldSp, pfe: pfe, fly: fly };
@@ -228,7 +266,7 @@
     var d = derive(st), eq = st.eq || {}, c = st.cond || {}, P = (root.SheetEngine && root.SheetEngine.PROSE) || {};
     var worn = function (k) { return eq[k] !== false; };
     var a = d.atk, sp = d.sp, h = "";
-    var HPMAX = 82, PETMAX = 45;
+    var HPMAX = 82, PETMAX = PET.hpMax;
 
     /* gear and conditions */
     var gear = ITEMS.map(function (i) { return tg("eq", i.k, i.name, worn(i.k), i.fx); }).join("");
@@ -365,11 +403,9 @@
     /* companion */
     var pet = d.pet;
     h += sec("Gwathfaron, panther",
-      '<div class="sgrid sm">' + box("HP", st.petHp + "<small>/" + PETMAX + "</small>", "dies at −15") + box("AC", 20, "touch 15 · flat-footed 15") +
-      box("Initiative", sg(pet.init)) + box("Speed", "50 ft", "sprint 500 ft, once per hour") + box("Fort / Ref / Will", "+7 / +10 / +3") +
-      box("Bite", sg(pet.bite), "1d6" + sg(pet.biteD) + " + trip") + box("Claws ×2", sg(pet.claw), "1d3" + sg(pet.clawD)) +
-      box("Stealth", sg(pet.stealth)) + box("Perception", sg(pet.perc)) + box("CMB / CMD", "+9 / 24", "28 vs trip") + "</div>" +
-      '<p class="hint">Shares her favored enemy and forest bonuses: the toggles above change these numbers. Full block: Gwathfaron\'s sheet.</p>', false);
+      '<div class="sgrid sm">' + box("HP", st.petHp + "<small>/" + PETMAX + "</small>", "dies at −" + pet.dead) + box("AC", pet.ac, "touch " + pet.touch + " · flat-footed " + pet.ff) +
+      box("Initiative", sg(pet.init)) + box("Bite", sg(pet.bite), "1d6" + sg(pet.biteD) + " + trip") + box("Stealth", sg(pet.stealth)) + box("Perception", sg(pet.perc)) + "</div>" +
+      '<p class="hint">Summary. His full sheet is on the <a href="#gwathfaron">Gwathfaron</a> tab.</p>', false);
 
     /* prose */
     var prose = [["Racial traits and feats", "feats"], ["Spell-less Ranger", "ranger"], ["Eternal Mage", "mage"], ["Mythic", "mythic"],
@@ -379,7 +415,94 @@
     return h;
   }
 
-  var api = { derive: derive, render: render, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
+
+  /* ---------- Gwathfaron tab ---------- */
+  function renderPet(st, o) {
+    o = o || {};
+    var c = st.cond || {}, tgt = c.target === "elf" ? 4 : c.target === "undead" ? 2 : 0;
+    var p = derivePet(c, tgt), m = p.m, hp = st.petHp == null ? p.hpMax : st.petHp, h = "";
+    var hpBtn = function (d) { return '<button class="btn sm" data-act="hp" data-k="petHp" data-d="' + d + '">' + (d > 0 ? "+" : "−") + Math.abs(d) + "</button>"; };
+    var shared = '<div class="grp"><div class="gl">Shared with Daerlieth</div>' +
+      tg("cond", "forest", CONDS.forest, c.forest, "+4 initiative, Perception, Stealth, Survival") +
+      '<div class="seg" role="group" aria-label="Target">' +
+      tg("cond", "target", "No favored enemy", !c.target, "", "") +
+      tg("cond", "target", "Elf or drow", c.target === "elf", "+4 attack and damage", "elf") +
+      tg("cond", "target", "Undead", c.target === "undead", "+2 attack and damage", "undead") + "</div></div>";
+    var status = hp > 0 ? "Up" : hp === 0 ? "Disabled" : hp > -p.dead ? "Dying" : "Dead";
+
+    h += '<div class="panel"><div class="ph"><div><h2>Gwathfaron</h2><span class="hint">Panther (Core Rulebook small cat, leopard), Medium animal companion · effective druid level 8 · N</span></div></div>' +
+      '<div class="sgrid">' +
+      box("HP", hp + "<small>/" + p.hpMax + "</small>", status + " · dies at −" + p.dead) +
+      box("AC", p.ac, "touch " + p.touch + " · flat-footed " + p.ff) +
+      box("Initiative", sg(p.init), p.forest ? "forest counted" : "+4 in forest") +
+      box("Speed", "50 ft", "sprint: 500 ft charge, once an hour") +
+      box("Fort", sg(p.fort)) + box("Ref", sg(p.ref), "evasion") + box("Will", sg(p.will), "+4 vs enchantment") +
+      box("Bite", sg(p.bite), "1d6" + sg(p.biteD) + " + trip") +
+      box("Claws ×2", sg(p.claw), "1d3" + sg(p.clawD)) +
+      box("CMB / CMD", sg(p.cmb) + " / " + p.cmd, (p.cmd + 4) + " vs trip") +
+      box("Stealth", sg(p.stealth)) + box("Perception", sg(p.perc), "scent, low-light vision") +
+      "</div>" +
+      (o.readOnly ? "" : '<div class="ctl">' + [-10, -5, -1, 1, 5, 10].map(hpBtn).join("") + "</div>") +
+      shared + "</div>";
+
+    var abRow = function (k, label) { return [label, PET.ab[k], sg(m[k])]; };
+    h += sec("Abilities", tbl(["", "Score", "Mod"], [abRow("str", "STR"), abRow("dex", "DEX"), abRow("con", "CON"), abRow("int", "INT"), abRow("wis", "WIS"), abRow("cha", "CHA")]) +
+      '<p class="hint">Small cat base Str 12, Dex 21, Con 13, Int 2, Wis 12, Cha 6. 4th-level advancement: Str +4, Dex −2, Con +2 (Medium). Companion bonus Str/Dex +2. Ability score increase +1 Str. Improved Animal Companion +1 Dex.</p>', true);
+
+    h += sec("Defense", tbl(["", "Total", "How"], [
+      ["AC", p.ac, "10 + " + m.dex + " Dex + " + PET.nat + " natural"],
+      ["Touch", p.touch, "10 + " + m.dex + " Dex"],
+      ["Flat-footed", p.ff, "10 + " + PET.nat + " natural"],
+      ["Hit points", p.hpMax, "7d8 + 14 Con, +1d8 Improved Animal Companion (averages)"],
+      ["Fort", sg(p.fort), PET.fort + " base + " + m.con + " Con"],
+      ["Ref", sg(p.ref), PET.ref + " base + " + m.dex + " Dex"],
+      ["Will", sg(p.will), PET.will + " base + " + m.wis + " Wis; +4 morale vs enchantment (devotion)"]
+    ]) + '<p class="hint">Natural armor 7 = 1 (small cat) + 4 (companion at 8th) + 2 (Improved Animal Companion). Evasion: no damage on a successful Reflex save for half. Dies at −15 (Con 15).</p>', true);
+
+    h += sec("Offense", tbl(["Attack", "Bonus", "Damage", "Notes"], [
+      ["Bite", sg(p.bite), "1d6" + sg(p.biteD), "Primary. Trip: on a hit, a free trip attempt at CMB " + sg(p.cmb) + " that doesn't provoke"],
+      ["Claw", sg(p.claw), "1d3" + sg(p.clawD), "Secondary, two of them (−5, half Str)"],
+      ["Full attack", "", "", "Bite " + sg(p.bite) + " and 2 claws " + sg(p.claw)],
+      ["Sprint", "", "", "Once an hour, a charge at 10× speed (500 ft)"]
+    ]) + '<p class="hint">BAB +5. Weapon Finesse puts Dex (+6) on attack rolls; damage uses Str (+4). Space 5 ft, reach 5 ft. Built to flank with Daerlieth so her stealth attack and Skirmishing Attack land.' + (p.tgt ? " Favored enemy " + sg(p.tgt) + " counted." : "") + "</p>", true);
+
+    h += sec("Skills", tbl(["Skill", "Ranks", "Total"], p.skills.map(function (s) {
+      return ['<span title="' + esc(s.tip) + '">' + esc(s.name) + (s.ranks ? "" : ' <small class="hint">untrained</small>') + "</span>", s.ranks, sg(s.total)];
+    }), "sk") + '<p class="hint">7 ranks (1 per HD, Int 2). Animal companion class skills, all listed. Speed 50 ft gives +8 on Acrobatics checks to jump. Hover or tap a skill for the arithmetic.</p>', true);
+
+    h += sec("Feats", "<ul>" +
+      "<li><b>Weapon Finesse</b>: Dex instead of Str on bite and claw attacks.</li>" +
+      "<li><b>Improved Initiative</b>: +4 initiative, so he moves before the target and takes up a flanking spot.</li>" +
+      "<li><b>Skill Focus (Stealth)</b>: +3 Stealth (+6 at 10 ranks).</li>" +
+      "<li><b>Stealthy</b>: +2 Stealth and Escape Artist.</li>" +
+      "<li><b>Bonded Mind</b> (teamwork, from Daerlieth through Coordinated Companion): silent messages between them while they can see each other.</li></ul>" +
+      '<p class="hint">4 feats at 7 HD, all from the Animal Feats list. Next feat at 9 HD.</p>', false);
+
+    h += sec("Tricks", "<p>9 tricks (6 from Int 2, 3 bonus):</p><ul>" +
+      "<li><b>Attack</b>, any creature (counts as 2 tricks)</li><li><b>Come</b></li><li><b>Down</b></li><li><b>Guard</b></li>" +
+      "<li><b>Heel</b></li><li><b>Seek</b></li><li><b>Stay</b></li><li><b>Track</b></li></ul>" +
+      '<p class="hint">Handle Animal +21 with him (+4 bond). Bonded Mind lets her give these silently.</p>', false);
+
+    h += sec("Special abilities", "<ul>" +
+      "<li><b>Link</b>: she handles him as a free action, or pushes him as a move action, with +4 on wild empathy and Handle Animal.</li>" +
+      "<li><b>Share spells</b>: she can cast a spell with a target of “you” on him instead, as a touch spell.</li>" +
+      "<li><b>Evasion</b>: no damage on a successful Reflex save for half.</li>" +
+      "<li><b>Devotion</b>: +4 morale bonus on Will saves against enchantment.</li>" +
+      "<li><b>Scent</b> and <b>low-light vision</b>.</li>" +
+      "<li><b>Sprint</b> (Ex): once an hour, charge at ten times his speed.</li>" +
+      "<li><b>Trip</b> (bite).</li>" +
+      "<li><b>Shared with Daerlieth</b>: her favored enemy bonuses (elf +4, undead +2) and forest bonuses (+4).</li></ul>", false);
+
+    h += sec("Equipment", "<p>None.</p>" +
+      '<p class="hint">Room for later: barding (he would need Light Armor Proficiency to wear it without penalty) and a collar in the neck slot (amulet of natural armor or amulet of mighty fists). Carrying capacity, Medium quadruped (1.5×) at Str 19: light 174 lb, medium 349 lb, heavy 525 lb.</p>', true);
+
+    h += sec("Advancement", "<ul>" +
+      "<li><b>9th level</b>: 8 HD, BAB +6, a 5th feat, ability score increase, natural armor +6, Str/Dex +3, Multiattack (claws at −2 instead of −5).</li>" +
+      "<li><b>Greater Animal Companion</b> (Daerlieth, later): a bonus animal feat for him, and a move action to give him her stealth attack and fast movement.</li></ul>", false);
+    return h;
+  }
+
+  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
   root.SheetEngine = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
