@@ -84,7 +84,15 @@
       ["Survival", "wis", 0, 1, []], ["Swim", "str", 0, 1, []]
     ]
   };
-  function derivePet(c, tgt) {
+  /* his skill ranks: state.petRanks {skill: ranks} once she changes them, else the build above. 7 ranks, max 7 per skill. */
+  var PET_RANKS = 7;
+  function petRanks(st) {
+    var r = {}, saved = st && st.petRanks;
+    PET.skills.forEach(function (s) { r[s[0]] = saved && typeof saved === "object" ? Math.max(0, Math.min(PET.hd, Math.floor(+saved[s[0]] || 0))) : s[2]; });
+    return r;
+  }
+  function derivePet(c, tgt, ranksBy) {
+    ranksBy = ranksBy || petRanks(null);
     var m = {}; Object.keys(PET.ab).forEach(function (k) { m[k] = mod(PET.ab[k]); });
     var pf = c.forest ? 4 : 0;
     var p = { ab: PET.ab, m: m, forest: pf, tgt: tgt, hpMax: PET.hpMax, dead: PET.dead };
@@ -95,13 +103,14 @@
     p.claw = PET.bab + m.dex - 5 + tgt; p.clawD = Math.floor(m.str / 2) + tgt; /* secondary attacks */
     p.cmb = PET.bab + m.str; p.cmd = 10 + PET.bab + m.str + m.dex;
     p.skills = PET.skills.map(function (s) {
-      var name = s[0], key = s[1], ranks = s[2], misc = s[4].slice();
+      var name = s[0], key = s[1], ranks = ranksBy[name] || 0, misc = s[4].slice();
       if (name === "Perception" || name === "Stealth" || name === "Survival") { if (pf) misc.push(["forest", pf]); }
       if ((name === "Perception" || name === "Survival") && tgt) misc.push(["favored enemy", tgt]);
       var cls = ranks && s[3] ? 3 : 0, mv = 0; misc.forEach(function (x) { mv += x[1]; });
-      return { name: name, ranks: ranks, total: ranks + m[key] + cls + mv,
+      return { name: name, key: key, ranks: ranks, abil: m[key], cls: cls, misc: mv, total: ranks + m[key] + cls + mv,
         tip: parts([["ranks", ranks], [key[0].toUpperCase() + key.slice(1), m[key]], ["class skill", cls]].concat(misc)).replace(/^ /, "") };
     });
+    p.ranksUsed = 0; p.skills.forEach(function (s) { p.ranksUsed += s.ranks; });
     p.stealth = p.skills.filter(function (s) { return s.name === "Stealth"; })[0].total;
     p.perc = p.skills.filter(function (s) { return s.name === "Perception"; })[0].total;
     return p;
@@ -241,7 +250,7 @@
     d.track = 4 + 0; d.empathy = BAB + CH;
 
     /* panther: shares her favored enemy and forest bonuses */
-    d.pet = derivePet(c, tgt);
+    d.pet = derivePet(c, tgt, petRanks(st));
     d.tgt = tgt;
     d.hasteOn = haste;
     d.flags = { haste: haste, er: er, cg: cg, shield: shieldSp, pfe: pfe, fly: fly };
@@ -461,7 +470,7 @@
   function renderPet(st, o) {
     o = o || {};
     var c = st.cond || {}, tgt = c.target === "elf" ? 4 : c.target === "undead" ? 2 : 0;
-    var p = derivePet(c, tgt), m = p.m, hp = st.petHp == null ? p.hpMax : st.petHp, h = "";
+    var p = derivePet(c, tgt, petRanks(st)), m = p.m, hp = st.petHp == null ? p.hpMax : st.petHp, h = "";
     var hpBtn = function (d) { return '<button class="btn sm" data-act="hp" data-k="petHp" data-d="' + d + '">' + (d > 0 ? "+" : "−") + Math.abs(d) + "</button>"; };
     var shared = '<div class="grp"><div class="gl">Shared with Daerlieth</div>' +
       tg("cond", "forest", CONDS.forest, c.forest, "+4 initiative, Perception, Stealth, Survival") +
@@ -508,9 +517,19 @@
       ["Sprint", "", "", "Once an hour, a charge at 10× speed (500 ft)"]
     ]) + '<p class="hint">BAB +5. Weapon Finesse puts Dex (+6) on attack rolls; damage uses Str (+4). Space 5 ft, reach 5 ft. Built to flank with Daerlieth so her stealth attack and Skirmishing Attack land.' + (p.tgt ? " Favored enemy " + sg(p.tgt) + " counted." : "") + "</p>", true);
 
-    h += sec("Skills", tbl(["Skill", "Ranks", "Total"], p.skills.map(function (s) {
-      return ['<span title="' + esc(s.tip) + '">' + esc(s.name) + (s.ranks ? "" : ' <small class="hint">untrained</small>') + "</span>", s.ranks, sg(s.total)];
-    }), "sk") + '<p class="hint">7 ranks (1 per HD, Int 2). Animal companion class skills, all listed. Speed 50 ft gives +8 on Acrobatics checks to jump. Hover or tap a skill for the arithmetic.</p>', true);
+    var left = PET_RANKS - p.ranksUsed;
+    var rankCell = function (s) {
+      if (o.readOnly) return String(s.ranks);
+      var b = function (d, dis, lbl) { return '<button type="button" class="btn sm rk" data-act="prank" data-k="' + esc(s.name) + '" data-d="' + d + '"' + (dis ? " disabled" : "") + ' aria-label="' + lbl + " " + esc(s.name) + '">' + (d > 0 ? "+" : "−") + "</button>"; };
+      return '<span class="rks">' + b(-1, s.ranks < 1, "One rank less in") + '<b class="num">' + s.ranks + "</b>" + b(1, left < 1 || s.ranks >= PET.hd, "One rank more in") + "</span>";
+    };
+    h += sec("Skills", '<p class="rkhead"><b>' + p.ranksUsed + " of " + PET_RANKS + "</b> ranks used" + (left ? " · " + left + " left to place" : "") +
+      (o.readOnly ? "" : ' <button type="button" class="btn sm" data-act="prankreset">Back to the stalker build</button>') + "</p>" +
+      tbl(["Skill", "Ranks", "Ability", "Class", "Misc", "Total"], p.skills.map(function (s) {
+        return ['<span title="' + esc(s.tip) + '">' + esc(s.name) + (s.ranks ? "" : ' <small class="hint">untrained</small>') + "</span>",
+          rankCell(s), sg(s.abil) + ' <small class="hint">' + s.key.toUpperCase() + "</small>", s.cls ? "+3" : "", s.misc ? sg(s.misc) : "", "<b>" + sg(s.total) + "</b>"];
+      }), "sk pk") +
+      '<p class="hint">7 ranks (1 per Hit Die, Int 2), at most 7 in one skill. Class skill +3 once a skill has a rank. All are animal companion class skills. Misc: Skill Focus and Stealthy on Stealth, Stealthy on Escape Artist, and her forest and favored enemy bonuses when those are on. Speed 50 ft gives +8 on Acrobatics checks to jump. Hover or tap a skill for the arithmetic.</p>', true);
 
     h += sec("Feats", "<ul>" +
       "<li><b>Weapon Finesse</b>: Dex instead of Str on bite and claw attacks.</li>" +
@@ -545,7 +564,7 @@
     return h;
   }
 
-  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, FX_UNITS: FX_UNITS, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
+  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, PET_RANKS: PET_RANKS, petRanks: petRanks, FX_UNITS: FX_UNITS, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
   root.SheetEngine = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
