@@ -86,3 +86,23 @@ table.t.sk td span { cursor: help; }
   table.pk th:nth-child(3), table.pk th:nth-child(4), table.pk th:nth-child(5),
   table.pk td:nth-child(3), table.pk td:nth-child(4), table.pk td:nth-child(5) { display: none; }
 }
+
+/* breakdown tooltips: hover on desktop, tap (focus) on phones */
+.tip { position: relative; cursor: help; text-decoration: underline dotted var(--line-strong); text-underline-offset: 3px; border-radius: 3px; }
+.tip:focus { outline: none; }
+.tip:focus-visible { outline: 2px solid var(--moon); outline-offset: 2px; }
+.tip::after {
+  content: attr(data-tip); position: absolute; left: 0; top: calc(100% + 6px); z-index: 30; display: none;
+  width: max-content; max-width: min(300px, 80vw); padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: 8px;
+  background: var(--surface-2); color: var(--fg); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  font-family: var(--font-body); font-size: 0.8rem; font-weight: 400; line-height: 1.4; letter-spacing: 0; text-transform: none; white-space: normal; text-align: left;
+}
+.tip:hover::after, .tip:focus::after { display: block; }
+/* index.html adds .tip-r when a tooltip would run off the right edge; it then opens leftward */
+.tip.tip-r::after { left: auto; right: 0; }
+/* phones: show the breakdown as a bar across the bottom of the screen instead of next to the number */
+@media (max-width: 700px) {
+  .tip::after, .tip.tip-r::after {
+    position: fixed; left: 16px; right: 16px; top: auto; bottom: 16px; width: auto; max-width: none; font-size: 0.9rem; padding: 12px 14px;
+  }
+}

@@ -1236,6 +1236,15 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     if (t) setView(t.getAttribute("data-tab"));
   });
   window.addEventListener("hashchange", function () { setView(viewFromHash() || "tracker", true); });
+  /* breakdown tooltips (.tip): open toward whichever side has room */
+  function placeTip(e) {
+    var t = e.target.closest && e.target.closest(".tip");
+    if (!t) return;
+    var r = t.getBoundingClientRect();
+    t.classList.toggle("tip-r", r.left + Math.min(300, innerWidth * 0.8) > innerWidth - 16);
+  }
+  document.addEventListener("mouseover", placeTip);
+  document.addEventListener("focusin", placeTip);
 
   /* ---------- events ---------- */
   document.addEventListener("click", function (e) {

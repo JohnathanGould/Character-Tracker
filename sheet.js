@@ -78,6 +78,15 @@
   var PET = {
     hpMax: 50, dead: 15, hd: 7, bab: 5, fort: 5, ref: 5, will: 2, nat: 7, speed: 50,
     ab: { str: 18, dex: 22, con: 15, int: 3, wis: 12, cha: 6 },
+    /* where each score comes from; must add up to ab above */
+    abParts: {
+      str: [["small cat", 12], ["4th-level advancement", 4], ["companion Str/Dex bonus", 2]],
+      dex: [["small cat", 21], ["4th-level advancement", -2], ["companion Str/Dex bonus", 2], ["Improved Animal Companion", 1]],
+      con: [["small cat", 13], ["4th-level advancement", 2]],
+      int: [["small cat", 2], ["ability score increase", 1]],
+      wis: [["small cat", 12]],
+      cha: [["small cat", 6]]
+    },
     /* name, ability, ranks, class skill, misc [label, value] */
     skills: [
       ["Acrobatics", "dex", 0, 1, [["speed 50 ft, jumping only", 0]]], ["Climb", "str", 0, 1, []], ["Escape Artist", "dex", 0, 1, [["Stealthy", 2]]],
@@ -112,8 +121,28 @@
         tip: parts([["ranks", ranks], [key[0].toUpperCase() + key.slice(1), m[key]], ["class skill", cls]].concat(misc)).replace(/^ /, "") };
     });
     p.ranksUsed = 0; p.skills.forEach(function (s) { p.ranksUsed += s.ranks; });
+    var fe = tgt ? [["favored enemy", tgt]] : [];
+    p.t = {
+      hp: "31.5 (7d8 average) + 14 Con (+2 × 7 HD) + 4.5 (1d8 Improved Animal Companion) = " + PET.hpMax,
+      ac: how([["base", 10], ["Dex", m.dex], ["natural, small cat", 1], ["natural, companion at 8th", 4], ["natural, Improved Animal Companion", 2]]) + " = " + p.ac,
+      touch: how([["base", 10], ["Dex", m.dex]]) + " = " + p.touch,
+      ff: how([["base", 10], ["natural armor", PET.nat]]) + " = " + p.ff + " (loses Dex)",
+      init: how([["Dex", m.dex], ["forest", pf]]) + " = " + sg(p.init),
+      fort: how([["base save (companion)", PET.fort], ["Con", m.con]]) + " = " + sg(p.fort),
+      ref: how([["base save (companion)", PET.ref], ["Dex", m.dex]]) + " = " + sg(p.ref) + ". Evasion: no damage on a successful save for half",
+      will: how([["base save (companion)", PET.will], ["Wis", m.wis]]) + " = " + sg(p.will) + ". Devotion: +4 morale vs enchantment",
+      bite: how([["BAB", PET.bab], ["Str", m.str]].concat(fe)) + " = " + sg(p.bite) + ". Damage 1d6 " + how([["Str", m.str]].concat(fe), " ").trim() + ". On a hit: free trip, CMB " + sg(PET.bab + m.str),
+      claw: how([["BAB", PET.bab], ["Str", m.str], ["secondary attack", -5]].concat(fe)) + " = " + sg(p.claw) + ". Damage 1d3 " + how([["half Str", Math.floor(m.str / 2)]].concat(fe), " ").trim(),
+      cmb: "CMB " + how([["BAB", PET.bab], ["Str", m.str]]) + " = " + sg(p.cmb) + ". CMD " + how([["base", 10], ["BAB", PET.bab], ["Str", m.str], ["Dex", m.dex]]) + " = " + p.cmd + ", +4 vs trip (four legs)"
+    };
+    p.ab_t = {};
+    Object.keys(PET.abParts).forEach(function (k) {
+      p.ab_t[k] = PET.abParts[k].map(function (x, i) { return (i ? (x[1] < 0 ? "− " : "+ ") + Math.abs(x[1]) : x[1]) + " (" + x[0] + ")"; }).join(" ") + " = " + PET.ab[k] + ", mod " + sg(m[k]);
+    });
     p.stealth = p.skills.filter(function (s) { return s.name === "Stealth"; })[0].total;
     p.perc = p.skills.filter(function (s) { return s.name === "Perception"; })[0].total;
+    p.t.stealth = p.skills.filter(function (s) { return s.name === "Stealth"; })[0].tip + " = " + sg(p.stealth);
+    p.t.perc = p.skills.filter(function (s) { return s.name === "Perception"; })[0].tip + " = " + sg(p.perc);
     return p;
   }
 
@@ -259,7 +288,18 @@
   }
 
   /* ---------- markup ---------- */
-  function box(l, v, s) { return '<div class="sbox"><div class="lbl">' + esc(l) + '</div><div class="v num">' + v + (s ? '</div><div class="s">' + s : "") + "</div></div>"; }
+  function box(l, v, s, t) { return '<div class="sbox"><div class="lbl">' + esc(l) + '</div><div class="v num">' + (t ? tip(v, t) : v) + (s ? '</div><div class="s">' + s : "") + "</div></div>"; }
+  /* a number with its arithmetic: shows on hover, and on tap (focus) on phones */
+  function tip(v, t) { return '<span class="tip" tabindex="0" data-tip="' + esc(t) + '">' + v + "</span>"; }
+  /* "12 small cat + 4 advancement − 2 …": [label, value] pairs, zeros dropped, signs spelled out */
+  function how(list, start) {
+    var out = start || "";
+    list.forEach(function (x) {
+      if (!x[1] && out) return;
+      out += (out ? (x[1] < 0 ? " − " : " + ") + Math.abs(x[1]) : String(x[1])) + " " + x[0];
+    });
+    return out;
+  }
   function tg(act, k, label, on, extra, v) {
     return '<button type="button" class="tg" data-act="' + act + '" data-k="' + k + '"' + (v ? ' data-v="' + v + '"' : "") + ' aria-pressed="' + (!!on) + '">' + '<span class="dot"></span><span class="tl">' + esc(label) + "</span>" + (extra ? '<span class="tx">' + esc(extra) + "</span>" : "") + "</button>";
   }
@@ -403,7 +443,7 @@
     var sk = function (bg) {
       /* every skill she has on this side, ranked or not; trained-only skills without ranks show a dash */
       var rows = d.skills.filter(function (s) { return !!s.bg === bg; }).map(function (s) {
-        return ['<span title="' + esc(s.tip) + '">' + esc(s.name) + (s.ranks ? "" : ' <small class="hint">untrained</small>') + "</span>", s.ranks, s.usable ? sg(s.total) : "— (needs ranks)"];
+        return [tip(esc(s.name), s.tip + " = " + (s.usable ? sg(s.total) : "needs ranks")) + (s.ranks ? "" : ' <small class="hint">untrained</small>'), s.ranks, s.usable ? sg(s.total) : "— (needs ranks)"];
       });
       return tbl(["Skill", "Ranks", "Total"], rows, "sk");
     };
@@ -483,21 +523,21 @@
 
     h += '<div class="panel"><div class="ph"><div><h2>Gwathfaron</h2><span class="hint">Panther (Core Rulebook small cat, leopard), Medium animal companion · effective druid level 8 · N</span></div></div>' +
       '<div class="sgrid">' +
-      box("HP", hp + "<small>/" + p.hpMax + "</small>", status + " · dies at −" + p.dead) +
-      box("AC", p.ac, "touch " + p.touch + " · flat-footed " + p.ff) +
-      box("Initiative", sg(p.init), p.forest ? "forest counted" : "+4 in forest") +
-      box("Speed", "50 ft", "sprint: 500 ft charge, once an hour") +
-      box("Fort", sg(p.fort)) + box("Ref", sg(p.ref), "evasion") + box("Will", sg(p.will), "+4 vs enchantment") +
-      box("Bite", sg(p.bite), "1d6" + sg(p.biteD) + " + trip") +
-      box("Claws ×2", sg(p.claw), "1d3" + sg(p.clawD)) +
-      box("CMB / CMD", sg(p.cmb) + " / " + p.cmd, (p.cmd + 4) + " vs trip") +
-      box("Stealth", sg(p.stealth)) + box("Perception", sg(p.perc), "scent, low-light vision") +
+      box("HP", hp + "<small>/" + p.hpMax + "</small>", status + " · dies at −" + p.dead, p.t.hp) +
+      box("AC", p.ac, tip("touch " + p.touch, p.t.touch) + " · " + tip("flat-footed " + p.ff, p.t.ff), p.t.ac) +
+      box("Initiative", sg(p.init), p.forest ? "forest counted" : "+4 in forest", p.t.init) +
+      box("Speed", "50 ft", "sprint: 500 ft charge, once an hour", "Small cat base speed 50 ft. Sprint (Ex): once an hour, a charge at ten times his speed") +
+      box("Fort", sg(p.fort), "", p.t.fort) + box("Ref", sg(p.ref), "evasion", p.t.ref) + box("Will", sg(p.will), "+4 vs enchantment", p.t.will) +
+      box("Bite", sg(p.bite), "1d6" + sg(p.biteD) + " + trip", p.t.bite) +
+      box("Claws ×2", sg(p.claw), "1d3" + sg(p.clawD), p.t.claw) +
+      box("CMB / CMD", sg(p.cmb) + " / " + p.cmd, (p.cmd + 4) + " vs trip", p.t.cmb) +
+      box("Stealth", sg(p.stealth), "", p.t.stealth) + box("Perception", sg(p.perc), "scent, low-light vision", p.t.perc) +
       "</div>" +
       (o.readOnly ? "" : '<div class="ctl">' + [-10, -5, -1, 1, 5, 10].map(hpBtn).join("") + "</div>") +
       shared + "</div>";
     h += fxPanel("pet", st, o);
 
-    var abRow = function (k, label) { return [label, PET.ab[k], sg(m[k])]; };
+    var abRow = function (k, label) { return [label, tip(String(PET.ab[k]), p.ab_t[k]), sg(m[k])]; };
     h += sec("Abilities", tbl(["", "Score", "Mod"], [abRow("str", "STR"), abRow("dex", "DEX"), abRow("con", "CON"), abRow("int", "INT"), abRow("wis", "WIS"), abRow("cha", "CHA")]) +
       '<p class="hint">Small cat base Str 12, Dex 21, Con 13, Int 2, Wis 12, Cha 6. 4th-level advancement: Str +4, Dex −2, Con +2 (Medium). Companion bonus Str/Dex +2. Ability score increase +1 Int (2 to 3: at Int 3 a companion can take any feat it can use, which opens Alertness). Improved Animal Companion +1 Dex.</p>', true);
 
@@ -520,7 +560,7 @@
 
     h += sec("Skills", '<p class="rkhead"><b>' + p.ranksUsed + " of " + PET_RANKS + "</b> ranks: Stealth 4, Perception 3</p>" +
       tbl(["Skill", "Ranks", "Ability", "Class", "Misc", "Total"], p.skills.map(function (s) {
-        return ['<span title="' + esc(s.tip) + '">' + esc(s.name) + (s.ranks ? "" : ' <small class="hint">untrained</small>') + "</span>",
+        return [tip(esc(s.name), s.tip + " = " + sg(s.total)) + (s.ranks ? "" : ' <small class="hint">untrained</small>'),
           String(s.ranks), sg(s.abil) + ' <small class="hint">' + s.key.toUpperCase() + "</small>", s.cls ? "+3" : "", s.misc ? sg(s.misc) : "", "<b>" + sg(s.total) + "</b>"];
       }), "sk pk") +
       '<p class="hint">7 ranks: the animal companion table fixes them at 7 for effective druid level 8 (Int would need to reach 10 to add more), at most 7 in one skill. Class skill +3 once a skill has a rank. All are animal companion class skills. Misc: Skill Focus and Stealthy on Stealth, Skill Focus and Alertness on Perception, Alertness on Sense Motive, Stealthy on Escape Artist, and her forest and favored enemy bonuses when those are on. Speed 50 ft gives +8 on Acrobatics checks to jump. Hover or tap a skill for the arithmetic.</p>', true);
