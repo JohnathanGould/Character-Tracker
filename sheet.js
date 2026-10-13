@@ -605,6 +605,8 @@
         var opts = ch.type === "ability" ? LV().ABIL : feOpts;
         return '<select class="pick" data-pick="' + ch.id + '"><option value="">Choose…</option>' + opts.map(function (x) { return '<option value="' + x[0] + '"' + (v === x[0] ? " selected" : "") + ">" + esc(x[1]) + "</option>"; }).join("") + "</select>";
       }
+      var sm = /^sp-\d+-(\d)-/.exec(ch.id);
+      if (sm) return '<input type="text" class="pick" data-pick="' + ch.id + '" list="wizL' + sm[1] + '" autocomplete="off" maxlength="80" value="' + esc(v) + '" placeholder="Search ' + (+sm[1] ? LV().ord(+sm[1]) + "-level" : "0-level") + ' wizard spells">';
       return '<input type="text" class="pick" data-pick="' + ch.id + '" maxlength="80" value="' + esc(v) + '" placeholder="Type the name">';
     };
     var body = Object.keys(byLvl).sort(function (x, y) { return x - y; }).map(function (l) {

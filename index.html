@@ -497,7 +497,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   </form>
 </div>
 
-<datalist id="codexList"></datalist>
+<datalist id="codexList"></datalist><div id="wizLists" hidden></div>
 <div class="sheet" id="helpSheet" hidden>
   <form class="helpform" id="helpForm">
     <h2 id="helpTitle">How burnout works</h2>
@@ -683,7 +683,25 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     return { id: "custom", name: ui.customName.trim() || "Unknown spell", lvl: ui.customLvl, per: d.per || 0, custom: true,
       note: "A wizard spell she does not know. Track its details yourself." };
   }
-  function allSpells() { return SPELLS.concat([expSpell(), customSpell()]); }
+  /* spells she learned at level-up (picks "sp-<level>-<spell level>-<n>"): castable like the rest of her list */
+  function knownSpells() {
+    var out = [], seen = {};
+    SPELLS.forEach(function (x) { seen[x.name.toLowerCase()] = true; });
+    Object.keys(state.picks || {}).sort().forEach(function (k) {
+      var m = /^sp-\d+-(\d)-\d+$/.exec(k), nm = String(state.picks[k] || "").trim();
+      if (!m || !nm || seen[nm.toLowerCase()]) return;
+      seen[nm.toLowerCase()] = true;
+      var lvl = +m[1], b = lvl >= 1 ? bankFind(nm, lvl) : null;
+      if (b) { out.push(bankSpell(b, { id: "k-" + b.id, known: true })); return; }
+      var c = codexFind(nm), d = c ? fxDuration(c.du, 1) : null, perLvl = c && /\/level/i.test(c.du || "");
+      out.push({ id: "k-" + lvl + "-" + nm.toLowerCase().replace(/[^a-z0-9]+/g, "-"), name: c ? c.n : nm, lvl: lvl, known: true,
+        per: d && d.rounds ? (perLvl ? d.rounds : 1) : 0, fixed: d && d.rounds && !perLvl ? d.rounds : undefined,
+        fire: !!(c && c.ds && c.ds.indexOf("Fire") >= 0),
+        note: !c ? "Not found in the spell list; check the name." : c.lv && c.lv.Wizard != null && c.lv.Wizard !== lvl ? "Picked as " + (lvl ? ordinal(lvl) + " level" : "an orison") + ", but it is a " + (c.lv.Wizard ? ordinal(c.lv.Wizard) + "-level" : "0-level") + " wizard spell." : c.lv && c.lv.Wizard == null ? "Not on the wizard list." : "" });
+    });
+    return out;
+  }
+  function allSpells() { return SPELLS.concat(knownSpells(), [expSpell(), customSpell()]); }
   function getSpell(id) { return allSpells().filter(function (s) { return s.id === id; })[0]; }
   /* burnout from a cast: spell level minus arcane buffer (artillery counts as half her level), +1 experimental */
   function baseGain(sp) {
@@ -1052,12 +1070,12 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   }
 
   function renderSpells() {
-    var titles = ["Orisons · no burnout", "1st level", "2nd level", "3rd level", "4th level"];
-    var h = "";
-    for (var L = 0; L <= 4; L++) {
-      var items = SPELLS.filter(function (s) { return s.lvl === L; });
-      if (L === 4) items = items.filter(function (s) { return !s.art; }).concat(SPELLS.filter(function (s) { return s.art; }));
-      h += '<div class="group"><h3>' + titles[L] + '</h3><div class="spells">' + items.map(spellBtn).join("") + "</div></div>";
+    var h = "", mine = SPELLS.concat(knownSpells());
+    for (var L = 0; L <= Math.max(4, LP().maxSpell); L++) {
+      var items = mine.filter(function (s) { return s.lvl === L && !s.art; });
+      if (!items.length && L > 4) continue;
+      if (L === 4) items = items.concat(SPELLS.filter(function (s) { return s.art; }));
+      h += '<div class="group"><h3>' + (L ? ordinal(L) + " level" : "Orisons · no burnout") + '</h3><div class="spells">' + items.map(spellBtn).join("") + "</div></div>";
     }
     var expOpts = '<optgroup label="Common picks">' + EXP.map(function (e) { return '<option value="' + e.id + '"' + (e.id === state.exp ? " selected" : "") + ">" + e.name + " (" + ordinal(e.lvl) + ")</option>"; }).join("") + "</optgroup>";
     var presetNames = EXP.map(function (e) { return e.name.toLowerCase(); });
@@ -1297,6 +1315,15 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         CODEX = list;
         list.forEach(function (c) { CODEX_IX[c.n.toLowerCase()] = c; });
         $("codexList").innerHTML = list.map(function (c) { return '<option value="' + esc(c.n) + '"></option>'; }).join("");
+        var SL = { abjuration: "A", conjuration: "C", divination: "D", enchantment: "E", evocation: "V", illusion: "I", necromancy: "N", transmutation: "T", universal: "U" }, dl = "";
+        for (var L = 0; L <= 9; L++) {
+          dl += '<datalist id="wizL' + L + '">' + list.filter(function (c) { return c.lv && c.lv.Wizard === L; }).map(function (c) {
+            var k = SL[String(c.s).toLowerCase()];
+            return '<option value="' + esc(c.n) + '">' + esc((SCHOOLS[k] || c.s) + (FOCUS[k] ? " · focus school" : "")) + "</option>";
+          }).join("") + "</datalist>";
+        }
+        $("wizLists").innerHTML = dl;
+        renderSpells(); renderCast(); /* not the sheet: that would wipe a half-typed form */
       });
       codexWait.catch(function () { codexWait = null; });
     }
