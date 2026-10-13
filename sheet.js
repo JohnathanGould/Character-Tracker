@@ -24,7 +24,8 @@
     forest: "In forest (favored terrain)",
     charge: "Charging",
     ffoot: "Flat-footed",
-    sneak: "Target flat-footed or flanked",
+    sneak: "Target flat-footed (denied Dex)",
+    flank: "Flanking with Gwathfaron",
     shaken: "Shaken",
     sickened: "Sickened",
     fatigued: "Fatigued",
@@ -109,8 +110,10 @@
     p.init = m.dex + pf;
     p.ac = 10 + m.dex + PET.nat; p.touch = 10 + m.dex; p.ff = 10 + PET.nat;
     p.fort = PET.fort + m.con; p.ref = PET.ref + m.dex; p.will = PET.will + m.wis;
-    p.bite = PET.bab + m.str + tgt; p.biteD = m.str + tgt;
-    p.claw = PET.bab + m.str - 5 + tgt; p.clawD = Math.floor(m.str / 2) + tgt; /* secondary attacks */
+    var fl = c.flank ? 2 : 0;
+    p.flank = fl;
+    p.bite = PET.bab + m.str + tgt + fl; p.biteD = m.str + tgt;
+    p.claw = PET.bab + m.str - 5 + tgt + fl; p.clawD = Math.floor(m.str / 2) + tgt; /* secondary attacks */
     p.cmb = PET.bab + m.str; p.cmd = 10 + PET.bab + m.str + m.dex;
     p.skills = PET.skills.map(function (s) {
       var name = s[0], key = s[1], ranks = ranksBy[name] || 0, misc = s[4].slice();
@@ -131,8 +134,8 @@
       fort: how([["base save (companion)", PET.fort], ["Con", m.con]]) + " = " + sg(p.fort),
       ref: how([["base save (companion)", PET.ref], ["Dex", m.dex]]) + " = " + sg(p.ref) + ". Evasion: no damage on a successful save for half",
       will: how([["base save (companion)", PET.will], ["Wis", m.wis]]) + " = " + sg(p.will) + ". Devotion: +4 morale vs enchantment",
-      bite: how([["BAB", PET.bab], ["Str", m.str]].concat(fe)) + " = " + sg(p.bite) + ". Damage 1d6 " + how([["Str", m.str]].concat(fe), " ").trim() + ". On a hit: free trip, CMB " + sg(PET.bab + m.str),
-      claw: how([["BAB", PET.bab], ["Str", m.str], ["secondary attack", -5]].concat(fe)) + " = " + sg(p.claw) + ". Damage 1d3 " + how([["half Str", Math.floor(m.str / 2)]].concat(fe), " ").trim(),
+      bite: how([["BAB", PET.bab], ["Str", m.str]].concat(fe).concat(fl ? [["flanking", fl]] : [])) + " = " + sg(p.bite) + ". Damage 1d6 " + how([["Str", m.str]].concat(fe), " ").trim() + ". On a hit: free trip, CMB " + sg(PET.bab + m.str),
+      claw: how([["BAB", PET.bab], ["Str", m.str], ["secondary attack", -5]].concat(fe).concat(fl ? [["flanking", fl]] : [])) + " = " + sg(p.claw) + ". Damage 1d3 " + how([["half Str", Math.floor(m.str / 2)]].concat(fe), " ").trim(),
       cmb: "CMB " + how([["BAB", PET.bab], ["Str", m.str]]) + " = " + sg(p.cmb) + ". CMD " + how([["base", 10], ["BAB", PET.bab], ["Str", m.str], ["Dex", m.dex]]) + " = " + p.cmd + ", +4 vs trip (four legs)"
     };
     p.ab_t = {};
@@ -218,7 +221,8 @@
     var fin = Math.max(S, D), stat = -sp2;
     var defAtk = c.defend === "fight" ? -4 : 0;
     var hasteAtk = haste ? 1 : 0;
-    var common = BAB + fin + 1 + tgt + hasteAtk + defAtk + stat;
+    var flank = c.flank ? 2 : 0; /* flanking: +2 on melee attacks */
+    var common = BAB + fin + 1 + tgt + hasteAtk + defAtk + stat + flank;
     var half = S > 0 ? Math.floor(S / 2) : S;
     var dmgM = S + tgt - (c.sickened ? 2 : 0), dmgO = half + tgt - (c.sickened ? 2 : 0);
     var wrap = worn("wrap") ? 1 : 0;
@@ -228,7 +232,8 @@
       mainA: common - 2, mainB: common - 7, offA: common - 2, offB: common - 7,
       dmgM: dmgM, dmgO: dmgO, haste: haste,
       stunDc: 10 + Math.floor(LEVEL / 2) + W,
-      sneak: !!(c.sneak && (c.forest || tgt) && true)
+      flank: flank,
+      sneak: !!((c.sneak || c.flank) && (c.forest || tgt))
     };
     var rtouch = BAB + D + hasteAtk + stat + defAtk;
     d.rtouch = rtouch;
@@ -335,6 +340,7 @@
       tg("cond", "defend", "Fighting defensively", c.defend === "fight", "−4 attacks, +3 dodge AC", "fight") +
       tg("cond", "defend", "Total defense", c.defend === "total", "+6 dodge AC, no attacks", "total") + "</div>" +
       tg("cond", "ffoot", CONDS.ffoot, c.ffoot, "loses Dex and dodge to AC") +
+      tg("cond", "flank", CONDS.flank, c.flank, "+2 melee attack for both; her stealth attack +3d6 if forest or favored enemy") +
       tg("cond", "sneak", CONDS.sneak, c.sneak, "stealth attack +3d6 if forest or favored enemy") + "</div>" +
       '<div class="grp"><div class="gl">Status</div>' +
       tg("cond", "shaken", CONDS.shaken, c.shaken, "−2 attacks, saves, skills") +
@@ -400,8 +406,8 @@
     /* attacks */
     var tgtTxt = a.tgt ? " (" + sg(a.tgt) + " favored enemy)" : "";
     var wrapNote = a.wrap ? "With the bodywrap on a strike: +1 attack and damage, 2 uses a round." : "Bodywrap off: no bonus strikes.";
-    var dm = function (n) { return "1d8" + (n ? sg(n) : ""); };
-    var dmW = function (n) { return dm(n + a.wrap); };
+    var dm = function (n) { return "1d8" + (n ? sg(n) : "") + (a.sneak ? " +3d6" : ""); };
+    var dmW = function (n) { return "1d8" + sg(n + a.wrap) + (a.sneak ? " +3d6" : ""); };
     /* attack picker: action (standard, full attack, charge, attack of opportunity) and one or two weapons, saved in cond */
     var mode = { std: "std", charge: "charge", aoo: "aoo" }[c.atk] || "full", two = c.hands !== "one";
     var pick = '<div class="atkpick"><div class="grp"><div class="gl">Action</div><div class="seg seg-row" role="group" aria-label="Attack action">' +
@@ -441,16 +447,28 @@
       else atkRows.push(["<b>If hasted: 5 strikes</b>", strikes([a.mainA + 1, a.offA + 1, a.mainA + 1, a.mainB + 1, a.offB + 1]), "", "Haste gives +1 on every attack and one extra main-hand strike at her highest bonus"]);
     }
     if (a.canAttack) atkRows.push(["Stunning Fist", "on a hit", "", "Declare before the roll on any strike, 1 a round: Fort DC " + a.stunDc + " or stunned. 2 a day (" + (st.stun == null ? 2 : st.stun) + " left)"]);
-    var sneakTxt = c.sneak ? ((c.forest || a.tgt) ? "Stealth attack +3d6 applies now (the extra damage isn't multiplied on a critical)." : "Stealth attack needs forest or a favored enemy.") : "Stealth attack +3d6 when the target is flat-footed or flanked, in forest or against a favored enemy. Skirmishing Attack: move 10+ ft first and the first attack counts as against a flat-footed target.";
+    var sneakOn = (c.sneak || c.flank), sneakTxt = sneakOn ? ((c.forest || a.tgt) ? "Stealth attack +3d6 on every hit now (" + (c.flank ? "flanking" : "target flat-footed") + "); it isn't multiplied on a critical." : "Stealth attack needs forest or a favored enemy as well.") : "Stealth attack +3d6 when the target is flat-footed or flanked, in forest or against a favored enemy. Skirmishing Attack: move 10+ ft first and the first attack counts as against a flat-footed target.";
     var art = sp.artDice + "d6" + sg(sp.artFlat), art8 = sp.artDice + "d8" + sg(sp.artFlat);
+    /* artillery picker: delivery (secret) and die size, saved in cond */
+    var artMode = c.art === "sniper" || c.art === "burst" ? c.art : "touch", d8 = !!c.artD8;
+    var odNow = st.overdrive == null ? sp.od : st.overdrive;
+    var artPick = '<div class="atkpick"><div class="grp"><div class="gl">Arcane artillery</div><div class="seg seg-row" role="group" aria-label="Artillery delivery">' +
+      tg("cond", "art", "Touch", artMode === "touch", "ranged touch, 30 ft", "") +
+      tg("cond", "art", "Sniper", artMode === "sniper", "ranged touch, 120 ft", "sniper") +
+      tg("cond", "art", "Burst", artMode === "burst", "15 ft around her, Reflex half", "burst") + "</div></div>" +
+      '<div class="grp"><div class="gl">Damage die</div><div class="seg seg-row" role="group" aria-label="Artillery die">' +
+      tg("cond", "artD8", "d6", !d8, "no overdrive", "") +
+      tg("cond", "artD8", "d8", d8, "artillery overdrive, 1 point", "1") + "</div></div></div>";
+    var artDmg = (d8 ? art8 : art) + " arcane", artCost = "Standard action. 2 burnout (as a 4th-level spell), or 0 with 1 overdrive." + (d8 ? " The d8s cost 1 overdrive on top." : "") + " She has " + odNow + " overdrive.";
+    var artRow = artMode === "burst" ? ["Artillery burst", "Reflex DC " + sp.secretDc, artDmg, "Everyone in 15 ft of her, Reflex half; she takes none (Artillery Burst). " + artCost]
+      : ["Arcane artillery" + (artMode === "sniper" ? " (sniper)" : ""), sg(d.rtouch) + " touch", artDmg, (artMode === "sniper" ? "Range 120 ft (Artillery Sniper). " : "Range 30 ft. ") + artCost];
     var spRows = [
-      ["Arcane artillery", sg(d.rtouch) + " touch", art, "1 overdrive: " + art8 + ". Sniper 120 ft, 30 ft otherwise"],
-      ["Artillery burst", "Reflex DC " + sp.secretDc, art, "15 ft burst around her, she takes none"],
+      artRow,
       ["Scorching ray", sg(d.rtouch) + " touch, " + sp.rays + (sp.rays > 1 ? " rays" : " ray"), "4d6 fire each", "Caster level " + sp.clFire + " for fire. Burnout 0"]
     ];
     h += sec("Attacks", pick + tbl(["Attack", "Bonus", "Damage", "Notes"], atkRows, "atk") +
-      '<p class="hint">Unarmed strikes with Weapon Finesse (' + (a.fin === d.ab.dex.mod ? "Dex" : "Str") + ' ' + sg(a.fin) + '), Weapon Focus +1' + esc(tgtTxt) + ". Crit 20/x2. " + esc(wrapNote) + " " + esc(sneakTxt) + "</p>" +
-      tbl(["Spell attack", "Bonus", "Damage", "Notes"], spRows) +
+      '<p class="hint">Unarmed strikes with Weapon Finesse (' + (a.fin === d.ab.dex.mod ? "Dex" : "Str") + ' ' + sg(a.fin) + '), Weapon Focus +1' + esc(tgtTxt) + (a.flank ? ", flanking +2" : "") + ". Crit 20/x2. " + esc(wrapNote) + " " + esc(sneakTxt) + "</p>" +
+      artPick + tbl(["Spell attack", "Bonus", "Damage", "Notes"], spRows, "atk") +
       '<p class="hint">Companion bite: ' + sg(d.pet.bite) + ' for 1d6' + sg(d.pet.biteD) + ' plus trip, claws ' + sg(d.pet.claw) + ' for 1d3' + sg(d.pet.clawD) + ".</p>", true);
 
     /* spellcasting */
@@ -545,6 +563,7 @@
     var hpBtn = function (d) { return '<button class="btn sm" data-act="hp" data-k="petHp" data-d="' + d + '">' + (d > 0 ? "+" : "−") + Math.abs(d) + "</button>"; };
     var shared = '<div class="grp"><div class="gl">Shared with Daerlieth</div>' +
       tg("cond", "forest", CONDS.forest, c.forest, "+4 initiative, Perception, Stealth, Survival") +
+      tg("cond", "flank", "Flanking with Daerlieth", c.flank, "+2 melee attack for both; her stealth attack +3d6") +
       '<div class="seg" role="group" aria-label="Target">' +
       tg("cond", "target", "No favored enemy", !c.target, "", "") +
       tg("cond", "target", "Elf or drow", c.target === "elf", "+4 attack and damage", "elf") +
@@ -581,12 +600,29 @@
       ["Will", sg(p.will), PET.will + " base + " + m.wis + " Wis; +4 morale vs enchantment (devotion)"]
     ]) + '<p class="hint">Natural armor 7 = 1 (small cat) + 4 (companion at 8th) + 2 (Improved Animal Companion). Evasion: no damage on a successful Reflex save for half. Dies at −15 (Con 15).</p>', true);
 
-    h += sec("Offense", tbl(["Attack", "Bonus", "Damage", "Notes"], [
-      ["Bite", sg(p.bite), "1d6" + sg(p.biteD), "Primary. Trip: on a hit, a free trip attempt at CMB " + sg(p.cmb) + " that doesn't provoke"],
-      ["Claw", sg(p.claw), "1d3" + sg(p.clawD), "Secondary, two of them (−5, half Str)"],
-      ["Full attack", "", "", "Bite " + sg(p.bite) + " and 2 claws " + sg(p.claw)],
-      ["Sprint", "", "", "Once an hour, a charge at 10× speed (500 ft)"]
-    ]) + '<p class="hint">BAB +5, Str +4 on attack and damage. Space 5 ft, reach 5 ft. He is built as a scout, not a fighter; he can still flank so her stealth attack and Skirmishing Attack land.' + (p.tgt ? " Favored enemy " + sg(p.tgt) + " counted." : "") + "</p>", true);
+    /* attack picker, like hers: action saved in cond.petAtk */
+    var pm = { std: "std", charge: "charge", aoo: "aoo" }[c.petAtk] || "full";
+    var pPick = '<div class="atkpick"><div class="grp"><div class="gl">Action</div><div class="seg seg-row" role="group" aria-label="Gwathfaron attack action">' +
+      tg("cond", "petAtk", "Standard attack", pm === "std", "standard action, bite", "std") +
+      tg("cond", "petAtk", "Full attack", pm === "full", "bite and 2 claws, 5-ft step only", "") +
+      tg("cond", "petAtk", "Charge", pm === "charge", "full-round, bite at +2", "charge") +
+      tg("cond", "petAtk", "Attack of opportunity", pm === "aoo", "bite, on their turn", "aoo") + "</div></div></div>";
+    var biteD = "1d6" + sg(p.biteD), clawD = "1d3" + sg(p.clawD), tripTxt = "On a hit: free trip attempt at CMB " + sg(p.cmb) + ", doesn't provoke";
+    var pRows = [];
+    if (pm === "full") {
+      pRows.push(["<b>Full attack: 3 attacks</b>", "<b>" + [p.bite, p.claw, p.claw].map(sg).join(" / ") + "</b>", "", "Full-round action; only a 5-ft step. Natural attacks, all at once."]);
+      pRows.push([" Bite", sg(p.bite), biteD, "Primary, full Str. " + tripTxt]);
+      pRows.push([" Claw", sg(p.claw), clawD, "Secondary (−5, half Str)"]);
+      pRows.push([" Claw", sg(p.claw), clawD, "Secondary (−5, half Str)"]);
+    } else if (pm === "std") {
+      pRows.push(["Bite (standard action)", sg(p.bite), biteD, "One attack; he can still move. " + tripTxt]);
+    } else if (pm === "charge") {
+      pRows.push(["Charge", sg(p.bite + 2), biteD, "Up to 100 ft in a straight line, one bite at +2; −2 AC until his next turn. No pounce, so no claws. Sprint: once an hour a charge can cover 500 ft. " + tripTxt]);
+    } else {
+      pRows.push(["Attack of opportunity", sg(p.bite), biteD, "One a round. He threatens 5 ft. " + tripTxt]);
+    }
+    h += sec("Offense", pPick + tbl(["Attack", "Bonus", "Damage", "Notes"], pRows, "atk") +
+      '<p class="hint">BAB +5, Str +4 on attack and damage. Space 5 ft, reach 5 ft. Built as a scout, not a fighter; his job is to flank so her stealth attack lands.' + (p.flank ? " Flanking +2 counted." : "") + (p.tgt ? " Favored enemy " + sg(p.tgt) + " counted." : "") + " Tap a bonus at the top for its breakdown.</p>", true);
 
     h += sec("Skills", '<p class="rkhead"><b>' + p.ranksUsed + " of " + PET_RANKS + "</b> ranks: Stealth 4, Perception 3</p>" +
       tbl(["Skill", "Ranks", "Ability", "Class", "Misc", "Total"], p.skills.map(function (s) {
