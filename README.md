@@ -13,6 +13,7 @@ It is plain static files with no build step. Opening `index.html` straight from 
 | `index.html` | The whole app: HTML, CSS, rules and UI. The storage section at the bottom of the script talks to Firebase. |
 | `config.js` | Firebase web config, the player's User UID and the character id. An empty `apiKey` runs the page in local-only mode. |
 | `firestore.rules` | Security rules: anyone reads, only the player writes. |
+| `sheet.js`, `sheet-prose.js`, `sheet.css` | The Sheet tab: live character sheet with worn-gear and condition toggles (saved in the same synced document). |
 | `sw.js`, `manifest.webmanifest`, `icons/` | Installable PWA and offline cache. |
 | `vendor/firebase-*-compat.js` | Firebase JS SDK 10.14.1 (app, auth, firestore), vendored so the app shell caches offline. |
 | `data/spell-bank.json` | The wizard spell bank (also inlined in `index.html` as `BANK`). |

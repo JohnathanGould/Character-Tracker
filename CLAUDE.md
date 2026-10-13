@@ -14,6 +14,9 @@ Turn it into a hosted web app:
 Keep the look (black background, silver-blue accent, Marcellus / Albert Sans / IBM Plex Mono) and every rule below.
 
 ## What exists
+- `sheet.js`: the Sheet tab. `SheetEngine.derive(state)` computes every sheet number (abilities, AC, saves, attacks, DCs, skills, load) from the tracker state plus `state.eq` (gear off when `eq[key] === false`) and `state.cond` (conditions). `SheetEngine.render` builds the markup. The tracker also calls `derive` for Cha, touch bonus, AC and the overdrive pool, so worn gear changes both tabs. Edit sheet numbers here, not in `index.html`.
+- `sheet-prose.js`: generated static text for the Sheet tab. Rebuild with `python3 tools/make-prose.py <printed sheet>.txt > sheet-prose.js`.
+- `sheet.css`: styles for the tabs and the Sheet.
 - `index.html`: all HTML, CSS and JS in one file. Keeps a local copy in `localStorage` key `ilmadria-burnout-ledger-v1` (plus an `:edit` flag).
 - Storage is isolated in the storage section at the bottom of the script (`initStore`, `applyRemote`, `setUser`, `scheduleSave`, `flush`, `setReadOnly`, `setEditable`). It talks to Firebase using `config.js`; with an empty config it falls back to local-only. Everything else is pure UI and rules.
 - `.ro` class on `<body>` hides every editing control (read-only mode already exists; reuse it for the GM view).
@@ -38,7 +41,7 @@ Keep the look (black background, silver-blue accent, Marcellus / Albert Sans / I
 - **Hit points.** Daerlieth 82 max; Hard to Kill: stabilizes below 0, dies at -32 (twice Con 16). Gwathfaron (panther companion) 45 max, dies at -15. New day heals 8 and 7 (natural healing).
 - **Stunning Fist** 2/day, refills on New day. **Mythic Surge** (+1d6 to a d20) and **Amazing Initiative** (extra standard action, no spells or artillery) each cost 1 mythic power.
 - **Mythic spells** (Mythic Spell Lore): fireball (d10s, burning 2d6/round on a failed save) and dimension door (one-way portal for up to CL allies), +1 mythic power each.
-- Ranged touch +15 (BAB 8 + Dex 7). Dimension door carries 1 creature per 3 CL.
+- Ranged touch +14 (BAB 8 + Dex 6). Dimension door carries 1 willing Medium or smaller creature per 3 CL (2 at CL 8).
 - Strength buttons act on the score: "Strength -1" adds Strength damage, "+1" heals it.
 
 ## Open rulings for the GM (no longer shown on the page)
