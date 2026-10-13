@@ -719,7 +719,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         break;
       }
     }
-    if (sp.sch && sp.sch !== "?") rows.push(["School", SCHOOLS[sp.sch] + (FOCUS[sp.sch] ? ", a focus school" : sp.exp ? ", outside her focus schools (fine for an experimental spell, which can come from any school)" : ", outside her focus schools, confirm with the GM")]);
+    if (sp.sch && sp.sch !== "?") rows.push(["School", SCHOOLS[sp.sch] + (FOCUS[sp.sch] ? ", a focus school" : sp.exp ? ", outside her focus schools (fine for an experimental spell, which can come from any school)" : ", outside her focus schools")]);
     if (sp.unk) rows.push(["Check", "School, duration and casting time are not recorded. Read the spell." + (sp.custom ? " Wild Arcana needs a casting time of 1 standard action or less." : "")]);
     if (sp.custom && sp.slow) problems.push("Casting time is longer than 1 standard action, so Wild Arcana cannot cast it.");
     if (sp.note && !sp.calc) rows.push(["Effect", sp.note]);

@@ -373,7 +373,7 @@
 
     /* prose */
     var prose = [["Racial traits and feats", "feats"], ["Spell-less Ranger", "ranger"], ["Eternal Mage", "mage"], ["Mythic", "mythic"],
-      ["Daily resources", "daily"], ["Gear and money", "gear"], ["Languages", "lang"], ["Description and background", "bg"], ["Awaiting a GM ruling", "gm"]];
+      ["Daily resources", "daily"], ["Gear and money", "gear"], ["Languages", "lang"], ["Description and background", "bg"]];
     prose.forEach(function (p) { if (P[p[1]]) h += sec(p[0], P[p[1]], false); });
     h += '<p class="hint foot">Numbers above are live. The text sections come from the printed sheet and don\'t change with the toggles.</p>';
     return h;
