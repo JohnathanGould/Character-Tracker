@@ -180,8 +180,37 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
 .hint { color: var(--muted); font-size: 0.8rem; margin: 0; }
 
 /* resources */
-.gauges { display: grid; gap: 16px; grid-template-columns: 1fr; }
-@media (min-width: 860px) { .gauges { grid-template-columns: 1.5fr 1fr 1fr; } }
+.gauges { display: grid; gap: 0; grid-template-columns: 1fr; }
+.gsec { min-width: 0; padding: 14px 0; }
+.gsec:first-child { padding-top: 0; }
+.gsec:last-child { padding-bottom: 0; }
+.gsec + .gsec { border-top: 1px solid var(--line); }
+.gsec .gh { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.gsec h2 { font-size: 1rem; }
+.gsec .big { margin-bottom: 8px; gap: 10px; }
+.gsec .bignum { font-size: 2.4rem; }
+.gsec .ctl { margin-top: 10px; }
+.helpbtn { min-height: 28px; padding: 0 10px; font-size: 0.78rem; }
+@media (max-width: 859px) {
+  .gauges { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  #pBurn { grid-column: 1 / -1; }
+  #pMyth { border-left: 1px solid var(--line); padding-left: 14px; }
+  #pOver { padding-right: 14px; }
+  #pOver, #pMyth { padding-bottom: 0; }
+  .gsec .gh { flex-wrap: wrap; gap: 2px 8px; }
+  #pOver .pips:has(.pip.od) { grid-template-columns: repeat(5, 20px); gap: 7px; }
+  #pOver .pip, #pMyth .pip { width: 20px; height: 20px; }
+  #pMyth .pips { gap: 6px; }
+}
+@media (min-width: 860px) {
+  .gauges { grid-template-columns: 1.5fr 1fr 1fr; }
+  .gsec { padding: 0 18px; }
+  .gsec:first-child { padding-left: 0; }
+  .gsec:last-child { padding-right: 0; }
+  .gsec + .gsec { border-top: 0; border-left: 1px solid var(--line); }
+}
+.helpform { max-width: 520px !important; }
+.helpform .explain { margin-top: 0; padding-top: 0; border-top: 0; }
 .big { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
 .bignum { font-family: var(--font-display); font-size: 3.2rem; line-height: 1; min-width: 2ch; }
 .bignum small { font-size: 1.1rem; color: var(--muted); font-family: var(--font-mono); }
@@ -403,10 +432,10 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
 <div class="wrap">
 <main>
-  <section class="gauges" aria-label="Resources">
-    <div class="panel" id="pBurn"></div>
-    <div class="panel" id="pOver"></div>
-    <div class="panel" id="pMyth"></div>
+  <section class="panel gauges" aria-label="Resources">
+    <div class="gsec" id="pBurn"></div>
+    <div class="gsec" id="pOver"></div>
+    <div class="gsec" id="pMyth"></div>
   </section>
 
   <section class="cols">
@@ -458,6 +487,14 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     </div>
     <p class="err" id="lvlErr" aria-live="polite"></p>
     <div class="row"><button type="button" class="btn" id="lvlCancel">Cancel</button><button type="submit" class="btn primary" id="lvlGo">Level up</button></div>
+  </form>
+</div>
+
+<div class="sheet" id="helpSheet" hidden>
+  <form class="helpform" id="helpForm">
+    <h2>How burnout works</h2>
+    <div id="helpBody"></div>
+    <div class="row"><button type="submit" class="btn primary">Close</button></div>
   </form>
 </div>
 
@@ -948,7 +985,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     for (var j = 1; j <= 6; j++) t += "<span" + (b >= j * 2 ? ' class="on"' : "") + ">−" + j + " DC</span>";
     var dcPen = Math.floor(b / 2);
     $("pBurn").innerHTML =
-      '<div class="ph"><h2>Eldritch burnout</h2><span class="hint">The cost of casting without spell slots</span></div>' +
+      '<div class="gh"><h2>Eldritch burnout</h2><button type="button" class="btn sm helpbtn" data-help="burn" aria-haspopup="dialog">How it works</button></div>' +
       '<div class="big"><div class="bignum num">' + b + '</div><div class="effects">' +
       '<span class="chip' + (b ? " hot" : "") + '">CL ' + (state.level - b) + "</span>" +
       '<span class="chip' + (dcPen ? " hot" : "") + '">DC −' + dcPen + "</span>" +
@@ -958,21 +995,23 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       (b > 12 ? '<div class="over">Past the track: ' + b + "</div>" : "") +
       '<div class="ctl"><button class="btn icon" data-act="burn" data-d="-1" aria-label="Burnout minus one">−</button>' +
       '<button class="btn icon" data-act="burn" data-d="1" aria-label="Burnout plus one">+</button>' +
-      '<button class="btn" data-act="burn" data-d="clear">Clear</button></div>' +
-      '<div class="explain">' +
+      '<button class="btn" data-act="burn" data-d="clear">Clear</button></div>';
+  }
+  function burnHelpHtml() {
+    return '<div class="explain">' +
       "<p><b>What it is.</b> Daerlieth has no spell slots. Burnout is the only limit on how much she casts, and it builds up as she does.</p>" +
       "<p><b>When it goes up.</b> Each time she casts a spell of 1st level or higher. Press Cast spell in the top bar and choose a spell under its level, or cast one from the list. Either way the round advances. The + and − buttons are only for fixing a mistake.</p>" +
       '<div class="costs">' +
       '<span class="chip">Orisons: 0</span><span class="chip">1st and 2nd level: 0</span><span class="chip hot">3rd level: +1</span><span class="chip hot">4th level: +2</span><span class="chip hot">Experimental spell: +1 extra</span></div>' +
       "<p>Arcane artillery is treated as a spell of half her level, so 4th level (+2). Haste as the experimental spell is 3rd level plus 1, so +2. Spending 1 overdrive on a cast ignores up to 4 burnout from it.</p>" +
       "<p><b>When it goes down.</b> At the end of any round where she gained no burnout, she recovers 1. Press No cast to pass a round without casting. A cast that adds no burnout, such as an orison or a 1st or 2nd level spell, also lets her recover 1.</p>" +
-      "<p><b>What it does while it is up.</b> Each point lowers her caster level by 1, which shortens durations and cuts dice such as fireball's. Every 2 points also lower spell DCs by 1 and artillery damage by 1d6. The bar above marks each step.</p>" +
+      "<p><b>What it does while it is up.</b> Each point lowers her caster level by 1, which shortens durations and cuts dice such as fireball's. Every 2 points also lower spell DCs by 1 and artillery damage by 1d6. The burnout bar marks each step.</p>" +
       "</div>";
   }
 
   function renderOver() {
     $("pOver").innerHTML =
-      '<div class="ph"><h2>Arcane overdrive</h2><span class="hint">Refills after 8 hours of sleep. Press New day</span></div>' +
+      '<div class="gh"><h2>Arcane overdrive</h2><span class="hint">Refills on New day</span></div>' +
       '<div class="big"><div class="bignum num">' + state.overdrive + '<small>/' + odMax() + '</small></div></div>' +
       pips("overdrive", state.overdrive, odMax()) +
       '<div class="ctl"><button class="btn icon" data-act="res" data-k="overdrive" data-d="-1" aria-label="Overdrive minus one">−</button>' +
@@ -981,7 +1020,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
   function renderMyth() {
     $("pMyth").innerHTML =
-      '<div class="ph"><h2>Mythic power</h2><span class="hint">Wild Arcana costs 1</span></div>' +
+      '<div class="gh"><h2>Mythic power</h2><span class="hint">Wild Arcana costs 1</span></div>' +
       '<div class="big"><div class="bignum num">' + state.mythic + '<small>/7</small></div></div>' +
       pips("mythic", state.mythic, 7) +
       '<div class="ctl"><button class="btn icon" data-act="res" data-k="mythic" data-d="-1" aria-label="Mythic power minus one">−</button>' +
@@ -1255,6 +1294,17 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     $("lvlSheet").hidden = false;
     $("lvlRoll").focus();
   }
+  /* help dialog (works in the GM's read-only view too) */
+  function closeHelp() { $("helpSheet").hidden = true; }
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-help]");
+    if (!t) return;
+    $("helpBody").innerHTML = burnHelpHtml();
+    $("helpSheet").hidden = false;
+  });
+  $("helpForm").addEventListener("submit", function (e) { e.preventDefault(); closeHelp(); });
+  $("helpSheet").addEventListener("click", function (e) { if (e.target === $("helpSheet")) closeHelp(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("helpSheet").hidden) closeHelp(); });
   function closeLevelUp() { $("lvlSheet").hidden = true; }
   $("lvlCancel").addEventListener("click", closeLevelUp);
   $("lvlSheet").addEventListener("click", function (e) { if (e.target === $("lvlSheet")) closeLevelUp(); });
