@@ -491,6 +491,7 @@
       "<li><b>Scent</b> and <b>low-light vision</b>.</li>" +
       "<li><b>Sprint</b> (Ex): once an hour, charge at ten times his speed.</li>" +
       "<li><b>Trip</b> (bite).</li>" +
+      "<li><b>Improved Animal Companion</b> (Daerlieth's Enhanced Companion feat, 7th level): +1d8 hp, +1 Dex, +2 natural armor, all counted above.</li>" +
       "<li><b>Shared with Daerlieth</b>: her favored enemy bonuses (elf +4, undead +2) and forest bonuses (+4).</li></ul>", false);
 
     h += sec("Equipment", "<p>None.</p>" +
