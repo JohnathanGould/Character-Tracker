@@ -1317,7 +1317,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     } else if (a === "cond") {
       var ck = t.getAttribute("data-k"), cv = t.getAttribute("data-v");
       mutate(function (s) {
-        if (ck === "target" || ck === "defend") { if (cv && s.cond[ck] !== cv) s.cond[ck] = cv; else delete s.cond[ck]; return; }
+        if (ck === "target" || ck === "defend" || ck === "atk" || ck === "hands") { if (cv && s.cond[ck] !== cv) s.cond[ck] = cv; else delete s.cond[ck]; return; }
         if (s.cond[ck]) delete s.cond[ck]; else s.cond[ck] = true;
         if (ck === "exhausted" && s.cond[ck]) delete s.cond.fatigued;
         if (ck === "fatigued" && s.cond[ck]) delete s.cond.exhausted;

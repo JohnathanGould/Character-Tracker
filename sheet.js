@@ -402,21 +402,45 @@
     var wrapNote = a.wrap ? "With the bodywrap on a strike: +1 attack and damage, 2 uses a round." : "Bodywrap off: no bonus strikes.";
     var dm = function (n) { return "1d8" + (n ? sg(n) : ""); };
     var dmW = function (n) { return dm(n + a.wrap); };
-    var atkRows;
-    if (!a.canAttack) atkRows = [["Total defense", "—", "She can't attack this round."]];
-    else atkRows = [
-      ["Single attack", sg(a.single), dm(a.dmgM), "Bodywrap: " + sg(a.single + a.wrap) + ", " + dmW(a.dmgM)],
-      ["<b>Full attack: " + (a.haste ? "5 strikes, hasted" : "4 strikes") + "</b>", "<b>" + [a.mainA, a.offA].concat(a.haste ? [a.mainA] : []).concat([a.mainB, a.offB]).map(sg).join(" / ") + "</b>", "", "Full-round action, in this order. Two-Weapon Fighting: −2 on every strike (unarmed strikes count as light). BAB +8 gives the second main-hand strike at −5; Improved Two-Weapon Fighting gives the second off-hand strike at −5."],
-      [" 1. Main hand", sg(a.mainA), dm(a.dmgM), "Full Str to damage"],
-      [" 2. Off hand", sg(a.offA), dm(a.dmgO), "Two-Weapon Fighting; half Str to damage"],
-      [" 3. Main hand", sg(a.mainB), dm(a.dmgM), "Second strike from BAB +8"],
-      [" 4. Off hand", sg(a.offB), dm(a.dmgO), "Improved Two-Weapon Fighting"]
-    ].concat(a.haste ? [[" 5. Main hand (haste)", sg(a.mainA), dm(a.dmgM), "Haste: one extra strike at her highest bonus"]] : [
-      ["<b>If hasted: 5 strikes</b>", "<b>" + [a.mainA + 1, a.offA + 1, a.mainA + 1, a.mainB + 1, a.offB + 1].map(sg).join(" / ") + "</b>", "", "Haste gives +1 on every attack and one extra main-hand strike at her highest bonus"]
-    ]).concat([
-      ["Charge" + (c.charge ? " (now)" : ""), d.noCharge ? "can't charge" : sg(a.charge), dm(a.dmgM), "−2 AC until her next turn. Bodywrap: " + sg(a.charge + a.wrap)],
-      ["Stunning Fist", sg(a.stun), dm(a.dmgM), "Fort DC " + a.stunDc + ", 2 a day (" + (st.stun == null ? 2 : st.stun) + " left)"]
-    ]);
+    /* attack picker: action (standard, full attack, charge, attack of opportunity) and one or two weapons, saved in cond */
+    var mode = { std: "std", charge: "charge", aoo: "aoo" }[c.atk] || "full", two = c.hands !== "one";
+    var pick = '<div class="atkpick"><div class="grp"><div class="gl">Action</div><div class="seg seg-row" role="group" aria-label="Attack action">' +
+      tg("cond", "atk", "Standard attack", mode === "std", "standard action, 1 strike", "std") +
+      tg("cond", "atk", "Full attack", mode === "full", "full-round action, 5-ft step only", "") +
+      tg("cond", "atk", "Charge", mode === "charge", "full-round, 1 strike", "charge") +
+      tg("cond", "atk", "Attack of opportunity", mode === "aoo", "free, on their turn", "aoo") + "</div></div>" +
+      '<div class="grp"><div class="gl">Weapons</div><div class="seg seg-row" role="group" aria-label="Weapons">' +
+      tg("cond", "hands", "One weapon", !two, "main hand only", "one") +
+      tg("cond", "hands", "Two weapons", two, "Two-Weapon Fighting", "") + "</div></div></div>";
+    var one = a.single, wr = function (b) { return "Bodywrap on this strike: " + sg(b + a.wrap) + ", " + dmW(a.dmgM); };
+    var strikes = function (list) { return "<b>" + list.map(sg).join(" / ") + "</b>"; };
+    var atkRows = [];
+    if (!a.canAttack) atkRows = [["Total defense", "—", "", "She can't attack, or make attacks of opportunity, this round."]];
+    else if (mode === "std") {
+      atkRows.push(["Attack (standard action)", sg(one), dm(a.dmgM), "One strike; she can still move. " + wr(one)]);
+      if (two) atkRows.push(["", "", "", "Two-Weapon Fighting only adds strikes on a full attack, so a standard attack is one strike either way."]);
+    } else if (mode === "charge") {
+      atkRows.push(["Charge", d.noCharge ? "can't charge" : sg(a.charge), dm(a.dmgM), "Move up to twice her speed in a straight line and make one strike at +2. −2 AC until her next turn. " + wr(a.charge)]);
+      if (two) atkRows.push(["", "", "", "A charge is one strike, so the second weapon adds nothing."]);
+    } else if (mode === "aoo") {
+      atkRows.push(["Attack of opportunity", sg(one), dm(a.dmgM), "One a round (no Combat Reflexes). Improved Unarmed Strike means her fists threaten, so foes leaving her reach or acting carelessly next to her provoke. " + wr(one)]);
+      if (two) atkRows.push(["", "", "", "No Two-Weapon Fighting penalty: it's a single strike."]);
+    } else if (!two) {
+      atkRows.push(["<b>Full attack, one weapon: " + (a.haste ? "3 strikes, hasted" : "2 strikes") + "</b>", strikes([one].concat(a.haste ? [one] : []).concat([one - 5])), "", "Full-round action; only a 5-ft step. Strikes in this order."]);
+      atkRows.push([" 1. Main hand", sg(one), dm(a.dmgM), "BAB +8"]);
+      atkRows.push([" 2. Main hand", sg(one - 5), dm(a.dmgM), "Second strike from BAB +8 (−5)"]);
+      if (a.haste) atkRows.push([" 3. Main hand (haste)", sg(one), dm(a.dmgM), "Haste: one extra strike at her highest bonus"]);
+      else atkRows.push(["<b>If hasted: 3 strikes</b>", strikes([one + 1, one + 1, one - 4]), "", "Haste gives +1 on every attack and one extra strike at her highest bonus"]);
+    } else {
+      atkRows.push(["<b>Full attack, two weapons: " + (a.haste ? "5 strikes, hasted" : "4 strikes") + "</b>", strikes([a.mainA, a.offA].concat(a.haste ? [a.mainA] : []).concat([a.mainB, a.offB])), "", "Full-round action; only a 5-ft step. Two-Weapon Fighting: −2 on every strike (unarmed strikes count as light). Strikes in this order."]);
+      atkRows.push([" 1. Main hand", sg(a.mainA), dm(a.dmgM), "Full Str to damage"]);
+      atkRows.push([" 2. Off hand", sg(a.offA), dm(a.dmgO), "Two-Weapon Fighting; half Str to damage"]);
+      atkRows.push([" 3. Main hand", sg(a.mainB), dm(a.dmgM), "Second strike from BAB +8 (−5)"]);
+      atkRows.push([" 4. Off hand", sg(a.offB), dm(a.dmgO), "Improved Two-Weapon Fighting (−5)"]);
+      if (a.haste) atkRows.push([" 5. Main hand (haste)", sg(a.mainA), dm(a.dmgM), "Haste: one extra strike at her highest bonus"]);
+      else atkRows.push(["<b>If hasted: 5 strikes</b>", strikes([a.mainA + 1, a.offA + 1, a.mainA + 1, a.mainB + 1, a.offB + 1]), "", "Haste gives +1 on every attack and one extra main-hand strike at her highest bonus"]);
+    }
+    if (a.canAttack) atkRows.push(["Stunning Fist", "on a hit", "", "Declare before the roll on any strike, 1 a round: Fort DC " + a.stunDc + " or stunned. 2 a day (" + (st.stun == null ? 2 : st.stun) + " left)"]);
     var sneakTxt = c.sneak ? ((c.forest || a.tgt) ? "Stealth attack +3d6 applies now (the extra damage isn't multiplied on a critical)." : "Stealth attack needs forest or a favored enemy.") : "Stealth attack +3d6 when the target is flat-footed or flanked, in forest or against a favored enemy. Skirmishing Attack: move 10+ ft first and the first attack counts as against a flat-footed target.";
     var art = sp.artDice + "d6" + sg(sp.artFlat), art8 = sp.artDice + "d8" + sg(sp.artFlat);
     var spRows = [
@@ -424,7 +448,7 @@
       ["Artillery burst", "Reflex DC " + sp.secretDc, art, "15 ft burst around her, she takes none"],
       ["Scorching ray", sg(d.rtouch) + " touch, " + sp.rays + (sp.rays > 1 ? " rays" : " ray"), "4d6 fire each", "Caster level " + sp.clFire + " for fire. Burnout 0"]
     ];
-    h += sec("Attacks", tbl(["Attack", "Bonus", "Damage", "Notes"], atkRows) +
+    h += sec("Attacks", pick + tbl(["Attack", "Bonus", "Damage", "Notes"], atkRows, "atk") +
       '<p class="hint">Unarmed strikes with Weapon Finesse (' + (a.fin === d.ab.dex.mod ? "Dex" : "Str") + ' ' + sg(a.fin) + '), Weapon Focus +1' + esc(tgtTxt) + ". Crit 20/x2. " + esc(wrapNote) + " " + esc(sneakTxt) + "</p>" +
       tbl(["Spell attack", "Bonus", "Damage", "Notes"], spRows) +
       '<p class="hint">Companion bite: ' + sg(d.pet.bite) + ' for 1d6' + sg(d.pet.biteD) + ' plus trip, claws ' + sg(d.pet.claw) + ' for 1d3' + sg(d.pet.clawD) + ".</p>", true);

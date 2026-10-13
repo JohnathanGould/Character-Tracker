@@ -106,3 +106,20 @@ table.t.sk td span { cursor: help; }
     position: fixed; left: 16px; right: 16px; top: auto; bottom: 16px; width: auto; max-width: none; font-size: 0.9rem; padding: 12px 14px;
   }
 }
+
+/* attack picker */
+.atkpick { display: grid; gap: 4px 16px; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); margin-bottom: 10px; }
+@media (max-width: 700px) { .atkpick { grid-template-columns: minmax(0, 1fr); } }
+.seg-row { display: grid; gap: 6px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.seg-row .tg { margin: 0; }
+.seg-row .tg { flex-wrap: wrap; }
+.seg-row .tg .tl { flex: 1 1 0; min-width: 0; }
+@media (max-width: 700px) {
+  .seg-row .tg > span:not(.dot):not(.tl) { flex-basis: 100%; padding-left: 24px; }
+  /* attack table: notes drop to their own line under each row */
+  table.atk thead { display: none; }
+  table.atk tr { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 2px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  table.atk td { border: 0; padding: 0; }
+  table.atk td:nth-child(4) { grid-column: 1 / -1; color: var(--muted); font-size: 0.8rem; text-align: left; }
+  table.atk td:nth-child(4):empty { display: none; }
+}
