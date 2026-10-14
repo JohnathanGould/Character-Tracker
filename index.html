@@ -482,6 +482,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
 <div class="wrap">
 <main>
+  <section id="sheetHead" aria-label="Daerlieth at a glance"></section>
+
   <section class="panel gauges" aria-label="Resources">
     <div class="gsec" id="pBurn"></div>
     <div class="gsec" id="pOver"></div>
@@ -1747,6 +1749,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var open = {};
     Array.prototype.forEach.call(host.querySelectorAll("details.sec"), function (d) { open[d.firstChild.textContent] = d.open; });
     host.innerHTML = view === "pet" ? SheetEngine.renderPet(state, { readOnly: readOnly }) : SheetEngine.render(state, { readOnly: readOnly });
+    /* her headline panel lives above the tracker (main is hidden on Gwathfaron's tab) */
+    $("sheetHead").innerHTML = SheetEngine.render(state, { readOnly: readOnly, headOnly: true });
     Array.prototype.forEach.call(host.querySelectorAll("details.sec"), function (d) { var k = d.firstChild.textContent; if (k in open) d.open = open[k]; });
   }
   document.addEventListener("click", function (e) {
