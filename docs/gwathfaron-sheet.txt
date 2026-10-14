@@ -1,0 +1,104 @@
+Name  : Gwathfaron           | Race  : Panther (leopard)| Height: 2'6" at shoulder
+Player: Balthazar            | Gender: Male             | Weight: 140 lbs
+Update: Oct 14 2026          | Type  : Animal companion | Eyes  : Gold
+Align : Neutral              | Size  : Medium           | Coat  : Black
+Bond  : Daerlieth Nightstar  | Speed : 50ft             | Senses: Low-light vision, scent
+----------------------------------------------------------------------------
+       Ability    |   Temporary   | Class                     Level
+     Score   Mod  |  Score   Mod  |  Animal companion (small cat)
+STR   18      +4  |               |  Effective druid level      8
+DEX   22      +6  |               |  Hit Dice                   7
+CON   15      +2  |               |
+INT    3      -4  |               |Companion of Daerlieth (Spell-less Ranger 8,
+WIS   12      +1  |               |Companion-Bound) with Improved Animal Companion
+CHA    6      -2  |               |
+- Small cat base Str 12, Dex 21, Con 13, Int 2, Wis 12, Cha 6.
+- 4th-level advancement (Medium): Str +4, Dex -2, Con +2. Companion table Str/Dex +2.
+- Ability increase at 4 HD: Int +1 (2 to 3, so he can take any feat he can use).
+- Improved Animal Companion: Dex +1.
+----------------------------------------------------------------------------
+        Total   Current   Subdual |         Total   Dex   Misc
+HP    :   50       50             | Init  :   +6  =  6  +  0
+- 7d8 (average 31.5) + 14 Con + 1d8 Improved Animal Companion (4.5) = 50.
+- Dies at -15 (Con 15). +4 initiative in forest (Daerlieth's favored terrain, shared).
+----------------------------------------------------------------------------
+          Total        Armr  Shld   Dex  Nat  Defl
+Full    :   23  =  10 +  0  +  0  +  6  + 7 +  0
+AC      :   23  =  10 +  0  +  0  +  6  + 7 +  0
+Touch   :   16  =  10 +  0  +  0  +  6  + 0 +  0
+FlatFoot:   17  =  10 +  0  +  0  +  0  + 7 +  0
+- Natural armor 7 = 1 small cat + 4 companion table + 2 Improved Animal Companion.
+----------------------------------------------------------------------------
+SAVES                          Ability
+            Bonus    Base   Mod  Magic
+Fort (Con):   +7    =  5  +  2  +  0
+Ref  (Dex):  +11    =  5  +  6  +  0
+Will (Wis):   +3    =  2  +  1  +  0
+- Evasion: no damage on a successful Reflex save for half.
+- Devotion: +4 morale bonus on Will saves against enchantment (+7).
+----------------------------------------------------------------------------
+Base    Total       Base   Str   Misc | Base    Total   Base   Dex   Misc
+Melee :   +9      =  5  +  4  +  0    | Range :  +11  =  5  +  6  +  0
+- Natural attacks only. Space 5 ft, reach 5 ft.
+----------------------------------------------------------------------------
+Combat  Total  Base  Str  Misc    | Mnvr   Total  Base   Str   Dex  Misc
+Mnvr   :  +9 =  5  +  4  +  0     | Defense: 25  = 10  +  5  +  4  +  6  +  0
+- CMD 29 vs trip (four legs).
+----------------------------------------------------------------------------
+
+Weapon: Natural attacks
+Move Name         Type    Atk            Damage   Crit   Range   Type    Special
+Bite             |Melee | +9           | 1d6+4 | 20/x2 |   -   | B/P/S | Primary. On a hit: free trip, CMB +9, no AoO.
+Claw             |Melee | +4           | 1d3+2 | 20/x2 |   -   | B/S   | Secondary (-5, half Str).
+Claw             |Melee | +4           | 1d3+2 | 20/x2 |   -   | B/S   | Secondary (-5, half Str).
+Full attack      |Melee | +9/+4/+4     | as above              | Bite and 2 claws, 5-ft step only.
+Charge           |Melee | +11          | 1d6+4 | 20/x2 |   -   | B/P/S | Bite only. -2 AC until his next turn.
+Attack of opp.   |Melee | +9           | 1d6+4 | 20/x2 |   -   | B/P/S | Bite.
+
+Flanking with Daerlieth: +2 on every melee attack (and it turns on her stealth attack).
+Favored enemy (shared from Daerlieth): +4 attack and damage vs elves (incl. drow), +2 vs undead.
+Sprint (Ex): once an hour, a charge at ten times his speed (500 ft).
+Built as a scout, not a fighter: his job is to find things and flank so her stealth attack lands.
+----------------------------------------------------------------------------
+Skills                    Total  Ranks  Abil   Class  Misc
+Stealth           (Dex)    +18  =  4  +  6  +  3  +  5   Skill Focus 3, Stealthy 2
+Perception        (Wis)    +12  =  3  +  1  +  3  +  5   Skill Focus 3, Alertness 2
+Escape Artist     (Dex)     +8  =  0  +  6  +  0  +  2   Stealthy
+Acrobatics        (Dex)     +6  =  0  +  6  +  0  +  0   +8 to jump (speed 50)
+Climb             (Str)     +4  =  0  +  4  +  0  +  0
+Swim              (Str)     +4  =  0  +  4  +  0  +  0
+Sense Motive      (Wis)     +3  =  0  +  1  +  0  +  2   Alertness
+Survival          (Wis)     +1  =  0  +  1  +  0  +  0
+Intimidate        (Cha)     -2  =  0  -  2  +  0  +  0
+- 7 ranks (1 per Hit Die). +4 Perception, Stealth and Survival in forest (shared).
+- Scent and low-light vision.
+----------------------------------------------------------------------------
+Feats (4 at 7 HD)
+- Skill Focus (Stealth)    : +3 Stealth (+6 at 10 ranks).
+- Skill Focus (Perception) : +3 Perception (+6 at 10 ranks).
+- Stealthy                 : +2 Stealth and Escape Artist.
+- Alertness                : +2 Perception and Sense Motive (legal at Int 3).
+- Bonded Mind (teamwork, from Daerlieth's Coordinated Companion): silent messages
+  between them while they can see each other.
+----------------------------------------------------------------------------
+Tricks (9: 6 from Int, 3 bonus)
+Attack (any creature, counts as 2), Come, Down, Guard, Heel, Seek, Stay, Track
+- Handle Animal +21 for Daerlieth (+4 bond). Bonded Mind lets her give these silently.
+----------------------------------------------------------------------------
+Special Abilities
+Link         : she handles him as a free action, or pushes him as a move action.
+Share spells : she can cast a "you" spell on him instead, as a touch spell.
+Evasion      : no damage on a successful Reflex save for half.
+Devotion     : +4 morale bonus on Will saves against enchantment.
+Sprint (Ex)  : once an hour, charge at ten times his speed.
+Trip         : free trip attempt when his bite hits.
+Improved Animal Companion (her Enhanced Companion pick): +1d8 hp, +1 Dex, +2 natural
+             armor, all counted above.
+Shared       : her favored enemies (elf/drow +4, undead +2) and forest bonus (+4).
+----------------------------------------------------------------------------
+Equipment
+None.
+Carrying capacity (Medium quadruped, Str 18): light 150 lb, medium 300 lb, heavy 450 lb.
+----------------------------------------------------------------------------
+Next level (effective druid level 9): 8 HD, BAB +6, natural armor +6 (companion
+table), Str/Dex +3, 8 skill ranks, Multiattack (claws become -2).
