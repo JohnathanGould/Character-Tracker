@@ -214,6 +214,7 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
 .tlist li { display: flex; align-items: baseline; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
 .tact { font-family: var(--font-mono); font-size: 0.7rem; color: var(--moon); min-width: 6.5em; text-transform: uppercase; letter-spacing: 0.04em; }
 .tact.a-full, .tact.a-std { color: var(--heat); }
+.tbudget .chip.react { border-style: dashed; }
 .tname { flex: 1; font-size: 0.88rem; }
 .tlist .tx { min-height: 26px; padding: 0 8px; }
 .tadd { display: flex; flex-direction: column; gap: 6px; }
@@ -1477,7 +1478,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   function oocText(s) {
     s = s || state;
     var A = Actions.ACT, D = SheetEngine.derive(s), c = s.cond || {}, lines = ["OOC: Round " + s.round];
-    var order = ["full", "std", "move", "step", "swift", "imm", "free", "none", "long"];
+    var order = ["full", "std", "move", "step", "swift", "imm", "free", "react", "none", "long"];
     var who = function (k, label) {
       var list = s.turn[k] || [];
       if (!list.length) return label + ": nothing yet.";
@@ -1509,11 +1510,11 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var left = function (b) {
       var used = [];
       if (!b.std) used.push("standard"); if (!b.move) used.push("move"); if (!b.full) used.push("full-round");
-      if (!b.swift) used.push("swift"); if (!b.step) used.push("5-ft step");
+      if (!b.swift) used.push("swift"); if (!b.step) used.push("5-ft step"); if (!b.react) used.push("reaction");
       return used.length > 1 ? used.slice(0, -1).join(", ") + " or " + used[used.length - 1] : used[0] || "";
     };
     var col = function (who, label) {
-      var list = state.turn[who] || [], b = Actions.budget(list);
+      var list = state.turn[who] || [], b = Actions.budget(list, who === "her" && SheetEngine.hasFeat(state, "Combat Reflexes") ? 1 + Math.max(0, dv().ab.dex.mod) : 1);
       var chip = function (lbl, left, used) { return '<span class="chip' + (left ? "" : " used") + '">' + lbl + " " + (left ? "✓" : "used") + "</span>"; };
       var all = turnCatalog(who), hidden = 0, showAll = !!ui_turn.all[who];
       /* leave out what she has no action left for (Show all brings them back) */
@@ -1527,7 +1528,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       }).join("") + '<optgroup label="Something else"><option value="custom"' + (sel === "custom" ? " selected" : "") + '>Something else (describe it)…</option></optgroup>';
       var pick = null; cat.forEach(function (g) { g.items.forEach(function (it) { if (it.id === sel) pick = it; }); });
       return '<div class="tcol"><h3>' + label + "</h3>" +
-        '<div class="tbudget">' + chip("Standard", b.std) + chip("Move", b.move) + chip("Swift", b.swift) + chip("5-ft step", b.step) + "</div>" +
+        '<div class="tbudget">' + chip("Standard", b.std) + chip("Move", b.move) + chip("Swift", b.swift) + chip("5-ft step", b.step) + '<span class="chip react' + (b.react ? "" : " used") + '" title="Attacks of opportunity happen on enemies\' turns and use none of the actions above.">Reaction ' + (b.react ? "✓" : "used") + "</span></div>" +
         (b.warn.length ? '<p class="warn-text">' + esc(b.warn.join("; ")) + ".</p>" : "") +
         (list.length ? '<ul class="tlist">' + list.map(function (e) {
           return '<li><span class="tact a-' + e.act + '">' + A[e.act] + '</span><span class="tname">' + esc(e.name) + (e.note ? ' <span class="hint">' + esc(e.note) + "</span>" : "") + "</span>" +

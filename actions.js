@@ -1,9 +1,10 @@
 /* Action economy for the "This round" panel: what each thing she (or Gwathfaron) can do costs in actions.
    Acts: std (standard), move, swift, imm (immediate, uses next turn's swift), free, full (full-round), step (5-ft step),
+   react (on an enemy's turn, uses none of her own actions: attacks of opportunity, one a round),
    none (no action, e.g. reactive checks), long (takes a minute or more: out of combat).
    Actions.catalog(who, ctx) builds the picker list from the live sheet; ctx = { d: SheetEngine.derive(state), spells: [castable], ct: function (name) -> casting time text or "" }. */
 (function (root) {
-  var ACT = { std: "Standard", move: "Move", swift: "Swift", imm: "Immediate", free: "Free", full: "Full-round", step: "5-ft step", none: "No action", long: "1 minute or more" };
+  var ACT = { std: "Standard", move: "Move", swift: "Swift", imm: "Immediate", free: "Free", react: "Reaction", full: "Full-round", step: "5-ft step", none: "No action", long: "1 minute or more" };
   var sg = function (n) { return (n >= 0 ? "+" : "") + n; };
 
   /* what a skill normally costs in combat, and a note for the common uses */
@@ -64,7 +65,7 @@
         I("p-full", "Full attack: bite " + sg(p.bite) + ", claws " + sg(p.claw) + "/" + sg(p.claw), "full"),
         I("p-charge", "Charge: bite " + sg(p.bite + 2) + ", −2 AC", "full", "", MV),
         I("p-sprint", "Sprint: charge at ten times his speed (once an hour)", "full", "", MV),
-        I("p-aoo", "Attack of opportunity: bite " + sg(p.bite), "none", "One a round, on an enemy's turn."),
+        I("p-aoo", "Attack of opportunity: bite " + sg(p.bite), "react", "A reaction on an enemy's turn, when a foe in his reach provokes. Uses none of his actions; one a round."),
         I("p-trip", "Trip (free on a bite hit), CMB " + sg(p.cmb), "free"),
         I("p-aid", "Aid another", "std"),
         I("p-totdef", "Total defense", "std")
@@ -87,7 +88,7 @@
       I("h-full2", "Full attack, two weapons " + tw.map(sg).join("/") + " (" + dm + ")", "full"),
       I("h-full1", "Full attack, one weapon " + a.mains.map(sg).join("/") + " (" + dm + ")", "full"),
       I("h-charge", "Charge " + sg(a.charge) + " (" + dm + "), −2 AC", "full", "", MV),
-      I("h-aoo", "Attack of opportunity " + sg(a.single), "none", "One a round, on an enemy's turn."),
+      I("h-aoo", "Attack of opportunity " + sg(a.single), "react", "A reaction on an enemy's turn, when a foe in her reach provokes. Uses none of her actions; one a round."),
       I("h-stun", "Stunning Fist (declared before an unarmed attack, Fort DC " + a.stunDc + ")", "none", "Declared as part of an attack."),
       I("h-art", "Arcane artillery " + sg(d.rtouch) + " touch (" + sp.artDice + "d6" + sg(sp.artFlat) + ")", "std"),
       I("h-sniper", "Arcane artillery, sniper (120 ft)", "std"),
@@ -134,8 +135,9 @@
 
   /* budget: what a creature has used this round, what is left and what is over the limit.
      A standard action can be traded down for a second move action; a full-round action takes both. */
-  function budget(list) {
-    var n = { std: 0, move: 0, swift: 0, imm: 0, free: 0, full: 0, step: 0, none: 0, long: 0 }, extra = 0, moved = false;
+  function budget(list, aooCap) {
+    aooCap = aooCap || 1;
+    var n = { std: 0, move: 0, swift: 0, imm: 0, free: 0, react: 0, full: 0, step: 0, none: 0, long: 0 }, extra = 0, moved = false;
     (list || []).forEach(function (e) {
       n[e.act] = (n[e.act] || 0) + 1;
       if (e.grants === "std") extra++;
@@ -148,12 +150,13 @@
     if (stdUsed > stdCap) warn.push(n.move > 1 ? "only " + (1 + stdCap - n.std) + " move action" + (stdCap - n.std ? "s" : "") + " (a move can replace the standard)" : "only " + stdCap + " standard action" + (stdCap > 1 ? "s" : "") + " this round");
     if (n.swift + n.imm > 1) warn.push("one swift or immediate action a round");
     if (n.step > 1) warn.push("only one 5-ft step");
+    if (n.react > aooCap) warn.push("only " + aooCap + " attack" + (aooCap > 1 ? "s" : "") + " of opportunity a round");
     if (n.step && moved) warn.push("no 5-ft step in a round she moves");
     if (n.long) warn.push("something here takes a minute or more: not a combat round");
     var std = n.full ? 0 : Math.max(0, stdCap - stdUsed);
     var move = n.full ? 0 : Math.max(0, 1 - n.move) + std;
     return {
-      n: n, warn: warn, moved: moved,
+      n: n, warn: warn, moved: moved, react: Math.max(0, aooCap - n.react),
       std: std, move: move, full: !n.full && !n.std && !n.move,
       swift: Math.max(0, 1 - n.swift - n.imm), step: n.step || moved ? 0 : 1
     };
@@ -167,6 +170,7 @@
     if (act === "full") return b.full;
     if (act === "swift" || act === "imm") return b.swift > 0;
     if (act === "step") return b.step > 0;
+    if (act === "react") return b.react > 0;
     return true; /* free, no action, out of combat */
   }
 
