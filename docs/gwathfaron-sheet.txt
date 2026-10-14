@@ -59,19 +59,20 @@ Flanking with Daerlieth: +4 on every melee attack (Outflank) and +1d6 precision 
 both hers through Coordinated Companion (his while within 30 ft of her); it also turns on her stealth attack.
 Favored enemy (shared from Daerlieth): +4 attack and damage vs elves (incl. drow), +2 vs undead.
 Sprint (Ex): once an hour, a charge at ten times his speed (500 ft).
-Built as a scout, not a fighter: his job is to find things and flank so her stealth attack lands.
+Built as an all-round scout, not a fighter: his job is to find things, follow her anywhere (climbing, swimming,
+tracking) and flank so her stealth attack lands.
 ----------------------------------------------------------------------------
 Skills                    Total  Ranks  Abil   Class  Misc
-Stealth           (Dex)    +18  =  4  +  6  +  3  +  5   Skill Focus 3, Stealthy 2
-Perception        (Wis)    +12  =  3  +  1  +  3  +  5   Skill Focus 3, Alertness 2
-Escape Artist     (Dex)     +8  =  0  +  6  +  0  +  2   Stealthy
+Stealth           (Dex)    +16  =  2  +  6  +  3  +  5   Skill Focus 3, Stealthy 2
+Escape Artist     (Dex)    +12  =  1  +  6  +  3  +  2   Stealthy
+Perception        (Wis)    +10  =  1  +  1  +  3  +  5   Skill Focus 3, Alertness 2
+Climb             (Str)     +8  =  1  +  4  +  3  +  0
+Swim              (Str)     +8  =  1  +  4  +  3  +  0
 Acrobatics        (Dex)     +6  =  0  +  6  +  0  +  0   +8 to jump (speed 50)
-Climb             (Str)     +4  =  0  +  4  +  0  +  0
-Swim              (Str)     +4  =  0  +  4  +  0  +  0
+Survival          (Wis)     +5  =  1  +  1  +  3  +  0
 Sense Motive      (Wis)     +3  =  0  +  1  +  0  +  2   Alertness
-Survival          (Wis)     +1  =  0  +  1  +  0  +  0
 Intimidate        (Cha)     -2  =  0  -  2  +  0  +  0
-- 7 ranks (1 per Hit Die). +4 Perception, Stealth and Survival in forest (shared).
+- 7 ranks (1 per Hit Die), spread so he is useful everywhere. +4 Perception, Stealth and Survival in forest (shared).
 - Scent and low-light vision.
 ----------------------------------------------------------------------------
 Feats (4 at 7 HD)

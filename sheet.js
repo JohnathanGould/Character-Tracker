@@ -142,9 +142,9 @@
      Core Rulebook "Cat, small" (leopard) companion, Medium after its 4th-level advancement. His effective druid level
      is her level; HD, BAB, saves, natural armor, Str/Dex bonus, skill ranks, feats and tricks follow the companion
      table (Levels.prog(L).pet). Improved Animal Companion (her Enhanced Companion feat): +1d8 hp, +1 Dex, +2 natural.
-     Build (a scout: Stealth and Perception first): the HD 4 ability increase to Int (2 to 3, which lets him take any
-     feat he can use); feats Skill Focus (Stealth), Skill Focus (Perception), Stealthy, Alertness; ranks Stealth 4,
-     Perception 3 at 7 HD. Later increases, feats and ranks are her level-up picks. */
+     Build (an all-round scout: Stealth and Perception lead, every useful skill trained): the HD 4 ability increase to Int
+     (2 to 3, which lets him take any feat he can use); feats Skill Focus (Stealth), Skill Focus (Perception), Stealthy,
+     Alertness; ranks at 7 HD Stealth 2, Perception 1, Climb 1, Swim 1, Survival 1, Escape Artist 1. Later increases, feats and ranks are her level-up picks. */
   var PET = {
     dead: 15, nat: 1, speed: 50,
     base: { str: 12, dex: 21, con: 13, int: 2, wis: 12, cha: 6 },        /* small cat */
@@ -152,9 +152,9 @@
     feats: ["Skill Focus (Stealth)", "Skill Focus (Perception)", "Stealthy", "Alertness"],
     /* name, ability, ranks at 7 HD, class skill, misc [label, value] */
     skills: [
-      ["Acrobatics", "dex", 0, 1, [["speed 50 ft, jumping only", 0]]], ["Climb", "str", 0, 1, []], ["Escape Artist", "dex", 0, 1, [["Stealthy", 2]]],
-      ["Intimidate", "cha", 0, 1, []], ["Perception", "wis", 3, 1, [["Skill Focus", 3], ["Alertness", 2]]], ["Sense Motive", "wis", 0, 0, [["Alertness", 2]]], ["Stealth", "dex", 4, 1, [["Skill Focus", 3], ["Stealthy", 2]]],
-      ["Survival", "wis", 0, 1, []], ["Swim", "str", 0, 1, []]
+      ["Acrobatics", "dex", 0, 1, [["speed 50 ft, jumping only", 0]]], ["Climb", "str", 1, 1, []], ["Escape Artist", "dex", 1, 1, [["Stealthy", 2]]],
+      ["Intimidate", "cha", 0, 1, []], ["Perception", "wis", 1, 1, [["Skill Focus", 3], ["Alertness", 2]]], ["Sense Motive", "wis", 0, 0, [["Alertness", 2]]], ["Stealth", "dex", 2, 1, [["Skill Focus", 3], ["Stealthy", 2]]],
+      ["Survival", "wis", 1, 1, []], ["Swim", "str", 1, 1, []]
     ]
   };
   /* his ranks: state.petRanks once new ranks are placed at level-up, else the 7-HD build */
