@@ -62,16 +62,16 @@
     if (who === "pet") {
       G("Attacks", [
         I("p-bite", "Bite " + sg(p.bite) + " (1d6" + sg(p.biteD) + ", free trip)", "std"),
-        I("p-full", "Full attack: bite " + sg(p.bite) + ", claws " + sg(p.claw) + "/" + sg(p.claw), "full"),
+        I("p-full", "Full attack: " + (p.haste ? "bite " + sg(p.bite) + "/" + sg(p.bite) + " (hasted)" : "bite " + sg(p.bite)) + ", claws " + sg(p.claw) + "/" + sg(p.claw), "full"),
         I("p-charge", "Charge: bite " + sg(p.bite + 2) + ", −2 AC", "full", "", MV),
-        I("p-sprint", "Sprint: charge at ten times his speed (once an hour)", "full", "", MV),
+        I("p-sprint", "Sprint: charge " + p.speed * 10 + " ft (once an hour)", "full", "", MV),
         I("p-aoo", "Attack of opportunity: bite " + sg(p.bite), "react", "A reaction on an enemy's turn, when a foe in his reach provokes. Uses none of his actions; one a round."),
         I("p-trip", "Trip (free on a bite hit), CMB " + sg(p.cmb), "free"),
         I("p-aid", "Aid another", "std"),
         I("p-totdef", "Total defense", "std")
       ]);
       G("Movement", [
-        I("p-move", "Move (50 ft)", "move", "", MV), I("p-step", "5-ft step", "step"), I("p-run", "Run (200 ft)", "full", "", MV),
+        I("p-move", "Move (" + p.speed + " ft)", "move", "", MV), I("p-step", "5-ft step", "step"), I("p-run", "Run (" + p.speed * 4 + " ft)", "full", "", MV),
         I("p-stealth", "Move with Stealth " + sg(p.stealth), "move", "", MV), I("p-withdraw", "Withdraw", "full", "", MV), I("p-stand", "Stand up from prone", "move")
       ]);
       G("Senses and tricks", [
@@ -82,11 +82,13 @@
     }
     var tw = [], q;
     for (q = 0; q < Math.max(a.twMains.length, a.offs.length); q++) { if (q < a.twMains.length) tw.push(a.twMains[q]); if (q < a.offs.length) tw.push(a.offs[q]); }
-    var dm = a.die + sg(a.dmgM);
+    var dm = a.die + sg(a.dmgM), hst = a.haste ? " (hasted)" : "";
+    if (a.haste) { tw.splice(2, 0, a.twMains[0]); } /* haste: one extra main-hand strike at her highest bonus */
+    var one = a.haste ? [a.mains[0]].concat(a.mains) : a.mains;
     G("Attacks", [
       I("h-single", "Unarmed strike " + sg(a.single) + " (" + dm + ")", "std"),
-      I("h-full2", "Full attack, two weapons " + tw.map(sg).join("/") + " (" + dm + ")", "full"),
-      I("h-full1", "Full attack, one weapon " + a.mains.map(sg).join("/") + " (" + dm + ")", "full"),
+      I("h-full2", "Full attack, two weapons " + tw.map(sg).join("/") + hst + " (" + dm + ")", "full"),
+      I("h-full1", "Full attack, one weapon " + one.map(sg).join("/") + hst + " (" + dm + ")", "full"),
       I("h-charge", "Charge " + sg(a.charge) + " (" + dm + "), −2 AC", "full", "", MV),
       I("h-aoo", "Attack of opportunity " + sg(a.single), "react", "A reaction on an enemy's turn, when a foe in her reach provokes. Uses none of her actions; one a round."),
       I("h-stun", "Stunning Fist (declared before an unarmed attack, Fort DC " + a.stunDc + ")", "none", "Declared as part of an attack."),

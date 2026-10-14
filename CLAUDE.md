@@ -34,7 +34,7 @@ Keep the look (black background, silver-blue accent, Marcellus / Albert Sans / I
 
 ## State (one JSON document)
 `v, round, level, burnout, gained, overdrive, mythic, lightUsed, hp, petHp, stun, eq, cond, fx, picks, hpRolls, ranks, petRanks, vials, strDmg, blood, exp, expLocked, turn, prevOoc, active[], pending[], log[]`
-- `active[]`: `{id, name, cast, end (null = open-ended), total, on}`, max 2 entries. `on` is who the spell is on: `her` (default), `pet` or `ally` (Cast on, in the cast panel). Only spells on her change her sheet numbers.
+- `active[]`: `{id, name, cast, end (null = open-ended), total, on}`, max 2 entries. `on` is who the spell is on: `her` (default), `pet` or `ally` (Cast on, in the cast panel). Only spells on her change her sheet numbers, except haste (`hastedOn` in `sheet.js`, matched by name so any way she casts it counts, or a Haste status effect from someone else): on her it covers Gwathfaron too (one creature per level), on `pet` only him. Haste gives +1 attack, +1 dodge AC, +1 Reflex, +30 ft speed and one extra strike at the highest bonus on a full attack, on both sheets and in the This round list.
 - `pending[]`: Detonate reminders `{id, name, fire, text}`.
 - `cond.atk` (`std` | `charge` | `aoo`, absent = full attack) and `cond.hands` (`one`, absent = two weapons): the attack picker on her tab; the Attacks table shows only that combination.
 - `cond.flank` (flanking: +4 melee for both with Outflank, +1d6 precision with Precise Strike, turns on her stealth attack), `cond.art` (`sniper` | `burst`, absent = touch) and `cond.artD8` (artillery picker on her tab), `cond.petAtk` (`std` | `charge` | `aoo`, absent = full attack; Gwathfaron's picker).

@@ -138,6 +138,16 @@
     PET.skills.forEach(function (s) { r[s[0]] = saved && typeof saved === "object" && saved[s[0]] != null ? Math.max(0, Math.floor(+saved[s[0]] || 0)) : s[2]; });
     return r;
   }
+  /* is haste on her ("her") or Gwathfaron ("pet")? Her own haste, however she cast it (known, experimental, Wild Arcana),
+     or a Haste status effect someone else put on them. Haste targets one creature per level, so when she hastes
+     herself Gwathfaron is counted too; cast on him alone it is his only. */
+  function hastedOn(st, who) {
+    var isH = function (n) { return /^haste\b/i.test(String(n || "")); };
+    var mine = (st.active || []).some(function (a) { var on = a.on || "her"; return isH(a.name) && (on === who || (who === "pet" && on === "her")); });
+    var fx = ((st.fx || {})[who] || []).some(function (e) { return isH(e.name) && e.kind !== "bad"; });
+    return mine || fx;
+  }
+
   function derivePet(c, tgt, ranksBy, st) {
     st = st || {};
     var cp = progOf(st).pet, hd = cp.hd, pk = picksOf(st);
@@ -157,15 +167,15 @@
     var m = {}; Object.keys(ab).forEach(function (k) { m[k] = mod(ab[k]); });
     var natT = PET.nat + cp.natBonus + 2;
     var hpMax = Math.floor(hd * 4.5 + hd * m.con + 4.5);
-    var pf = c.forest ? progOf(st).forest : 0;
-    var p = { ab: ab, abParts: abParts, m: m, forest: pf, tgt: tgt, hpMax: hpMax, dead: ab.con, hd: hd, bab: cp.bab, nat: natT, cp: cp };
+    var pf = c.forest ? progOf(st).forest : 0, hs = hastedOn(st, "pet") ? 1 : 0;
+    var p = { haste: !!hs, speed: 50 + (hs ? 30 : 0), ab: ab, abParts: abParts, m: m, forest: pf, tgt: tgt, hpMax: hpMax, dead: ab.con, hd: hd, bab: cp.bab, nat: natT, cp: cp };
     p.init = m.dex + pf;
-    p.ac = 10 + m.dex + natT; p.touch = 10 + m.dex; p.ff = 10 + natT;
-    p.fort = cp.good + m.con; p.ref = cp.good + m.dex; p.will = cp.poor + m.wis;
+    p.ac = 10 + m.dex + natT + hs; p.touch = 10 + m.dex + hs; p.ff = 10 + natT; /* haste: +1 dodge, lost when flat-footed */
+    p.fort = cp.good + m.con; p.ref = cp.good + m.dex + hs; p.will = cp.poor + m.wis;
     var fl = c.flank ? flankBonus(st) : 0, sec2 = cp.multiattack ? 2 : 5;
     p.flank = fl; p.secPen = sec2;
-    p.bite = cp.bab + m.str + tgt + fl; p.biteD = m.str + tgt;
-    p.claw = cp.bab + m.str - sec2 + tgt + fl; p.clawD = Math.floor(m.str / 2) + tgt; /* secondary attacks */
+    p.bite = cp.bab + m.str + tgt + fl + hs; p.biteD = m.str + tgt;
+    p.claw = cp.bab + m.str - sec2 + tgt + fl + hs; p.clawD = Math.floor(m.str / 2) + tgt; /* secondary attacks */
     p.cmb = cp.bab + m.str; p.cmd = 10 + cp.bab + m.str + m.dex;
     p.skills = PET.skills.map(function (s) {
       var name = s[0], key = s[1], ranks = ranksBy[name] || 0, misc = s[4].slice();
@@ -178,18 +188,18 @@
     p.ranksUsed = 0; p.skills.forEach(function (s) { p.ranksUsed += s.ranks; });
     p.ranksMax = cp.ranks;
     p.feats = PET.feats.concat(Object.keys(pk).filter(function (id) { return /^pfeat-/.test(id) && pk[id]; }).map(function (id) { return pk[id]; }));
-    var fe = tgt ? [["favored enemy", tgt]] : [];
+    var fe = tgt ? [["favored enemy", tgt]] : [], hsT = hs ? [["haste", 1]] : [];
     p.t = {
       hp: (hd * 4.5) + " (" + hd + "d8 average) + " + hd * m.con + " Con (" + sg(m.con) + " × " + hd + " HD) + 4.5 (1d8 Improved Animal Companion) = " + hpMax,
-      ac: how([["base", 10], ["Dex", m.dex], ["natural, small cat", 1], ["natural, companion table", cp.natBonus], ["natural, Improved Animal Companion", 2]]) + " = " + p.ac,
-      touch: how([["base", 10], ["Dex", m.dex]]) + " = " + p.touch,
+      ac: how([["base", 10], ["Dex", m.dex], ["natural, small cat", 1], ["natural, companion table", cp.natBonus], ["natural, Improved Animal Companion", 2]].concat(hs ? [["dodge, haste", 1]] : [])) + " = " + p.ac,
+      touch: how([["base", 10], ["Dex", m.dex]].concat(hs ? [["dodge, haste", 1]] : [])) + " = " + p.touch,
       ff: how([["base", 10], ["natural armor", natT]]) + " = " + p.ff + " (loses Dex)",
       init: how([["Dex", m.dex], ["forest", pf]]) + " = " + sg(p.init),
       fort: how([["base save (companion, " + hd + " HD)", cp.good], ["Con", m.con]]) + " = " + sg(p.fort),
-      ref: how([["base save (companion, " + hd + " HD)", cp.good], ["Dex", m.dex]]) + " = " + sg(p.ref) + ". " + (cp.impEvasion ? "Improved evasion" : "Evasion"),
+      ref: how([["base save (companion, " + hd + " HD)", cp.good], ["Dex", m.dex]].concat(hsT)) + " = " + sg(p.ref) + ". " + (cp.impEvasion ? "Improved evasion" : "Evasion"),
       will: how([["base save (companion, " + hd + " HD)", cp.poor], ["Wis", m.wis]]) + " = " + sg(p.will) + ". Devotion: +4 morale vs enchantment",
-      bite: how([["BAB", cp.bab], ["Str", m.str]].concat(fe).concat(fl ? [["flanking", fl]] : [])) + " = " + sg(p.bite) + ". Damage 1d6 " + how([["Str", m.str]].concat(fe), " ").trim() + ". On a hit: free trip, CMB " + sg(cp.bab + m.str),
-      claw: how([["BAB", cp.bab], ["Str", m.str], [cp.multiattack ? "secondary attack (Multiattack)" : "secondary attack", -sec2]].concat(fe).concat(fl ? [["flanking", fl]] : [])) + " = " + sg(p.claw) + ". Damage 1d3 " + how([["half Str", Math.floor(m.str / 2)]].concat(fe), " ").trim(),
+      bite: how([["BAB", cp.bab], ["Str", m.str]].concat(fe).concat(fl ? [["flanking", fl]] : []).concat(hsT)) + " = " + sg(p.bite) + ". Damage 1d6 " + how([["Str", m.str]].concat(fe), " ").trim() + ". On a hit: free trip, CMB " + sg(cp.bab + m.str),
+      claw: how([["BAB", cp.bab], ["Str", m.str], [cp.multiattack ? "secondary attack (Multiattack)" : "secondary attack", -sec2]].concat(fe).concat(fl ? [["flanking", fl]] : []).concat(hsT)) + " = " + sg(p.claw) + ". Damage 1d3 " + how([["half Str", Math.floor(m.str / 2)]].concat(fe), " ").trim(),
       cmb: "CMB " + how([["BAB", cp.bab], ["Str", m.str]]) + " = " + sg(p.cmb) + ". CMD " + how([["base", 10], ["BAB", cp.bab], ["Str", m.str], ["Dex", m.dex]]) + " = " + p.cmd + ", +4 vs trip (four legs)"
     };
     p.ab_t = {};
@@ -210,7 +220,7 @@
     /* only her own spells on herself change her numbers (a.on is "pet" or "ally" for spells cast on others) */
     var act = function (id) { return (st.active || []).some(function (a) { return a.id === id && (!a.on || a.on === "her"); }); };
     var burn = Math.max(0, st.burnout || 0), dcP = Math.floor(burn / 2);
-    var haste = act("exp-haste"), er = act("expeditious-retreat"), cg = act("exp-cats-grace");
+    var haste = hastedOn(st, "her"), er = act("expeditious-retreat"), cg = act("exp-cats-grace");
     var shieldSp = act("shield"), pfe = act("exp-protection-from-evil"), fly = act("exp-fly");
     var pen = c.exhausted ? 6 : c.fatigued ? 2 : 0;
     var L = levelOf(st), P = progOf(st), BAB = P.bab, LEVEL = L;
@@ -261,8 +271,8 @@
     /* saves */
     var cloak = worn("cloak") ? 3 : 0, sp2 = (c.shaken ? 2 : 0) + (c.sickened ? 2 : 0);
     d.save = {
-      base: P.save, fort: P.save + CO + cloak - sp2, ref: P.save + D + cloak - sp2, will: P.save + W + cloak - sp2,
-      cloak: cloak, status: -sp2
+      base: P.save, fort: P.save + CO + cloak - sp2, ref: P.save + D + cloak - sp2 + (haste ? 1 : 0), will: P.save + W + cloak - sp2,
+      cloak: cloak, status: -sp2, haste: haste ? 1 : 0
     };
 
     /* initiative, speed */
@@ -465,7 +475,7 @@
       (worn("shirt") ? "" : "No armor: no spell failure, no Dex cap. ") + "Spell failure on somatic spells: " + d.spellFail + "%. Load: " + d.load.cat + " (" + d.load.wt + " lb of " + d.load.light + " light, " + d.load.med + " medium, " + d.load.max + " max).";
     var svRows = [
       ["Fortitude", sg(d.save.fort), parts([["", d.save.base], ["Con", d.ab.con.mod], ["cloak", d.save.cloak], ["status", d.save.status]])],
-      ["Reflex", sg(d.save.ref), parts([["", d.save.base], ["Dex", d.ab.dex.mod], ["cloak", d.save.cloak], ["status", d.save.status]])],
+      ["Reflex", sg(d.save.ref), parts([["", d.save.base], ["Dex", d.ab.dex.mod], ["cloak", d.save.cloak], ["haste", d.save.haste], ["status", d.save.status]])],
       ["Will", sg(d.save.will), parts([["", d.save.base], ["Wis", d.ab.wis.mod], ["cloak", d.save.cloak], ["status", d.save.status]])]
     ];
     h += sec("Defense and saves", tbl(["", "Total", "How"], acRows) + '<p class="hint">' + esc(defNote) + "</p>" + tbl(["Save", "Total", "How"], svRows) +
@@ -961,7 +971,7 @@
       box("HP", hp + "<small>/" + p.hpMax + "</small>", status + " · dies at −" + p.dead, p.t.hp) +
       box("AC", p.ac, tip("touch " + p.touch, p.t.touch) + " · " + tip("flat-footed " + p.ff, p.t.ff), p.t.ac) +
       box("Initiative", sg(p.init), p.forest ? "forest counted" : "+" + PRp.forest + " in forest", p.t.init) +
-      box("Speed", "50 ft", "sprint: 500 ft charge, once an hour", "Small cat base speed 50 ft. Sprint (Ex): once an hour, a charge at ten times his speed") +
+      box("Speed", p.speed + " ft", (p.haste ? "hasted · " : "") + "sprint: " + p.speed * 10 + " ft charge, once an hour", "Small cat base speed 50 ft" + (p.haste ? ", +30 ft haste" : "") + ". Sprint (Ex): once an hour, a charge at ten times his speed") +
       box("Fort", sg(p.fort), "", p.t.fort) + box("Ref", sg(p.ref), cp.impEvasion ? "improved evasion" : "evasion", p.t.ref) + box("Will", sg(p.will), "+4 vs enchantment", p.t.will) +
       box("Bite", sg(p.bite), "1d6" + sg(p.biteD) + " + trip", p.t.bite) +
       box("Claws ×2", sg(p.claw), "1d3" + sg(p.clawD), p.t.claw) +
@@ -997,15 +1007,16 @@
     var biteD = "1d6" + sg(p.biteD) + pps, clawD = "1d3" + sg(p.clawD) + pps, tripTxt = "On a hit: free trip attempt at CMB " + sg(p.cmb) + ", doesn't provoke";
     var pRows = [];
     if (pm === "full") {
-      pRows.push(["<b>Full attack: 3 attacks</b>", "<b>" + [p.bite, p.claw, p.claw].map(sg).join(" / ") + "</b>", "", "Full-round action; only a 5-ft step. Natural attacks, all at once."]);
+      pRows.push(["<b>Full attack: " + (p.haste ? "4 attacks, hasted" : "3 attacks") + "</b>", "<b>" + (p.haste ? [p.bite, p.bite, p.claw, p.claw] : [p.bite, p.claw, p.claw]).map(sg).join(" / ") + "</b>", "", "Full-round action; only a 5-ft step. Natural attacks, all at once." + (p.haste ? " Haste: +1 on every attack and one extra bite at his full bonus." : "")]);
       /* claws: secondary, −5 (−2 with Multiattack at 9th) */
       pRows.push([" Bite", sg(p.bite), biteD, "Primary, full Str. " + tripTxt]);
+      if (p.haste) pRows.push([" Bite (haste)", sg(p.bite), biteD, "Haste: one extra attack at his highest bonus. " + tripTxt]);
       pRows.push([" Claw", sg(p.claw), clawD, "Secondary (−" + p.secPen + (cp.multiattack ? ", Multiattack" : "") + ", half Str)"]);
       pRows.push([" Claw", sg(p.claw), clawD, "Secondary (−" + p.secPen + (cp.multiattack ? ", Multiattack" : "") + ", half Str)"]);
     } else if (pm === "std") {
       pRows.push(["Bite (standard action)", sg(p.bite), biteD, "One attack; he can still move. " + tripTxt]);
     } else if (pm === "charge") {
-      pRows.push(["Charge", sg(p.bite + 2), biteD, "Up to 100 ft in a straight line, one bite at +2; −2 AC until his next turn. No pounce, so no claws. Sprint: once an hour a charge can cover 500 ft. " + tripTxt]);
+      pRows.push(["Charge", sg(p.bite + 2), biteD, "Up to " + p.speed * 2 + " ft in a straight line, one bite at +2; −2 AC until his next turn. No pounce, so no claws. Sprint: once an hour a charge can cover 500 ft. " + tripTxt]);
     } else {
       pRows.push(["Attack of opportunity", sg(p.bite), biteD, "One a round. He threatens 5 ft. " + tripTxt]);
     }
@@ -1057,7 +1068,7 @@
   }
 
   function d0level(st) { return levelOf(st); }
-  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, petRanks: petRanks, ranksOf: ranksOf, SKILLS: SKILLS, hpMaxOf: hpMaxOf, levelOf: levelOf, FX_UNITS: FX_UNITS, LETTERS: LETTERS, letterHtml: letterHtml, featHtml: featHtml, featGroups: featGroups, classData: classData, featInfo: featInfo, hasFeat: hasFeat, BASE_FEATS: BASE_FEATS, fxLeft: fxLeft, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
+  var api = { hastedOn: hastedOn, derive: derive, render: render, renderPet: renderPet, PET: PET, petRanks: petRanks, ranksOf: ranksOf, SKILLS: SKILLS, hpMaxOf: hpMaxOf, levelOf: levelOf, FX_UNITS: FX_UNITS, LETTERS: LETTERS, letterHtml: letterHtml, featHtml: featHtml, featGroups: featGroups, classData: classData, featInfo: featInfo, hasFeat: hasFeat, BASE_FEATS: BASE_FEATS, fxLeft: fxLeft, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
   root.SheetEngine = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
