@@ -145,7 +145,7 @@
      Build (an all-round scout: Stealth and Perception lead, every useful skill trained): the HD 4 ability increase to Int
      (2 to 3, which lets him take any feat he can use); feats Skill Focus (Stealth), Skill Focus (Perception),
      Cunning (+1 rank per Hit Die), Alertness;
-     14 ranks at 7 HD: Stealth 4, Perception 3, Survival 2, Escape Artist 1, Sense Motive 1, Climb 1, Swim 1, Acrobatics 1. Later increases, feats and ranks are her level-up picks. */
+     14 ranks at 7 HD: Stealth 4, Perception 3, Survival 2, Escape Artist 1, Intimidate 1, Climb 1, Swim 1, Acrobatics 1. Later increases, feats and ranks are her level-up picks. */
   var PET = {
     dead: 15, nat: 1, speed: 50,
     base: { str: 12, dex: 21, con: 13, int: 2, wis: 12, cha: 6 },        /* small cat */
@@ -154,7 +154,7 @@
     /* name, ability, ranks at 7 HD, class skill, misc [label, value] */
     skills: [
       ["Acrobatics", "dex", 1, 1, [["speed 50 ft, jumping only", 0]]], ["Climb", "str", 1, 1, []], ["Escape Artist", "dex", 1, 1, []],
-      ["Intimidate", "cha", 0, 1, []], ["Perception", "wis", 3, 1, [["Skill Focus", 3], ["Alertness", 2]]], ["Sense Motive", "wis", 1, 0, [["Alertness", 2]]], ["Stealth", "dex", 4, 1, [["Skill Focus", 3]]],
+      ["Intimidate", "cha", 1, 1, []], ["Perception", "wis", 3, 1, [["Skill Focus", 3], ["Alertness", 2]]], ["Sense Motive", "wis", 0, 0, [["Alertness", 2]]], ["Stealth", "dex", 4, 1, [["Skill Focus", 3]]],
       ["Survival", "wis", 2, 1, []], ["Swim", "str", 1, 1, []]
     ]
   };
