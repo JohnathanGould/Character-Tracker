@@ -210,7 +210,7 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
   .gsec + .gsec { border-top: 0; border-left: 1px solid var(--line); }
 }
 .helpform { max-width: 560px !important; }
-.duo { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); align-items: start; }
+.duo { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); align-items: start; }
 .pickbox { min-width: 0; margin-bottom: 0; display: flex; flex-direction: column; gap: 8px; }
 .pickbox .field select { width: 100%; }
 .spells.one { grid-template-columns: 1fr; }
@@ -457,12 +457,11 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     <div class="gsec" id="pMyth"></div>
   </section>
 
+  <section class="panel" id="pSpells"></section>
+
   <section class="cols">
-    <div class="panel" id="pSpells"></div>
-    <div class="stack">
-      <div class="panel" id="pCast"></div>
-      <div class="panel" id="pSlots"></div>
-    </div>
+    <div class="panel" id="pCast"></div>
+    <div class="panel" id="pSlots"></div>
   </section>
 
   <section class="panel" id="pBody"></section>
@@ -639,7 +638,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   var ui = {
     tray: false, qOd: false, qBlood: true, trayMsg: "", dayArmed: false, blood: false, bmChoice: "det", bmGp: 100,
     sel: "fireball", od: false, d8: false, wa: false, myth: false, castOn: "her", mode: "std", element: "fire",
-    customName: "", customLvl: 1, customDur: "none", unkFire: false
+    customName: "", customLvl: 1, customDur: "none", unkFire: false, knownSel: "fireball"
   };
   var readOnly = false, roLabel = "";
   var saving = false, dirty = false, saveTimer = null, dayTimer = null;
@@ -940,6 +939,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var sp = getSpell(parts[0]);
     if (!sp) return;
     ui.sel = sp.id;
+    if (!/^(exp-|custom)/.test(sp.id)) ui.knownSel = sp.id;
     ui.od = ui.qOd; ui.d8 = false; ui.wa = false; ui.myth = false; ui.castOn = "her";
     if (sp.calc === "det" && parts[1]) ui.element = parts[1];
     if (sp.art && parts[1]) ui.mode = parts[1];
@@ -1094,13 +1094,23 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   }
 
   function renderSpells() {
-    var h = "", mine = SPELLS.concat(knownSpells());
+    /* known spells: one picker like the experimental and Wild Arcana ones, grouped by level */
+    var mine = SPELLS.concat(knownSpells()), kOpts = "";
+    if (!mine.some(function (x) { return x.id === ui.knownSel; })) ui.knownSel = "fireball";
     for (var L = 0; L <= Math.max(4, LP().maxSpell); L++) {
       var items = mine.filter(function (s) { return s.lvl === L && !s.art; });
-      if (!items.length && L > 4) continue;
       if (L === 4) items = items.concat(SPELLS.filter(function (s) { return s.art; }));
-      h += '<div class="group"><h3>' + (L ? ordinal(L) + " level" : "Orisons · no burnout") + '</h3><div class="spells">' + items.map(spellBtn).join("") + "</div></div>";
+      if (!items.length) continue;
+      kOpts += '<optgroup label="' + (L ? ordinal(L) + " level" : "Orisons, no burnout") + '">' + items.map(function (x) {
+        var g = baseGain(x);
+        return '<option value="' + x.id + '"' + (x.id === ui.knownSel ? " selected" : "") + ">" + esc(x.name) + (x.lvl === 0 ? "" : " (" + (g > 0 ? "+" + g : "0") + " burnout)") + (isActive(x.id) ? " · active" : "") + "</option>";
+      }).join("") + "</optgroup>";
     }
+    var ks = getSpell(ui.knownSel);
+    var h = '<div class="duo"><div class="group pickbox"><h3>Known spells · ' + mine.length + "</h3>" +
+      '<label class="field">Spell to cast<select id="knownSel">' + kOpts + "</select></label>" +
+      '<div class="spells one">' + spellBtn(ks) + "</div>" +
+      (ks.art ? artBrief() : spellBrief(ks.name)) + "</div>";
     var expOpts = '<optgroup label="Common picks">' + EXP.map(function (e) { return '<option value="' + e.id + '"' + (e.id === state.exp ? " selected" : "") + ">" + e.name + " (" + ordinal(e.lvl) + ")</option>"; }).join("") + "</optgroup>";
     var presetNames = EXP.map(function (e) { return e.name.toLowerCase(); });
     for (var xl = 1; xl <= LP().expMax; xl++) {
@@ -1109,8 +1119,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       }).join("") + "</optgroup>";
     }
     var ex = expSpell();
-    h += '<div class="duo"><div class="group pickbox"><h3>Experimental spell · +1 burnout</h3>' +
-      '<label class="field">Today\'s pick<select id="expSel">' + expOpts + "</select></label>" +
+    h += '<div class="group pickbox"><h3>Experimental spell · +1 burnout</h3>' +
+      '<label class="field">Today\'s pick<select id="expSel"' + (readOnly ? " disabled" : "") + '>' + expOpts + "</select></label>" +
       '<div class="spells one">' + spellBtn(ex) + "</div>" + spellBrief(ex.name) + "</div>";
     var waCur = bankFind(ui.customName, ui.customLvl), waOpts = '<option value="">Choose a spell…</option>';
     for (var wl = 1; wl <= LP().maxSpell; wl++) {
@@ -1381,6 +1391,13 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       '<p class="brieftext">' + esc(String(c.d || "").replace(/\s+/g, " ")) + "</p>" +
       '<button type="button" class="btn sm" data-spell="' + esc(c.n) + '">Full text</button></div>';
   }
+  function artBrief() {
+    var D = dv().sp;
+    var rows = [["Action", "standard"], ["Attack", "ranged touch +" + dv().rtouch], ["Range", "30 ft · 120 ft sniper · 15-ft burst around her"],
+      ["Damage", D.artDice + "d6+" + D.artFlat + " arcane (d8s with 1 overdrive)"], ["Burst save", "Reflex half, DC " + D.secretDc]];
+    return '<div class="brief"><dl class="rows">' + rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" +
+      '<p class="brieftext">Raw arcane energy, treated as a spell of half her level (' + ordinal(LP().artLvl) + ") for burnout. Each 2 burnout: −1d6 and −1 DC. One secret per shot.</p></div>";
+  }
   function spellCard(c) {
     var lv = Object.keys(c.lv || {}).map(function (k) { return k + " " + c.lv[k]; }).join(", ");
     var rows = [
@@ -1553,6 +1570,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var a = t.getAttribute("data-act");
     if (a === "pick") {
       ui.sel = t.getAttribute("data-id");
+      if (!/^(exp-|custom)/.test(ui.sel)) ui.knownSel = ui.sel;
       ui.od = false; ui.d8 = false; ui.wa = false; ui.myth = false; ui.castOn = "her"; ui.blood = false;
       render();
       if (window.matchMedia("(max-width: 859px)").matches) {
@@ -1677,6 +1695,19 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     }
   });
 
+  /* the known and Wild Arcana pickers only choose what to look at or cast: they work in the GM view too */
+  document.addEventListener("change", function (e) {
+    var id = e.target.id;
+    if (id === "knownSel") {
+      ui.knownSel = ui.sel = e.target.value;
+      ui.od = false; ui.d8 = false; ui.wa = false; ui.myth = false; ui.castOn = "her"; ui.blood = false;
+      render();
+    }
+    else if (id === "waSel") {
+      var wb = BANK.filter(function (b) { return b.id === e.target.value; })[0];
+      if (wb) { ui.customName = wb.name; ui.customLvl = wb.lvl; ui.sel = "custom"; render(); }
+    }
+  });
   document.addEventListener("change", function (e) {
     if (readOnly) return;
     /* level-up picks: saved as she chooses or types (on blur) */
@@ -1699,10 +1730,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     else if (id === "elSel") { ui.element = e.target.value; renderCast(); }
     else if (id === "cLvl") { ui.customLvl = parseInt(e.target.value, 10); renderSpells(); renderCast(); }
     else if (id === "cDur") { ui.customDur = e.target.value; renderCast(); }
-    else if (id === "waSel") {
-      var wb = BANK.filter(function (b) { return b.id === e.target.value; })[0];
-      if (wb) { ui.customName = wb.name; ui.customLvl = wb.lvl; ui.sel = "custom"; render(); }
-    }
     else if (id === "expSel") {
       mutate(function (s) { s.exp = e.target.value; });
       if (/^exp-/.test(ui.sel)) ui.sel = "exp-" + e.target.value;
