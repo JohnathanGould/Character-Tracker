@@ -688,6 +688,7 @@
     var url = "https://aonprd.com/Search.aspx?Query=" + encodeURIComponent(nm.replace(/\s*\(.*\)$/, ""));
     return (f ? '<p class="hint">' + esc(f[0]) + '</p><p class="feattext">' + esc(f[2]) + "</p>" : '<p class="hint">No description recorded for this one yet.</p>') +
       (extra ? '<p class="featextra"><b>Hers:</b> ' + esc(extra) + "</p>" : "") +
+      (function () { var A = root.Actions, m = /^skill:(.*)$/i.exec(key), sa = A && m && A.SKILL_ACT[m[1]]; return sa ? '<p class="featextra"><b>Action:</b> ' + esc(A.ACT[sa[0]]) + ". " + esc(sa[1]) + "</p>" : ""; })() +
       (/^(ab|pet|trick):/i.test(key) ? "" : '<p class="hint"><a href="' + esc(url) + '" target="_blank" rel="noopener">Look it up on Archives of Nethys</a></p>');
   }
   /* her feats, traits and talents, built from the printed sheet plus her level-up picks */

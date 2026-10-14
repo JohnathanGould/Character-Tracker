@@ -210,6 +210,25 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
   .gsec + .gsec { border-top: 0; border-left: 1px solid var(--line); }
 }
 .helpform { max-width: 560px !important; }
+#pTurn .ph h2 .hint { font-family: var(--font-body); font-size: 0.8rem; margin-left: 6px; }
+.tcols { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.tcol h3 { margin: 0 0 8px; font-family: var(--font-display); font-weight: 400; font-size: 1.02rem; }
+.tbudget { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.tbudget .chip.used { opacity: 0.45; text-decoration: line-through; }
+.tlist { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.tlist li { display: flex; align-items: baseline; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
+.tact { font-family: var(--font-mono); font-size: 0.7rem; color: var(--moon); min-width: 6.5em; text-transform: uppercase; letter-spacing: 0.04em; }
+.tact.a-full, .tact.a-std { color: var(--heat); }
+.tname { flex: 1; font-size: 0.88rem; }
+.tlist .tx { min-height: 26px; padding: 0 8px; }
+.tadd { display: flex; flex-direction: column; gap: 6px; }
+.tadd select, .tadd input { width: 100%; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 10px; color: var(--fg); }
+.tinfo { margin: 0; }
+.tooc { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.tooch { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.tooc textarea { width: 100%; background: var(--surface-2); color: var(--fg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 10px; font-family: var(--font-mono); font-size: 0.78rem; resize: vertical; }
+.tprev { margin-top: 10px; }
+.ro .tadd, .ro .tlist .tx { display: none !important; }
 .helpform.wide { max-width: 980px !important; }
 .rpoltext { width: 100%; min-height: 55vh; background: var(--surface-2); color: var(--fg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 10px; font-family: var(--font-mono); font-size: 0.72rem; line-height: 1.35; white-space: pre; overflow: auto; resize: vertical; }
 .rpolrow { justify-content: flex-start !important; margin-top: 8px; }
@@ -454,8 +473,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     </div>
     <div class="clock">
       <div class="round"><span class="lbl">Round</span><b id="round" class="num">1</b><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects. Burnout carries over.">Reset</button></div>
-      <button class="btn primary" data-act="nocast" title="Pass one round without casting. Burnout drops by 1.">No cast</button>
-      <button class="btn" id="castBtn" data-act="tray" aria-expanded="false" title="Cast a spell of a chosen level. The round advances.">Cast spell ▾</button>
+      <button class="btn primary" data-act="nocast" title="End the round: durations count down, and burnout drops by 1 if she gained none this round. The round's actions move to Last round.">End round</button>
+      <button class="btn" id="castBtn" data-act="tray" aria-expanded="false" title="Cast a spell of a chosen level. It is added to This round; End round when she is done.">Cast spell ▾</button>
       <button class="btn" id="dayBtn" data-act="newday" title="Start a new day after 8 hours of sleep. Refills overdrive and mythic power and clears burnout and active spells, and heals 1 Strength damage.">New day</button>
     </div>
   </div>
@@ -477,6 +496,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   <section class="panel" id="pSpells"></section>
 
   <section class="panel" id="pSlots"></section>
+
+  <section class="panel" id="pTurn"></section>
 
   <section class="panel" id="pBody"></section>
 </main>
@@ -549,6 +570,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 <script src="sheet.js"></script>
 <script src="sheet-prose.js"></script>
 <script src="rpol.js"></script>
+<script src="actions.js"></script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-auth-compat.js"></script>
 <script src="vendor/firebase-firestore-compat.js"></script>
@@ -565,7 +587,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   var DEFAULT = {
     v: 1, round: 1, burnout: 0, gained: false,
     overdrive: 10, mythic: 7, eq: {}, cond: {}, fx: { her: [], pet: [] }, lightUsed: false, hp: 82, petHp: 50, stun: 2, level: 8, picks: {}, hpRolls: {},
-    vials: 2, strDmg: 0, blood: null, exp: "", expLocked: false, active: [], pending: [], log: []
+    vials: 2, strDmg: 0, blood: null, exp: "", expLocked: false, turn: { her: [], pet: [] }, prevOoc: "", active: [], pending: [], log: []
   };
 
   var EXP = [
@@ -690,6 +712,9 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     s.round = Math.max(1, Math.floor(+s.round || 1));
     if (!EXP.some(function (e) { return e.id === s.exp; }) && !BANK.some(function (b) { return b.id === s.exp && b.lvl <= Levels.prog(s.level).expMax; })) s.exp = "";
     s.expLocked = !!(s.expLocked && s.exp);
+    var tn = s.turn && typeof s.turn === "object" ? s.turn : {};
+    s.turn = { her: Array.isArray(tn.her) ? tn.her : [], pet: Array.isArray(tn.pet) ? tn.pet : [] };
+    s.prevOoc = typeof s.prevOoc === "string" ? s.prevOoc : "";
     s.log = s.log.slice(0, 40);
     return s;
   }
@@ -879,6 +904,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       s.strDmg = Math.min(16, s.strDmg + c.bmStr);
       s.blood = { name: c.bmName };
       log("Cast Blood Money for " + c.bmName + ": 1d6 damage" + (c.bmStr ? ", Strength damage +" + c.bmStr : ", no Strength damage"));
+      turnAdd(s, "her", { act: "swift", name: "Cast Blood Money for " + c.bmName + " (1d6 damage" + (c.bmStr ? ", " + c.bmStr + " Strength damage" : "") + ")" });
     });
     ui.od = false; ui.d8 = false; ui.wa = false; ui.myth = false; ui.castOn = "her";
     render();
@@ -921,7 +947,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         s.pending.push({ id: "p" + Date.now(), name: "Detonate (" + ui.element + ")", fire: s.round + 1, text: Math.min(10, c.cl) + "d8, Reflex DC " + c.dc });
       }
       log("Cast " + nm + ": " + bits.join(", "));
-      passRound(s, c.burn > 0);
+      turnAdd(s, "her", { act: sp.custom ? "std" : spellAct(sp), name: "Cast " + nm + (c.myth ? " (mythic)" : "") + (sp.custom ? " via Wild Arcana" : "") + " (" + bits.join(", ") + ")" });
     });
     ui.od = false;
     ui.d8 = false;
@@ -990,14 +1016,14 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     mutate(function (s) {
       s.round = 1;
       s.gained = false;
-      s.active = []; s.pending = [];
+      s.active = []; s.pending = []; s.turn = { her: [], pet: [] };
       log("Round counter reset to 1, concentration cleared");
     });
   }
 
   function newDay() {
     mutate(function (s) {
-      s.round = 1; s.gained = false; s.blood = null;
+      s.round = 1; s.gained = false; s.blood = null; s.turn = { her: [], pet: [] }; s.prevOoc = "";
       s.burnout = 0; s.overdrive = odMax(); s.mythic = 7;
       s.lightUsed = false; s.active = []; s.pending = []; s.stun = LP().stunUses;
       s.expLocked = false; /* a new day: she may pick a different experimental spell */
@@ -1028,19 +1054,14 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       });
     });
   }
+  /* End round: burnout recovers 1 only if none was gained this round; the round's actions become last round's OOC */
   function noCast() {
     mutate(function (s) {
-      var before = s.burnout;
-      s.round += 1;
-      tickFx(s);
-      if (before > 0) { s.burnout -= 1; log("No cast: burnout " + before + " → " + s.burnout); }
-      else log("No cast: no burnout to recover");
-      s.gained = false;
-      s.blood = null;
-      s.active = s.active.filter(function (a) {
-        if (a.end !== null && a.end <= s.round) { log(a.name + " expired"); return false; }
-        return true;
-      });
+      var before = s.burnout, r = s.round;
+      s.prevOoc = oocText(s);
+      passRound(s, s.gained);
+      log("End of round " + r + (before ? ": burnout " + before + " → " + s.burnout : ""));
+      s.turn = { her: [], pet: [] };
     });
   }
 
@@ -1078,7 +1099,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   function burnHelpHtml() {
     return '<div class="explain">' +
       "<p><b>What it is.</b> Daerlieth has no spell slots. Burnout is the only limit on how much she casts, and it builds up as she does.</p>" +
-      "<p><b>When it goes up.</b> Each time she casts a spell of 1st level or higher. Press Cast spell in the top bar and choose a spell under its level, or cast one from the list. Either way the round advances. The + and − buttons are only for fixing a mistake.</p>" +
+      "<p><b>When it goes up.</b> Each time she casts a spell of 1st level or higher. Press Cast spell in the top bar and choose a spell under its level, or cast one from the Spells panel. It is recorded under This round; press End round when her turn is over. The + and − buttons are only for fixing a mistake.</p>" +
       '<div class="costs">' +
       '<span class="chip">Orisons: 0</span>' + (function () {
         var out = "", P = LP();
@@ -1086,7 +1107,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         return out;
       })() + '<span class="chip hot">Experimental spell: +1 extra</span></div>' +
       "<p>Arcane artillery is treated as a spell of half her level, so " + ordinal(LP().artLvl) + " level (+" + Math.max(0, LP().artLvl - LP().buffer) + "). Spending 1 overdrive on a cast ignores up to " + LP().odIgnore + " burnout from it.</p>" +
-      "<p><b>When it goes down.</b> At the end of any round where she gained no burnout, she recovers 1. Press No cast to pass a round without casting. A cast that adds no burnout, such as an orison or a 1st or 2nd level spell, also lets her recover 1.</p>" +
+      "<p><b>When it goes down.</b> At the end of any round where she gained no burnout, she recovers 1. Press End round when the round is over. A round where her casts add no burnout (orisons, or 1st and 2nd level spells) still lets her recover 1.</p>" +
       "<p><b>What it does while it is up.</b> Each point lowers her caster level by 1, which shortens durations and cuts dice such as fireball's. Every 2 points also lower spell DCs by 1 and artillery damage by 1d6. The burnout bar marks each step.</p>" +
       "</div>";
   }
@@ -1404,7 +1425,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     $("dayBtn").textContent = ui.dayArmed ? "Confirm new day" : "New day";
     $("dayBtn").classList.toggle("warn", ui.dayArmed);
     renderTray();
-    renderBurn(); renderOver(); renderMyth(); renderSpells(); renderSlots(); renderBody(); renderLog(); renderRules();
+    renderBurn(); renderOver(); renderMyth(); renderSpells(); renderSlots(); renderTurn(); renderBody(); renderLog(); renderRules();
     renderSheet();
   }
 
@@ -1511,6 +1532,81 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     if (CODEX) go(); else loadCodex().then(go, function () {});
   });
 
+  /* ---------- this round: action economy for her and Gwathfaron, and an OOC line for RPoL ---------- */
+  function spellAct(sp) {
+    if (sp.calc === "bm") return "swift";
+    var c = codexFind(sp.name);
+    return Actions.castAct(c ? c.ct : /feather fall/i.test(sp.name) ? "immediate action" : "standard action");
+  }
+  function turnAdd(s, who, e) {
+    e.id = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    s.turn[who].push(e);
+  }
+  function turnCatalog(who) {
+    return Actions.catalog(who, { d: dv(), spells: castable(), ct: function (n) { var c = codexFind(n); return c ? c.ct : /feather fall/i.test(n) ? "immediate action" : /blood money/i.test(n) ? "swift action" : "standard action"; } });
+  }
+  var ui_turn = { her: "", pet: "" };
+  function oocText(s) {
+    s = s || state;
+    var A = Actions.ACT, D = SheetEngine.derive(s), c = s.cond || {}, lines = ["OOC: Round " + s.round];
+    var order = ["full", "std", "move", "step", "swift", "imm", "free", "none", "long"];
+    var who = function (k, label) {
+      var list = s.turn[k] || [];
+      if (!list.length) return label + ": nothing yet.";
+      return label + ": " + order.map(function (a) {
+        var xs = list.filter(function (e) { return e.act === a; });
+        return xs.length ? A[a] + ": " + xs.map(function (e) { return e.name + (e.note ? " (" + e.note + ")" : ""); }).join("; ") : "";
+      }).filter(Boolean).join(". ") + ".";
+    };
+    lines.push(who("her", "Daerlieth"), who("pet", "Gwathfaron"));
+    var fxl = function (k) {
+      var xs = (s.fx[k] || []).map(function (e) { return e.name + (e.from ? " from " + e.from : "") + " (" + SheetEngine.fxLeft(e.left) + ")"; });
+      (s.active || []).forEach(function (a) { if ((a.on || "her") === k) xs.push(a.name + " (her spell, " + (a.end == null ? "until ended" : SheetEngine.fxLeft(Math.max(0, a.end - s.round)) + " left") + ")"); });
+      return xs.length ? xs.join(", ") : "none";
+    };
+    lines.push("Effects on Daerlieth: " + fxl("her") + ". On Gwathfaron: " + fxl("pet") + ".");
+    var cd = [];
+    if (c.forest) cd.push("in forest");
+    if (c.flank) cd.push("flanking (+" + D.atk.flank + (SheetEngine.hasFeat(s, "Precise Strike") ? ", +1d6 precision" : "") + ")");
+    if (c.target) { var fe = D.fe.filter(function (f) { return f.k === c.target; })[0]; if (fe) cd.push("favored enemy " + fe.name + " +" + fe.b); }
+    if (c.defend === "fight") cd.push("fighting defensively"); if (c.defend === "total") cd.push("total defense");
+    ["charge", "ffoot", "sneak", "shaken", "sickened", "fatigued", "exhausted", "evil"].forEach(function (k) { if (c[k]) cd.push(String(SheetEngine.CONDS && SheetEngine.CONDS[k] || k).toLowerCase()); });
+    if (s.blood) cd.push("Blood Money ready");
+    if (cd.length) lines.push("Conditions: " + cd.join(", ") + ".");
+    lines.push("HP: Daerlieth " + s.hp + "/" + D.hpMax + ", Gwathfaron " + s.petHp + "/" + D.pet.hpMax + ". Burnout " + s.burnout + " (CL " + D.sp.cl + "), overdrive " + s.overdrive + "/" + D.sp.od + ", mythic " + s.mythic + "/7" + (s.strDmg ? ", Strength damage " + s.strDmg : "") + ".");
+    return lines.join("\n");
+  }
+  function renderTurn() {
+    var A = Actions.ACT;
+    var col = function (who, label) {
+      var list = state.turn[who] || [], b = Actions.budget(list);
+      var chip = function (lbl, left, used) { return '<span class="chip' + (left ? "" : " used") + '">' + lbl + " " + (left ? "✓" : "used") + "</span>"; };
+      var cat = turnCatalog(who), sel = ui_turn[who];
+      var opts = '<option value="">Add an action…</option>' + cat.map(function (g) {
+        return '<optgroup label="' + esc(g.label) + '">' + g.items.map(function (it) { return '<option value="' + esc(it.id) + '"' + (it.id === sel ? " selected" : "") + ">" + esc(it.name) + " · " + A[it.act] + "</option>"; }).join("") + "</optgroup>";
+      }).join("") + '<optgroup label="Something else"><option value="custom"' + (sel === "custom" ? " selected" : "") + '>Something else (describe it)…</option></optgroup>';
+      var pick = null; cat.forEach(function (g) { g.items.forEach(function (it) { if (it.id === sel) pick = it; }); });
+      return '<div class="tcol"><h3>' + label + "</h3>" +
+        '<div class="tbudget">' + chip("Standard", b.std) + chip("Move", b.move) + chip("Swift", b.swift) + chip("5-ft step", b.step) + "</div>" +
+        (b.warn.length ? '<p class="warn-text">' + esc(b.warn.join("; ")) + ".</p>" : "") +
+        (list.length ? '<ul class="tlist">' + list.map(function (e) {
+          return '<li><span class="tact a-' + e.act + '">' + A[e.act] + '</span><span class="tname">' + esc(e.name) + (e.note ? ' <span class="hint">' + esc(e.note) + "</span>" : "") + "</span>" +
+            '<button type="button" class="btn sm tx" data-act="turnrm" data-who="' + who + '" data-id="' + e.id + '" aria-label="Remove">×</button></li>';
+        }).join("") + "</ul>" : '<p class="hint">Nothing this round yet.</p>') +
+        '<div class="tadd"><select class="turnsel" data-who="' + who + '">' + opts + "</select>" +
+        (pick ? '<p class="hint tinfo"><b>' + A[pick.act] + ".</b> " + esc(pick.note || "") + "</p>" : "") +
+        (sel === "custom" ? '<select id="tAct-' + who + '">' + Object.keys(A).map(function (k) { return '<option value="' + k + '">' + A[k] + "</option>"; }).join("") + "</select>" : "") +
+        '<input type="text" id="tNote-' + who + '" maxlength="80" placeholder="' + (sel === "custom" ? "What she does" : "Details: target, result… (optional)") + '">' +
+        '<button type="button" class="btn primary sm" data-act="turnadd" data-who="' + who + '"' + (sel ? "" : " disabled") + ">Add</button></div></div>";
+    };
+    var ooc = oocText();
+    $("pTurn").innerHTML =
+      '<div class="ph"><h2>This round <span class="hint">round ' + state.round + '</span></h2><span class="hint">Actions for her and Gwathfaron; casting adds itself. End round in the top bar.</span></div>' +
+      '<div class="tcols">' + col("her", "Daerlieth") + col("pet", "Gwathfaron") + "</div>" +
+      '<div class="tooc"><div class="tooch"><b>OOC for RPoL</b><button type="button" class="btn sm" data-ooccopy="cur">Copy</button></div><textarea id="oocCur" readonly rows="6">' + esc(ooc) + "</textarea>" +
+      (state.prevOoc ? '<details class="tprev"><summary>Last round</summary><div class="tooch"><span></span><button type="button" class="btn sm" data-ooccopy="prev">Copy</button></div><textarea id="oocPrev" readonly rows="6">' + esc(state.prevOoc) + "</textarea></details>" : "") + "</div>";
+  }
+
   /* ---------- level up ---------- */
   function openLevelUp() {
     var L = state.level + 1;
@@ -1564,6 +1660,10 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     if (t) { openInfo("How burnout works", burnHelpHtml()); return; }
     t = e.target.closest("[data-rpol]");
     if (t) { rpolOpen(t.getAttribute("data-rpol")); return; }
+    t = e.target.closest("[data-ooccopy]");
+    if (t) { var ot = $(t.getAttribute("data-ooccopy") === "prev" ? "oocPrev" : "oocCur"), ob = t; ot.select();
+      var od = function () { ob.textContent = "Copied"; setTimeout(function () { ob.textContent = "Copy"; }, 1500); };
+      if (navigator.clipboard) navigator.clipboard.writeText(ot.value).then(od, function () { document.execCommand("copy"); od(); }); else { document.execCommand("copy"); od(); } return; }
     t = e.target.closest("[data-rpolcopy]");
     if (t) { var ta = $("rpolText"); ta.select(); var done = function () { t.textContent = "Copied"; setTimeout(function () { t.textContent = "Copy"; }, 1500); };
       if (navigator.clipboard) navigator.clipboard.writeText(ta.value).then(done, function () { document.execCommand("copy"); done(); }); else { document.execCommand("copy"); done(); } return; }
@@ -1679,6 +1779,17 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     else if (a === "resetround") resetRound();
     else if (a === "clearlog") mutate(function (s) { s.log = []; });
     else if (a === "nocast") noCast();
+    else if (a === "turnadd") {
+      var tw = t.getAttribute("data-who"), tid = ui_turn[tw], tn = ($("tNote-" + tw) || {}).value || "";
+      var it = null; turnCatalog(tw).forEach(function (g) { g.items.forEach(function (x) { if (x.id === tid) it = x; }); });
+      if (tid === "custom") { if (!tn.trim()) { $("tNote-" + tw).focus(); return; } it = { act: ($("tAct-" + tw) || {}).value || "std", name: tn.trim().slice(0, 80) }; tn = ""; }
+      if (!it) return;
+      ui_turn[tw] = "";
+      mutate(function (s) { turnAdd(s, tw, { act: it.act, name: it.name, note: tn.trim().slice(0, 80), grants: it.grants }); });
+    } else if (a === "turnrm") {
+      var rw = t.getAttribute("data-who"), rid = t.getAttribute("data-id");
+      mutate(function (s) { s.turn[rw] = s.turn[rw].filter(function (e) { return e.id !== rid; }); });
+    }
     else if (a === "pass") passTime(parseInt(t.getAttribute("data-n"), 10) || 10);
     else if (a === "newday") {
       if (!ui.dayArmed) {
@@ -1708,6 +1819,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         if (s.mythic < 1) return;
         s.mythic -= 1;
         log(what === "surge" ? "Mythic surge: +1d6 to a d20 roll, mythic −1" : "Amazing Initiative: extra standard action (no spells or artillery), mythic −1");
+        turnAdd(s, "her", what === "surge" ? { act: "imm", name: "Mythic Surge: +1d6 on a d20 roll (mythic −1)" } : { act: "free", name: "Amazing Initiative: extra standard action (mythic −1)", grants: "std" });
       });
     } else if (a === "setres") {
       var k2 = t.getAttribute("data-k"), n2 = parseInt(t.getAttribute("data-n"), 10);
@@ -1798,6 +1910,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       ui.od = false; ui.d8 = false; ui.wa = false; ui.myth = false; ui.castOn = "her"; ui.blood = false;
       render();
     }
+    else if (e.target.classList && e.target.classList.contains("turnsel")) { ui_turn[e.target.getAttribute("data-who")] = e.target.value; renderTurn(); }
     else if (id === "waSel") {
       var wb = BANK.filter(function (b) { return b.id === e.target.value; })[0];
       if (wb) { ui.customName = wb.name; ui.customLvl = wb.lvl; ui.sel = "custom"; }
