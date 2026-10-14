@@ -470,7 +470,11 @@
       (o.readOnly ? "" : '<div class="lvbtns">' + (L < LV().MAX ? '<button type="button" class="btn primary sm" data-act="lvlup">Level up to ' + (L + 1) + "</button>" : "") +
         (L > LV().MIN ? '<button type="button" class="btn sm" data-act="lvldown">Undo level ' + L + "</button>" : "") + "</div>") + "</div>" +
       '<div class="sgrid">' +
-      box("Artillery", sp.artDice + "d6" + sg(sp.artFlat), "burst DC " + sp.secretDc) +
+      (function () { /* current hit points; Hard to Kill: dies at twice her Con score below 0 */
+        var hp = st.hp == null ? HPMAX : st.hp, dead = 2 * d.ab.con.score;
+        var stt = hp > 0 ? "Up" : hp === 0 ? "Disabled" : hp > -dead ? "Dying, stable (Hard to Kill)" : "Dead";
+        return box("HP", hp + "<small>/" + HPMAX + "</small>", stt + " · dies at −" + dead);
+      })() +
       box(acLbl, d.ac.now, "touch " + d.ac.touch + " · flat-footed " + d.ac.ff) +
       box("Initiative", sg(d.init), c.forest ? "forest +" + PR.forest + " included" : "+" + PR.forest + " in forest") +
       box("Speed", d.speed + " ft", d.fly ? "fly " + d.fly + " ft" : (35 + PR.fastMove) + " ft in forest") +
