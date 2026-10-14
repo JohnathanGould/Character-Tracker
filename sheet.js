@@ -145,7 +145,7 @@
      Build (an all-round scout: Stealth and Perception lead, every useful skill trained): the HD 4 ability increase to Int
      (2 to 3, which lets him take any feat he can use); feats Skill Focus (Stealth), Skill Focus (Perception),
      Cunning (+1 rank per Hit Die), Alertness;
-     14 ranks at 7 HD: Stealth 4, Perception 3, Survival 2, Escape Artist 2, Climb 1, Swim 1, Acrobatics 1. Later increases, feats and ranks are her level-up picks. */
+     14 ranks at 7 HD: Stealth 4, Perception 3, Survival 2, Escape Artist 1, Sense Motive 1, Climb 1, Swim 1, Acrobatics 1. Later increases, feats and ranks are her level-up picks. */
   var PET = {
     dead: 15, nat: 1, speed: 50,
     base: { str: 12, dex: 21, con: 13, int: 2, wis: 12, cha: 6 },        /* small cat */
@@ -153,8 +153,8 @@
     feats: ["Skill Focus (Stealth)", "Skill Focus (Perception)", "Cunning", "Alertness"],
     /* name, ability, ranks at 7 HD, class skill, misc [label, value] */
     skills: [
-      ["Acrobatics", "dex", 1, 1, [["speed 50 ft, jumping only", 0]]], ["Climb", "str", 1, 1, []], ["Escape Artist", "dex", 2, 1, []],
-      ["Intimidate", "cha", 0, 1, []], ["Perception", "wis", 3, 1, [["Skill Focus", 3], ["Alertness", 2]]], ["Sense Motive", "wis", 0, 0, [["Alertness", 2]]], ["Stealth", "dex", 4, 1, [["Skill Focus", 3]]],
+      ["Acrobatics", "dex", 1, 1, [["speed 50 ft, jumping only", 0]]], ["Climb", "str", 1, 1, []], ["Escape Artist", "dex", 1, 1, []],
+      ["Intimidate", "cha", 0, 1, []], ["Perception", "wis", 3, 1, [["Skill Focus", 3], ["Alertness", 2]]], ["Sense Motive", "wis", 1, 0, [["Alertness", 2]]], ["Stealth", "dex", 4, 1, [["Skill Focus", 3]]],
       ["Survival", "wis", 2, 1, []], ["Swim", "str", 1, 1, []]
     ]
   };
@@ -1087,7 +1087,7 @@
         return [featBtn("skill:" + s.name, s.name, s.tip + " = " + sg(s.total) + "." + takeText(s.name, s.total)) + (s.ranks ? "" : ' <small class="hint">untrained</small>'),
           rc, sg(s.abil) + ' <small class="hint">' + s.key.toUpperCase() + "</small>", s.cls ? "+3" : "", s.misc ? sg(s.misc) : "", "<b>" + sg(s.total) + "</b>", takeCell(s.name, s.total)];
       }), "sk pk") +
-      '<p class="hint">' + p.ranksMax + " ranks: 1 per Hit Die from the companion table" + (p.cunning ? " and 1 per Hit Die from Cunning" : "") + " (Int would need to reach 10 to add more), at most " + p.hd + " in one skill. Rank buttons appear only while there are ranks to place." + ' Class skill +3 once a skill has a rank. All are animal companion class skills. Misc: Skill Focus on Stealth, Skill Focus and Alertness on Perception, Alertness on Sense Motive, and her forest and favored enemy bonuses when those are on. Speed 50 ft gives +8 on Acrobatics checks to jump. Hover or tap a skill for the arithmetic.</p>', true);
+      '<p class="hint">' + p.ranksMax + " ranks: 1 per Hit Die from the companion table" + (p.cunning ? " and 1 per Hit Die from Cunning" : "") + " (Int would need to reach 10 to add more), at most " + p.hd + " in one skill. Rank buttons appear only while there are ranks to place." + ' Class skill +3 once a skill has a rank. All but Sense Motive are animal companion class skills (a rank there adds only +1). Misc: Skill Focus on Stealth, Skill Focus and Alertness on Perception, Alertness on Sense Motive, and her forest and favored enemy bonuses when those are on. Speed 50 ft gives +8 on Acrobatics checks to jump. Hover or tap a skill for the arithmetic.</p>', true);
 
     h += sec("Feats", "<ul>" +
       "<li>" + featBtn("Skill Focus (Stealth)") + "</li>" +
