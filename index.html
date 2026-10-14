@@ -426,9 +426,8 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
 .toggle:disabled { opacity: 0.45; cursor: not-allowed; }
 .toggle[aria-pressed="true"] { border-color: var(--moon); background: rgba(169, 193, 255, 0.08); box-shadow: inset 0 0 0 1px var(--moon); color: var(--moon); }
 
-/* log + rules */
+/* log */
 .lower { display: grid; gap: 16px; grid-template-columns: 1fr; align-items: start; }
-@media (min-width: 860px) { .lower { grid-template-columns: 1fr 1fr; } }
 .log { list-style: none; margin: 0; padding: 0; max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
 .log li { display: flex; gap: 10px; font-size: 0.85rem; padding: 4px 0; border-bottom: 1px solid var(--line); }
 .log li:last-child { border-bottom: 0; }
@@ -500,7 +499,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 <section id="sheetView" aria-label="Character sheet"></section>
 <section class="lower" id="trkLower">
   <div class="panel" id="pLog"></div>
-  <div class="panel" id="pRules"></div>
 </section>
 </div>
 
@@ -1331,30 +1329,12 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     $("pLog").innerHTML = '<div class="ph"><h2>Log</h2><button class="btn sm" data-act="clearlog"' + (state.log.length ? "" : " disabled") + ">Clear log</button></div>" + h;
   }
 
-  var rulesLvl = 0;
-  function renderRules() {
-    if (rulesLvl === state.level) return; /* only when her numbers change, so open sections stay open */
-    rulesLvl = state.level;
-    $("pRules").innerHTML =
-      '<div class="ph"><h2>Rules at the table</h2></div>' +
-      "<details open><summary>How burnout works</summary><ul>" +
-      "<li>Casting a spell of 1st level or higher adds its level in burnout, minus " + LP().buffer + " from arcane buffer (minimum 0), plus 1 for the experimental spell.</li>" +
-      "<li>Burnout points each give −1 caster level. Every 2 points give −1 DC and −1d6 artillery damage.</li>" +
-      "<li>At the end of any round where she gained no burnout, she recovers 1.</li>" +
-      "<li>Spending 1 overdrive point (a free action) ignores up to " + LP().odIgnore + " burnout from one spell. A cast that ends at 0 burnout still counts as a clean round. The pool refills after 8 hours of sleep.</li>" +
-      "<li>At caster level 0 she can only cast orisons.</li></ul></details>" +
-      "<details><summary>Mythic</summary><ul>" +
-      "<li>Wild Arcana (per the Mythic Adventures FAQ): standard action, 1 mythic power. Cast any arcane spell from her list, known or not, with a casting time of 1 standard action or less, CL +2. Metamagic allowed if the adjusted level stays within her highest castable level.</li>" +
-      "<li>Eldritch Breach: roll twice and take the higher for dispel checks, spell resistance checks and effect checks.</li>" +
-      "<li>Elemental Bond (fire): fire descriptor spells get +2 caster level. Fire resistance 10.</li></ul></details>";
-  }
-
   function render() {
     $("round").textContent = state.round;
     $("subLvl").textContent = "Eternal Mage " + state.level + " · Artillery Expert · Ranger " + state.level + " · Archmage tier 2";
     $("dayBtn").textContent = ui.dayArmed ? "Confirm new day" : "New day";
     $("dayBtn").classList.toggle("warn", ui.dayArmed);
-    renderBurn(); renderOver(); renderMyth(); renderSpells(); renderSlots(); renderTurn(); renderBody(); renderLog(); renderRules();
+    renderBurn(); renderOver(); renderMyth(); renderSpells(); renderSlots(); renderTurn(); renderBody(); renderLog();
     renderSheet();
   }
 
@@ -2210,7 +2190,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     window.addEventListener("offline", function () { if (readOnly) setReadOnly("Offline, last saved copy"); else setStatus("Offline, saved on this device"); });
   }
 
-  renderRules();
   render();
   (function () {
     var v = viewFromHash();
