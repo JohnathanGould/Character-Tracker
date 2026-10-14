@@ -1726,7 +1726,9 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     }
     else if (id === "waSel") {
       var wb = BANK.filter(function (b) { return b.id === e.target.value; })[0];
-      if (wb) { ui.customName = wb.name; ui.customLvl = wb.lvl; ui.sel = "custom"; render(); }
+      if (wb) { ui.customName = wb.name; ui.customLvl = wb.lvl; ui.sel = "custom"; }
+      else { ui.customName = ""; ui.cols.w = null; if (ui.sel === "custom") ui.sel = ui.knownSel; }
+      render();
     }
   });
   document.addEventListener("change", function (e) {
