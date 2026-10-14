@@ -108,7 +108,8 @@ h1 {
   background: rgba(169, 193, 255, 0.08);
   box-shadow: 0 0 0 3px rgba(169, 193, 255, 0.06);
 }
-.rplus { min-width: 40px; min-height: 52px; padding: 0 10px; font-size: 1.4rem; line-height: 1; }
+.rstep { display: flex; flex-direction: column; gap: 3px; }
+.rplus { min-width: 40px; min-height: 26px; height: 26px; padding: 0 10px; font-size: 1.2rem; line-height: 1; border-radius: 7px; }
 @media (max-width: 440px) {
   .clock, .round { gap: 5px; }
   .round { padding-right: 0; }
@@ -487,7 +488,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       </div>
     </div>
     <div class="clock">
-      <div class="round"><div class="rframe" aria-label="Current round"><b id="round" class="num">1</b><span class="lbl">Round</span></div><button class="btn rplus" data-act="roundplus" title="Next round, nothing done: counts durations down, and burnout drops by 1 if she gained none." aria-label="Next round (no actions)">+</button><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects and turns off favored enemy and terrain. Burnout carries over.">Reset</button></div>
+      <div class="round"><div class="rframe" aria-label="Current round"><b id="round" class="num">1</b><span class="lbl">Round</span></div><div class="rstep"><button class="btn rplus" data-act="roundplus" title="Next round, nothing done: counts durations down, and burnout drops by 1 if she gained none." aria-label="Next round (no actions)">+</button><button class="btn rplus" id="roundMinus" data-act="roundminus" title="Undo the last round: puts back the round number, burnout, spell and effect durations and This round as they were." aria-label="Undo the last round">−</button></div><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects and turns off favored enemy and terrain. Burnout carries over.">Reset</button></div>
       <button class="btn primary" data-act="nocast" title="End the round: durations count down, and burnout drops by 1 if she gained none this round. The round's actions move to Last round.">End round</button>
       <button class="btn" id="dayBtn" data-act="newday" title="Start a new day after 8 hours of sleep. Refills overdrive and mythic power and clears burnout and active spells, turns off favored enemy and terrain, and heals 1 Strength damage.">New day</button>
     </div>
@@ -601,7 +602,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   var DEFAULT = {
     v: 1, round: 1, burnout: 0, gained: false,
     overdrive: 10, mythic: 7, eq: {}, cond: {}, fx: { her: [], pet: [] }, lightUsed: false, hp: 82, petHp: 50, level: 8, picks: {}, hpRolls: {},
-    vials: 2, strDmg: 0, blood: null, exp: "", expLocked: false, turn: { her: [], pet: [] }, prevOoc: "", active: [], pending: [], log: []
+    vials: 2, strDmg: 0, blood: null, exp: "", expLocked: false, turn: { her: [], pet: [] }, prevOoc: "", undo: [], active: [], pending: [], log: []
   };
 
   var EXP = [
@@ -729,6 +730,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var tn = s.turn && typeof s.turn === "object" ? s.turn : {};
     s.turn = { her: Array.isArray(tn.her) ? tn.her : [], pet: Array.isArray(tn.pet) ? tn.pet : [] };
     s.prevOoc = typeof s.prevOoc === "string" ? s.prevOoc : "";
+    s.undo = Array.isArray(s.undo) ? s.undo.filter(function (u) { return u && typeof u === "object" && isFinite(+u.round); }).slice(-5) : [];
     s.log = s.log.slice(0, 40);
     return s;
   }
@@ -1007,7 +1009,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     mutate(function (s) {
       s.round = 1;
       s.gained = false;
-      s.active = []; s.pending = []; s.turn = { her: [], pet: [] };
+      s.active = []; s.pending = []; s.turn = { her: [], pet: [] }; s.undo = [];
       clearScene(s);
       log("Round counter reset to 1, concentration cleared, favored enemy and terrain off");
     });
@@ -1015,7 +1017,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
   function newDay() {
     mutate(function (s) {
-      s.round = 1; s.gained = false; s.blood = null; s.turn = { her: [], pet: [] }; s.prevOoc = "";
+      s.round = 1; s.gained = false; s.blood = null; s.turn = { her: [], pet: [] }; s.prevOoc = ""; s.undo = [];
       s.burnout = 0; s.overdrive = odMax(); s.mythic = 7;
       s.lightUsed = false; s.active = []; s.pending = [];
       s.expLocked = false; /* a new day: she may pick a different experimental spell */
@@ -1033,6 +1035,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   /* out of combat: let minutes or hours go by. Every round in them gains no burnout, so each recovers 1 */
   function passTime(n) {
     mutate(function (s) {
+      s.undo = []; /* − steps back single rounds only */
       var before = s.burnout;
       s.round += n;
       tickFx(s, n);
@@ -1051,6 +1054,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   function noCast(idle) {
     mutate(function (s) {
       var before = s.burnout, r = s.round;
+      /* keep the last 5 rounds so − can step back */
+      s.undo = (s.undo || []).concat([JSON.parse(JSON.stringify({ round: s.round, burnout: s.burnout, gained: s.gained, blood: s.blood, active: s.active, pending: s.pending, fx: s.fx, turn: s.turn, prevOoc: s.prevOoc }))]).slice(-5);
       s.prevOoc = oocText(s);
       passRound(s, s.gained);
       log((idle ? "Round " + r + " passed, no actions" : "End of round " + r) + (before ? ": burnout " + before + " → " + s.burnout : ""));
@@ -1356,6 +1361,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
   function render() {
     $("round").textContent = state.round;
+    $("roundMinus").disabled = !(state.undo && state.undo.length);
     $("subLvl").textContent = "Eternal Mage " + state.level + " · Artillery Expert · Ranger " + state.level + " · Archmage tier 2";
     $("dayBtn").textContent = ui.dayArmed ? "Confirm new day" : "New day";
     $("dayBtn").classList.toggle("warn", ui.dayArmed);
@@ -1813,6 +1819,12 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     else if (a === "clearlog") mutate(function (s) { s.log = []; });
     else if (a === "nocast") noCast();
     else if (a === "roundplus") noCast(true);
+    else if (a === "roundminus") mutate(function (s) {
+      var u = (s.undo || []).pop();
+      if (!u) return;
+      ["round", "burnout", "gained", "blood", "active", "pending", "fx", "turn", "prevOoc"].forEach(function (k) { s[k] = u[k]; });
+      log("Back to round " + s.round + " (undid the end of round " + s.round + ")");
+    });
     else if (a === "turnadd") {
       var tw = t.getAttribute("data-who"), tid = ui_turn[tw], tn = ($("tNote-" + tw) || {}).value || "";
       var it = null; turnCatalog(tw).forEach(function (g) { g.items.forEach(function (x) { if (x.id === tid) it = x; }); });
