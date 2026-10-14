@@ -1,5 +1,5 @@
 /* App shell cache so the tracker opens offline. Bump VERSION when shipping changes. */
-var VERSION = "daerlieth-v22";
+var VERSION = "daerlieth-v23";
 var SHELL = ["./", "index.html", "config.js", "levels.js", "sheet.js", "sheet-prose.js", "sheet.css", "vendor/firebase-app-compat.js", "vendor/firebase-auth-compat.js", "vendor/firebase-firestore-compat.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "data/codex.json"];
 
 self.addEventListener("install", function (e) {
