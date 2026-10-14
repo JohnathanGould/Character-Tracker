@@ -312,7 +312,9 @@
       conc: cl + CH, secretDc: 10 + P.secretBase + CH - dcP,
       artDice: Math.max(0, P.artDice - dcP), artFlat: CH, artLvl: P.artLvl, buffer: P.buffer, odIgnore: P.odIgnore,
       od: CH + P.odBonus,
-      rays: clF >= 3 ? Math.min(3, 1 + Math.floor((clF - 3) / 4)) : 1,
+      /* scorching ray: Elemental Bond (fire) and Gifted Adept (+1 CL on this one spell) */
+      clRay: clF + 1,
+      rays: clF + 1 >= 3 ? Math.min(3, 1 + Math.floor((clF + 1 - 3) / 4)) : 1,
       missiles: cl >= 1 ? Math.min(5, 1 + Math.floor((cl - 1) / 2)) : 0,
       fbDice: Math.min(10, clF), detDice: Math.min(10, clF),
       ddRange: 400 + 40 * cl, ddCarry: Math.floor(cl / 3), ddDoor: cl,
@@ -536,7 +538,7 @@
       : ["Arcane artillery" + (artMode === "sniper" ? " (sniper)" : ""), sg(d.rtouch) + " touch", artDmg, (artMode === "sniper" ? "Range 120 ft (Artillery Sniper). " : "Range 30 ft. ") + artCost];
     var spRows = [
       artRow,
-      ["Scorching ray", sg(d.rtouch) + " touch, " + sp.rays + (sp.rays > 1 ? " rays" : " ray"), "4d6 fire each", "Caster level " + sp.clFire + " for fire. Burnout 0"]
+      ["Scorching ray", sg(d.rtouch) + " touch, " + sp.rays + (sp.rays > 1 ? " rays" : " ray"), "4d6 fire each", "Caster level " + sp.clRay + " (fire +2 Elemental Bond, +1 Gifted Adept). 3 rays at CL 11. Burnout 0"]
     ];
     h += sec("Attacks", pick + tbl(["Attack", "Bonus", "Damage", "Notes"], atkRows, "atk") +
       '<p class="hint">Unarmed strikes with Weapon Finesse (' + (a.fin === d.ab.dex.mod ? "Dex" : "Str") + ' ' + sg(a.fin) + '), Weapon Focus +1' + esc(tgtTxt) + (a.flank ? ", flanking +" + a.flank + (a.flank > 2 ? " (Outflank)" : "") + (psD ? ", Precise Strike +1d6 on every hit" : "") : "") + ". Damage " + a.die + " (Monastic Legacy, effective monk level " + Math.floor(L / 2) + "). Crit 20/x2. " + esc(wrapNote) + " " + esc(sneakTxt) + "</p>" +
@@ -616,6 +618,7 @@
     "moonlight resilience": ["Racial (alternate)", "Cold resistance 5; light or dancing lights 1/day.", "Cold resistance 5. Once a day she can produce light or dancing lights as a spell-like ability (no burnout). Replaces Elven Immunities."],
     /* traits */
     "reactionary": ["Trait (combat)", "+2 initiative.", "+2 trait bonus on initiative checks."],
+    "gifted adept": ["Trait (magic), taken with a drawback", "+1 caster level on scorching ray.", "Choose one spell: she casts it at +1 caster level. Hers is scorching ray, so with Elemental Bond it is cast at CL 11 and fires 3 rays (12d6 fire) for 0 burnout. Any burnout lowers her caster level, so the third ray needs a clean slate (or Wild Arcana's +2)."],
     "friend in every town": ["Trait (social)", "+1 Diplomacy and Knowledge (local); Diplomacy is a class skill.", "+1 trait bonus on Diplomacy and Knowledge (local) checks, and Diplomacy is always a class skill for her."],
     /* her feats */
     "weapon finesse": ["Combat feat", "Dex instead of Str on attack rolls with light weapons, unarmed strikes included.", "With light weapons (unarmed strikes and natural weapons count), rapiers, whips and spiked chains she adds her Dex modifier instead of Str to attack rolls. Damage still uses Str. A shield's armor check penalty applies to these attack rolls."],
@@ -703,7 +706,8 @@
     return sec("Feats, traits and talents",
       '<p class="hint">Hover or tap a name for what it does; tap for the full text.</p>' +
       g("Racial (moon elf, alternate features)", ["Low-Light Vision", "Keen Senses", "Silver-Tongued Diplomacy", "Wanderer's Stride", "Moonlight Resilience"].map(function (n) { return row("", n); })) +
-      g("Traits", [row("", "Reactionary"), row("", "Friend in Every Town")]) +
+      g("Traits (a third trait for one drawback)", [row("", "Reactionary"), row("", "Friend in Every Town"), row("", "Gifted Adept", "scorching ray"),
+        "<li><span class=\"flv\"></span><span class=\"hint\">Drawback: to be agreed with the GM (pays for Gifted Adept)</span></li>"]) +
       g("Feats (the normal feat plus the GM's extra feat at odd levels)", regular) +
       g("Teamwork (Companion-Bound, 4th; Gwathfaron shares them)", [row("L4", "Coordinated Companion", "Gwathfaron gets all her teamwork feats while within 30 ft of her"), row("L4", "Bonded Mind", "teamwork; Gwathfaron has it too (within 30 ft of her)")]) +
       g("Combat style (unarmed, prerequisites waived)", style) +

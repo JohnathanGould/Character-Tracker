@@ -751,10 +751,11 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var myth = !!sp.myth && ui.myth;
     var fire = !!sp.fire || (sp.calc === "det" && ui.element === "fire");
     var BASE_CL = state.level;
-    var cl = Math.max(1, BASE_CL - s.burnout + (wa ? 2 : 0) + (fire ? 2 : 0));
+    var gifted = /^scorching ray$/i.test(sp.name) ? 1 : 0; /* Gifted Adept (trait): +1 CL on scorching ray */
+    var cl = Math.max(1, BASE_CL - s.burnout + (wa ? 2 : 0) + (fire ? 2 : 0) + gifted);
     var dc = 10 + lvl + dv().sp.cha - Math.floor(s.burnout / 2);
     var gain = baseGain(sp);
-    var rawCl = BASE_CL - s.burnout + (wa ? 2 : 0) + (fire ? 2 : 0);
+    var rawCl = BASE_CL - s.burnout + (wa ? 2 : 0) + (fire ? 2 : 0) + gifted;
     var odUseful = gain > 0;
     var od = ui.od && s.overdrive > 0 && odUseful;
     var d8 = !!sp.art && !!ui.d8 && (s.overdrive - (od ? 1 : 0)) >= 1;
@@ -764,7 +765,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     if (rawCl <= 0 && lvl >= 1) problems.push("Caster level is 0, so she can only cast orisons.");
     var fireNote = fire ? " (fire +2 from Elemental Bond)" : "";
 
-    rows.push(["Caster level", cl + fireNote + (wa ? ", Wild Arcana +2" : "")]);
+    rows.push(["Caster level", cl + fireNote + (gifted ? ", Gifted Adept +1" : "") + (wa ? ", Wild Arcana +2" : "")]);
     if (sp.save || (sp.art && ui.mode === "burst")) rows.push(["Save DC", (sp.save || "Reflex") + " " + dc]);
 
     switch (sp.calc) {

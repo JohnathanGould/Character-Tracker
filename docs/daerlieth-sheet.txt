@@ -88,7 +88,7 @@ ABILITIES/FEATS
 
 Racial (Moon elf, alternate features): Low-Light Vision; Keen Senses (+2 Perception); Silver-Tongued Diplomacy (+2 Diplomacy and Bluff, 1 extra language; replaces Elven Magic); Wanderer's Stride (+5 ft speed, ignores natural difficult terrain; replaces Elven Weapon Familiarity); Moonlight Resilience (cold resistance 5; light or dancing lights 1/day, no burnout; replaces Elven Immunities).
 
-Traits: Reactionary (Combat): +2 initiative. Friend in Every Town (Social): +1 trait bonus on Diplomacy and Knowledge (local) checks; Diplomacy is always a class skill.
+Traits: Reactionary (Combat): +2 initiative. Friend in Every Town (Social): +1 trait bonus on Diplomacy and Knowledge (local) checks; Diplomacy is always a class skill. Gifted Adept (Magic, third trait for a drawback): +1 caster level on scorching ray (CL 11 with Elemental Bond: 3 rays). Drawback: to be agreed with the GM.
 
 Feats (8 regular, 2 archetype teamwork, 2 combat style, 1 mythic):
 Regular (8) (the GM's extra feat plus the normal feat at L1, L3, L5 and L7)
