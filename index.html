@@ -96,10 +96,19 @@ h1 {
 .clock { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .round {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   padding-right: 6px;
 }
+/* the current round, framed: big number with ROUND under it */
+.rframe {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-width: 64px; padding: 4px 12px 5px;
+  border: 1px solid var(--moon); border-radius: 10px;
+  background: rgba(169, 193, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(169, 193, 255, 0.06);
+}
+.rframe .lbl { color: var(--moon); font-size: 0.62rem; margin-top: 2px; }
 .round .lbl, .lbl {
   font-size: 0.68rem;
   letter-spacing: 0.1em;
@@ -107,7 +116,7 @@ h1 {
   color: var(--muted);
   font-weight: 600;
 }
-.round b { font-family: var(--font-display); font-weight: 400; font-size: 1.7rem; line-height: 1; }
+.round b { font-family: var(--font-display); font-weight: 400; font-size: 2.2rem; line-height: 1; color: var(--fg); }
 
 .btn {
   min-height: 40px;
@@ -469,7 +478,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       </div>
     </div>
     <div class="clock">
-      <div class="round"><span class="lbl">Round</span><b id="round" class="num">1</b><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects and turns off favored enemy and terrain. Burnout carries over.">Reset</button></div>
+      <div class="round"><div class="rframe" aria-label="Current round"><b id="round" class="num">1</b><span class="lbl">Round</span></div><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects and turns off favored enemy and terrain. Burnout carries over.">Reset</button></div>
       <button class="btn primary" data-act="nocast" title="End the round: durations count down, and burnout drops by 1 if she gained none this round. The round's actions move to Last round.">End round</button>
       <button class="btn" id="dayBtn" data-act="newday" title="Start a new day after 8 hours of sleep. Refills overdrive and mythic power and clears burnout and active spells, turns off favored enemy and terrain, and heals 1 Strength damage.">New day</button>
     </div>
