@@ -80,7 +80,7 @@
     { k: "wrap", name: "+1 bodywrap of mighty strikes", slot: "Body", wt: 1, fx: "+1 attack and damage on 2 unarmed strikes a round" },
     { k: "cloak", name: "Cloak of resistance +3", slot: "Shoulders", wt: 1, fx: "+3 resistance bonus on Fort, Ref and Will" },
     { k: "belt", name: "Belt of incredible dexterity +2", slot: "Belt", wt: 1, fx: "+2 enhancement to Dex" },
-    { k: "band", name: "Headband of alluring charisma +2", slot: "Head", wt: 1, fx: "+2 enhancement to Cha" },
+    { k: "band", name: "Headband of alluring charisma +2", slot: "Headband", wt: 1, fx: "+2 enhancement to Cha" },
     { k: "amulet", name: "Amulet of natural armor +2", slot: "Neck", wt: 0, fx: "+2 natural armor" }
   ];
   var FIXED_WT = 5; /* handy haversack, 5 lb however full */
@@ -437,7 +437,12 @@
     };
 
     /* gear and conditions */
-    var gear = ITEMS.map(function (i) { return tg("eq", i.k, i.name, worn(i.k), i.fx); }).join("");
+    var gear = ITEMS.map(function (i) { return tg("eq", i.k, i.slot + ": " + i.name, worn(i.k), i.fx); }).join("");
+    /* magic item slots (armor is its own category, not a slot); the handy haversack is slotless */
+    var SLOTS = ["Head", "Headband", "Eyes", "Shoulders", "Neck", "Chest", "Body", "Belt", "Wrists", "Hands", "Ring", "Ring", "Feet"];
+    var used = ITEMS.filter(function (i) { return worn(i.k); }).map(function (i) { return i.slot; }); /* gear set aside frees its slot */
+    var open = SLOTS.filter(function (sl) { var k = used.indexOf(sl); if (k >= 0) { used[k] = null; return false; } return true; });
+    gear += '<p class="hint slotsfree"><b>Open slots:</b> ' + esc(open.join(", ").replace("Ring, Ring", "2 rings")) + ". Slotless: handy haversack.</p>";
     gear += '<div class="row"><button type="button" class="btn sm" data-act="eqall" data-v="off">Take everything off</button><button type="button" class="btn sm" data-act="eqall" data-v="on">Put everything on</button></div>' +
       '<p class="hint">Off means set aside: it gives nothing and its weight leaves her load.</p>';
     var cond = '<div class="grp"><div class="gl">Where and who</div>' +
