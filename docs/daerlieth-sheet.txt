@@ -97,15 +97,15 @@ L1 – Weapon Finesse
 L1 – Improved Unarmed Strike
 L3 – Two-Weapon Fighting
 L3 – Weapon Focus (unarmed strike)
-L5 – Outflank (teamwork; Gwathfaron has it through Coordinated Companion): flanking bonus +4 instead of +2; a crit on the flanked foe gives the partner an attack of opportunity.
-L5 – Precise Strike (teamwork, GM's extra feat; Gwathfaron has it too): +1d6 precision damage on every melee hit while they flank the same foe.
+L5 – Outflank (teamwork; Gwathfaron has it too, within 30 ft of her, through Coordinated Companion): flanking bonus +4 instead of +2; a crit on the flanked foe gives the partner an attack of opportunity.
+L5 – Precise Strike (teamwork, GM's extra feat; Gwathfaron has it too, within 30 ft of her): +1d6 precision damage on every melee hit while they flank the same foe.
 L7 – Improved Two-Weapon Fighting
 L7 – Expanded Arcana (adds 1 spell known: detonate, 4th level)
 
 Archetype bonus (Companion-Bound Ranger, Teamwork, 4th level)
 
 L4 – Coordinated Companion: Gwathfaron counts as having any teamwork feat she has (within 30 ft, and he must see or hear her).
-L4 – Bonded Mind: silent messages, as the message spell, with an ally who has the feat while they can see each other. Gwathfaron can use it with her.
+L4 – Bonded Mind: silent messages, as the message spell, with an ally who has the feat while they can see each other. Gwathfaron has it too (within 30 ft of her) and can use it with her.
 
 Combat style (Unarmed, prerequisites waived)
 
