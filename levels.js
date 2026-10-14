@@ -91,7 +91,7 @@
       if ([9, 12, 15, 18].indexOf(l) >= 0) add(l, "sec-" + l, "Eternal Mage", "Eternal secret");
       if ([10, 15, 20].indexOf(l) >= 0) add(l, "sch-" + l, "Eternal Mage", "Additional school");
       if ([9, 11, 13, 16, 19].indexOf(l) >= 0) add(l, "tal-" + l, "Ranger", "Ranger talent");
-      if ([10, 14, 18].indexOf(l) >= 0) add(l, "cs-" + l, "Ranger", "Combat style feat (Unarmed)");
+      if ([10, 14, 18].indexOf(l) >= 0) add(l, "cs-" + l, "Ranger", "Combat style feat (Unarmed: Combat Reflexes, Punishing Kick, Greater Two-Weapon Fighting or Spring Attack; prerequisites waived)");
       if ([10, 13, 16, 19].indexOf(l) >= 0) add(l, "ec-" + l, "Ranger", "Enhanced Companion feat (Greater Animal Companion, Increased Devotion, Invulnerable Animal Companion, or an animal feat for Gwathfaron)");
       if ([10, 15, 20].indexOf(l) >= 0) { add(l, "fe-" + l, "Ranger", "New favored enemy (type)"); add(l, "fep-" + l, "Ranger", "+2 to one favored enemy", "feplus"); }
       var now = KNOWN[l], before = KNOWN[l - 1];
