@@ -128,14 +128,9 @@ h1 {
 .btn.warn:hover:not(:disabled) { border-color: var(--heat); background: rgba(236, 106, 54, 0.12); }
 .btn.sm { min-height: 34px; padding: 0 10px; font-size: 0.82rem; }
 .btn.icon { width: 40px; padding: 0; font-family: var(--font-mono); font-size: 1.05rem; }
-.tray-wrap { max-width: 1120px; margin-inline: auto; }
-.tray { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 10px; }
-.tray .lbl { margin-right: 4px; }
-.tray .field { flex: 1 1 150px; max-width: 230px; }
-.tray .warn-text { flex-basis: 100%; margin: 0; }
 
 /* view-only mode for anyone who cannot write */
-.ro .clock .btn, .ro .tray-wrap, .ro .castbox .opts, .ro .castbox .fields, .ro .castbox [data-act="cast"], .ro .castbox .warn-text,
+.ro .clock .btn, .ro .castbox .opts, .ro .castbox .fields, .ro .castbox [data-act="cast"], .ro .castbox .warn-text,
 .ro [data-act="str"], .ro [data-act="resolve"], .ro [data-act="endspell"], .ro [data-act="clearlog"],
 .ro [data-act="burn"], .ro [data-act="res"], .ro .passrow, .ro [data-act="hp"], .ro [data-act="mspend"] { display: none !important; }
 .ro .toggle, .ro .spell, .ro .cell, .ro .pip { pointer-events: none; }
@@ -474,11 +469,9 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     <div class="clock">
       <div class="round"><span class="lbl">Round</span><b id="round" class="num">1</b><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects. Burnout carries over.">Reset</button></div>
       <button class="btn primary" data-act="nocast" title="End the round: durations count down, and burnout drops by 1 if she gained none this round. The round's actions move to Last round.">End round</button>
-      <button class="btn" id="castBtn" data-act="tray" aria-expanded="false" title="Cast a spell of a chosen level. It is added to This round; End round when she is done.">Cast spell ▾</button>
       <button class="btn" id="dayBtn" data-act="newday" title="Start a new day after 8 hours of sleep. Refills overdrive and mythic power and clears burnout and active spells, and heals 1 Strength damage.">New day</button>
     </div>
   </div>
-  <div class="tray-wrap"><div class="tray" id="tray" hidden></div></div>
   <nav class="tabs" role="tablist" aria-label="View">
     <button type="button" class="tab" role="tab" id="tabSheet" data-tab="sheet" aria-selected="true">Daerlieth</button>
     <button type="button" class="tab" role="tab" id="tabPet" data-tab="pet" aria-selected="false">Gwathfaron</button>
@@ -674,7 +667,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
   var state = clone(DEFAULT);
   var ui = {
-    tray: false, qOd: false, qBlood: true, trayMsg: "", dayArmed: false, blood: false, bmChoice: "det", bmGp: 100,
+    dayArmed: false, blood: false, bmChoice: "det", bmGp: 100,
     sel: "fireball", od: false, d8: false, wa: false, myth: false, castOn: "her", mode: "std", element: "fire",
     customName: "", customLvl: 1, customDur: "none", unkFire: false, knownSel: "", cols: {}
   };
@@ -983,35 +976,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     });
   }
 
-  function trayCast(value) {
-    var parts = value.split("|");
-    var sp = getSpell(parts[0]);
-    if (!sp) return;
-    ui.sel = sp.id;
-    ui.od = ui.qOd; ui.d8 = false; ui.wa = false; ui.myth = false; ui.castOn = "her";
-    if (sp.calc === "det" && parts[1]) ui.element = parts[1];
-    if (sp.art && parts[1]) ui.mode = parts[1];
-    var gp = sp.cost || 0;
-    var pay = gp > 1 && ui.qBlood && !state.blood;
-    var prevBlood = state.blood;
-    if (pay) state.blood = { name: sp.name };
-    var c = compute(sp);
-    if (pay) state.blood = prevBlood;
-    if (c.problems.length) {
-      ui.trayMsg = c.problems.join(" ");
-      render();
-      return;
-    }
-    ui.trayMsg = "";
-    if (pay) {
-      castBlood({ bmStr: 1 + Math.floor(gp / 500), bmName: sp.name });
-      ui.od = ui.qOd;
-    }
-    doCast();
-    ui.tray = false; ui.qOd = false;
-    render();
-  }
-
   function resetRound() {
     mutate(function (s) {
       s.round = 1;
@@ -1034,7 +998,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       s.hp = Math.min(hpMax(), s.hp + lv); s.petHp = Math.min(petMax(), s.petHp + hdP);
       log("New day: overdrive " + s.overdrive + ", mythic power 7, burnout 0, Stunning Fist " + s.stun + ", hp +" + lv + " (panther +" + hdP + ")" + (healed ? ", Strength damage −1" : ""));
     });
-    ui.tray = false;
     render();
   }
 
@@ -1099,7 +1062,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   function burnHelpHtml() {
     return '<div class="explain">' +
       "<p><b>What it is.</b> Daerlieth has no spell slots. Burnout is the only limit on how much she casts, and it builds up as she does.</p>" +
-      "<p><b>When it goes up.</b> Each time she casts a spell of 1st level or higher. Press Cast spell in the top bar and choose a spell under its level, or cast one from the Spells panel. It is recorded under This round; press End round when her turn is over. The + and − buttons are only for fixing a mistake.</p>" +
+      "<p><b>When it goes up.</b> Each time she casts a spell of 1st level or higher. Cast it from the Spells panel. It is recorded under This round; press End round when her turn is over. The + and − buttons are only for fixing a mistake.</p>" +
       '<div class="costs">' +
       '<span class="chip">Orisons: 0</span>' + (function () {
         var out = "", P = LP();
@@ -1383,48 +1346,11 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       "<li>Elemental Bond (fire): fire descriptor spells get +2 caster level. Fire resistance 10.</li></ul></details>";
   }
 
-  function trayOptions(L) {
-    var out = [];
-    SPELLS.concat(knownSpells()).forEach(function (sp) {
-      if (sp.lvl !== L || sp.calc === "bm") return;
-      if (sp.calc === "det") {
-        ["fire", "acid", "cold", "electricity"].forEach(function (el) { out.push({ v: sp.id + "|" + el, t: "Detonate, " + el, g: baseGain(sp) }); });
-      } else if (sp.art) {
-        [["std", "touch"], ["sniper", "sniper"], ["burst", "burst"]].forEach(function (m) { out.push({ v: sp.id + "|" + m[0], t: "Arcane artillery, " + m[1], g: baseGain(sp) }); });
-      } else {
-        out.push({ v: sp.id, t: sp.name, g: baseGain(sp) });
-      }
-    });
-    var ex = lockedExp();
-    if (ex && ex.lvl === L) out.push({ v: ex.id, t: ex.name + " (experimental)", g: baseGain(ex) });
-    return out;
-  }
-
-  function renderTray() {
-    var tray = $("tray");
-    $("castBtn").setAttribute("aria-expanded", String(ui.tray));
-    tray.hidden = !ui.tray;
-    if (!ui.tray) return;
-    var h = '<span class="lbl">Cast a spell</span>';
-    for (var L = 0; L <= Math.max(4, LP().maxSpell); L++) {
-      if (L > 4 && !trayOptions(L).length) continue;
-      var opts = '<option value="">Choose a spell</option>' + trayOptions(L).map(function (o) {
-        return '<option value="' + o.v + '">' + esc(o.t) + (o.g > 0 ? " (+" + o.g + ")" : "") + "</option>";
-      }).join("");
-      h += '<label class="field">' + (L === 0 ? "Orison" : "Level " + L) + '<select class="traySel" data-l="' + L + '">' + opts + "</select></label>";
-    }
-    h += '<button class="toggle" data-act="qod" aria-pressed="' + ui.qOd + '"' + (state.overdrive < 1 ? " disabled" : "") + ">Spend 1 overdrive (" + state.overdrive + " left)</button>";
-    h += '<button class="toggle" data-act="qblood" aria-pressed="' + ui.qBlood + '">Pay costly components with Blood Money</button>';
-    if (ui.trayMsg) h += '<p class="warn-text">' + esc(ui.trayMsg) + "</p>";
-    tray.innerHTML = h;
-  }
-
   function render() {
     $("round").textContent = state.round;
     $("subLvl").textContent = "Eternal Mage " + state.level + " · Artillery Expert · Ranger " + state.level + " · Archmage tier 2";
     $("dayBtn").textContent = ui.dayArmed ? "Confirm new day" : "New day";
     $("dayBtn").classList.toggle("warn", ui.dayArmed);
-    renderTray();
     renderBurn(); renderOver(); renderMyth(); renderSpells(); renderSlots(); renderTurn(); renderBody(); renderLog(); renderRules();
     renderSheet();
   }
@@ -1769,9 +1695,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       if (cc) withCol(cc, function () { doCast(); }); else doCast();
       if (cc) { ui.cols[cc] = { od: false, d8: false, wa: false, myth: false, castOn: "her" }; render(); }
     }
-    else if (a === "tray") { ui.tray = !ui.tray; ui.trayMsg = ""; render(); }
-    else if (a === "qblood") { ui.qBlood = !ui.qBlood; render(); }
-    else if (a === "qod") { ui.qOd = !ui.qOd; render(); }
     else if (a === "explock") {
       var xs = expSpell();
       if (xs) mutate(function (s) { s.expLocked = true; log("Experimental spell for today: " + xs.name + " (locked in)"); });
@@ -1943,7 +1866,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     else if (id === "d8Chk") { ui.d8 = e.target.checked; renderCast(); }
     else if (id === "bmSel") { ui.bmChoice = e.target.value; renderCast(); }
     else if (id === "bmGp") { ui.bmGp = Math.max(0, parseInt(e.target.value, 10) || 0); renderCast(); }
-    else if (e.target.classList && e.target.classList.contains("traySel")) { if (e.target.value) trayCast(e.target.value); }
     else if (id === "fireChk") { ui.unkFire = e.target.checked; renderCast(); }
     else if (id === "waChk") { ui.wa = e.target.checked; renderCast(); }
     else if (id === "mythChk") { ui.myth = e.target.checked; renderCast(); }
@@ -1990,7 +1912,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     readOnly = true;
     roLabel = label;
     document.body.classList.add("ro");
-    ui.tray = false;
     setStatus("");
   }
   function setEditable(label) {
