@@ -108,6 +108,15 @@ h1 {
   background: rgba(169, 193, 255, 0.08);
   box-shadow: 0 0 0 3px rgba(169, 193, 255, 0.06);
 }
+.rplus { min-width: 40px; min-height: 52px; padding: 0 10px; font-size: 1.4rem; line-height: 1; }
+@media (max-width: 440px) {
+  .clock, .round { gap: 5px; }
+  .round { padding-right: 0; }
+  .clock .btn { padding: 0 9px; font-size: 0.84rem; }
+  .rframe { min-width: 54px; padding: 3px 8px 4px; }
+  .round b { font-size: 1.9rem; }
+  .rplus { min-width: 34px; padding: 0 8px; }
+}
 .rframe .lbl { color: var(--moon); font-size: 0.62rem; margin-top: 2px; }
 .round .lbl, .lbl {
   font-size: 0.68rem;
@@ -478,7 +487,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       </div>
     </div>
     <div class="clock">
-      <div class="round"><div class="rframe" aria-label="Current round"><b id="round" class="num">1</b><span class="lbl">Round</span></div><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects and turns off favored enemy and terrain. Burnout carries over.">Reset</button></div>
+      <div class="round"><div class="rframe" aria-label="Current round"><b id="round" class="num">1</b><span class="lbl">Round</span></div><button class="btn rplus" data-act="roundplus" title="Next round, nothing done: counts durations down, and burnout drops by 1 if she gained none." aria-label="Next round (no actions)">+</button><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects and turns off favored enemy and terrain. Burnout carries over.">Reset</button></div>
       <button class="btn primary" data-act="nocast" title="End the round: durations count down, and burnout drops by 1 if she gained none this round. The round's actions move to Last round.">End round</button>
       <button class="btn" id="dayBtn" data-act="newday" title="Start a new day after 8 hours of sleep. Refills overdrive and mythic power and clears burnout and active spells, turns off favored enemy and terrain, and heals 1 Strength damage.">New day</button>
     </div>
@@ -1038,12 +1047,13 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     });
   }
   /* End round: burnout recovers 1 only if none was gained this round; the round's actions become last round's OOC */
-  function noCast() {
+  /* End round, or + beside the round number for a round where she does nothing (same effect, logged as idle) */
+  function noCast(idle) {
     mutate(function (s) {
       var before = s.burnout, r = s.round;
       s.prevOoc = oocText(s);
       passRound(s, s.gained);
-      log("End of round " + r + (before ? ": burnout " + before + " → " + s.burnout : ""));
+      log((idle ? "Round " + r + " passed, no actions" : "End of round " + r) + (before ? ": burnout " + before + " → " + s.burnout : ""));
       s.turn = { her: [], pet: [] };
     });
   }
@@ -1802,6 +1812,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     else if (a === "resetround") resetRound();
     else if (a === "clearlog") mutate(function (s) { s.log = []; });
     else if (a === "nocast") noCast();
+    else if (a === "roundplus") noCast(true);
     else if (a === "turnadd") {
       var tw = t.getAttribute("data-who"), tid = ui_turn[tw], tn = ($("tNote-" + tw) || {}).value || "";
       var it = null; turnCatalog(tw).forEach(function (g) { g.items.forEach(function (x) { if (x.id === tid) it = x; }); });
