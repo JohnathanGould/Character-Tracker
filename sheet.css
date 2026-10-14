@@ -61,6 +61,9 @@ table.t td.num { font-size: 0.82rem; }
 table.t.sk td:nth-child(2), table.t.sk th:nth-child(2) { width: 56px; }
 table.t.sk td:nth-child(3), table.t.sk th:nth-child(3) { width: 64px; text-align: right; }
 table.t.sk td span { cursor: help; }
+table.t.sk td:last-child, table.t.sk th:last-child { text-align: right; }
+table.t.sk td:last-child { white-space: nowrap; }
+table.t.sk th:last-child { white-space: normal; width: 4.5em; }
 .foot { margin: 14px 4px 0; }
 
 /* view-only: the toggles stay visible but can't be pressed */

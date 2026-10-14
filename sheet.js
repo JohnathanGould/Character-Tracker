@@ -616,9 +616,9 @@
       var left = bg ? leftB : leftA, edit = !o.readOnly && left !== 0;
       var rows = d.skills.filter(function (s) { return !!s.bg === bg; }).map(function (s) {
         var rc = edit ? '<span class="rks"><button type="button" class="btn sm rk" data-act="rank" data-k="' + esc(s.name) + '" data-d="-1"' + (s.ranks < 1 ? " disabled" : "") + '>−</button><b class="num">' + s.ranks + '</b><button type="button" class="btn sm rk" data-act="rank" data-k="' + esc(s.name) + '" data-d="1"' + (left < 1 || s.ranks >= R_.cap ? " disabled" : "") + ">+</button></span>" : s.ranks;
-        return [featBtn("skill:" + s.name, s.name, s.tip + " = " + (s.usable ? sg(s.total) : "needs ranks")) + (s.ranks ? "" : ' <small class="hint">untrained</small>'), rc, s.usable ? sg(s.total) : "— (needs ranks)"];
+        return [featBtn("skill:" + s.name, s.name, s.tip + " = " + (s.usable ? sg(s.total) + "." + takeText(s.name, s.total) : "needs ranks")) + (s.ranks ? "" : ' <small class="hint">untrained</small>'), rc, s.usable ? sg(s.total) : "— (needs ranks)", s.usable ? takeCell(s.name, s.total) : ""];
       });
-      return tbl(["Skill", "Ranks", "Total"], rows, "sk");
+      return tbl(["Skill", "Ranks", "Total", "Take 10/20"], rows, "sk");
     };
     var rkHead = function (lbl, used, max) { var lf = max - used; return "<h3>" + lbl + " (" + used + " of " + max + " ranks" + (lf > 0 ? ", <b>" + lf + " to place</b>" : lf < 0 ? ", <b>" + (-lf) + " too many</b>" : "") + ")</h3>"; };
     var bonusNote = "Hover a skill name for what it does and her arithmetic; tap for the full rules. Ranks: (6 + Int " + sg(d.ab.int.mod) + ") a level plus 1 favored class bonus; background 2 a level; at most " + R_.cap + " in one skill. Wild Empathy " + sg(d.empathy) + " (+4 with Gwathfaron). Handle Animal with Gwathfaron +4.";
@@ -727,12 +727,29 @@
     var tipTxt = (f ? f[1] : "Tap for details") + (extra ? " · " + extra : "");
     return '<button type="button" class="featbtn tip" data-feat="' + esc(key) + '" data-title="' + esc(nm) + '"' + (extra ? ' data-extra="' + esc(extra) + '"' : "") + ' data-tip="' + esc(tipTxt) + '">' + esc(nm) + "</button>";
   }
+  /* take 10 (not threatened or distracted) and take 20 (20 times as long, only when failing costs nothing and the
+     skill can be retried). Use Magic Device allows neither; skills with no retry can't take 20. */
+  var NO_T20 = { "Appraise": "no retry", "Sense Motive": "no retry", "Spellcraft": "no retry to identify", "Use Magic Device": "not allowed" };
+  function takes(name, total) {
+    var no10 = name === "Use Magic Device", why = NO_T20[name] || (/^Knowledge/.test(name) ? "no retry" : "");
+    return { t10: no10 ? null : 10 + total, t20: why ? null : 20 + total, why: no10 ? "Use Magic Device: no taking 10 or 20" : why ? "no take 20 (" + why + ")" : "" };
+  }
+  function takeCell(name, total) {
+    var t = takes(name, total);
+    return '<span class="num">' + (t.t10 == null ? "—" : t.t10) + "/" + (t.t20 == null ? "—" : t.t20) + "</span>";
+  }
+  function takeText(name, total) {
+    var t = takes(name, total);
+    return (t.t10 == null ? "" : " Take 10: " + t.t10 + ".") + (t.t20 == null ? " " + t.why.charAt(0).toUpperCase() + t.why.slice(1) + "." : " Take 20: " + t.t20 + ".");
+  }
+  var TAKE_RULES = "<b>Take 10:</b> when she isn't threatened or distracted, count the d20 as a 10 instead of rolling. <b>Take 20:</b> when she has plenty of time and failing costs nothing, count it as a 20; it takes 20 times as long (2 minutes for a 1-round check) and only works for checks she could retry.";
   function featHtml(key, extra) {
     var f = featInfo(key), nm = plainName(key);
     var url = "https://aonprd.com/Search.aspx?Query=" + encodeURIComponent(nm.replace(/\s*\(.*\)$/, ""));
     return (f ? '<p class="hint">' + esc(f[0]) + '</p><p class="feattext">' + esc(f[2]) + "</p>" : '<p class="hint">No description recorded for this one yet.</p>') +
       (extra ? '<p class="featextra"><b>Hers:</b> ' + esc(extra) + "</p>" : "") +
       (function () { var A = root.Actions, m = /^skill:(.*)$/i.exec(key), sa = A && m && A.SKILL_ACT[m[1]]; return sa ? '<p class="featextra"><b>Action:</b> ' + esc(A.ACT[sa[0]]) + ". " + esc(sa[1]) + "</p>" : ""; })() +
+      (/^skill:/i.test(key) ? '<p class="hint">' + TAKE_RULES + "</p>" : "") +
       (/^(ab|pet|trick):/i.test(key) ? "" : '<p class="hint"><a href="' + esc(url) + '" target="_blank" rel="noopener">Look it up on Archives of Nethys</a></p>');
   }
   /* her feats, traits and talents, built from the printed sheet plus her level-up picks */
@@ -1060,10 +1077,10 @@
 
     var pLeft = p.ranksMax - p.ranksUsed, pEdit = !o.readOnly && pLeft !== 0;
     h += sec("Skills", '<p class="rkhead"><b>' + p.ranksUsed + " of " + p.ranksMax + "</b> ranks" + (pLeft > 0 ? " · <b>" + pLeft + " to place</b>" : pLeft < 0 ? " · <b>" + (-pLeft) + " too many</b>" : "") + "</p>" +
-      tbl(["Skill", "Ranks", "Ability", "Class", "Misc", "Total"], p.skills.map(function (s) {
+      tbl(["Skill", "Ranks", "Ability", "Class", "Misc", "Total", "Take 10/20"], p.skills.map(function (s) {
         var rc = pEdit ? '<span class="rks"><button type="button" class="btn sm rk" data-act="prank" data-k="' + esc(s.name) + '" data-d="-1"' + (s.ranks < 1 ? " disabled" : "") + '>−</button><b class="num">' + s.ranks + '</b><button type="button" class="btn sm rk" data-act="prank" data-k="' + esc(s.name) + '" data-d="1"' + (pLeft < 1 || s.ranks >= p.hd ? " disabled" : "") + ">+</button></span>" : String(s.ranks);
-        return [featBtn("skill:" + s.name, s.name, s.tip + " = " + sg(s.total)) + (s.ranks ? "" : ' <small class="hint">untrained</small>'),
-          rc, sg(s.abil) + ' <small class="hint">' + s.key.toUpperCase() + "</small>", s.cls ? "+3" : "", s.misc ? sg(s.misc) : "", "<b>" + sg(s.total) + "</b>"];
+        return [featBtn("skill:" + s.name, s.name, s.tip + " = " + sg(s.total) + "." + takeText(s.name, s.total)) + (s.ranks ? "" : ' <small class="hint">untrained</small>'),
+          rc, sg(s.abil) + ' <small class="hint">' + s.key.toUpperCase() + "</small>", s.cls ? "+3" : "", s.misc ? sg(s.misc) : "", "<b>" + sg(s.total) + "</b>", takeCell(s.name, s.total)];
       }), "sk pk") +
       '<p class="hint">' + p.ranksMax + " ranks: 1 per Hit Die from the companion table (Int would need to reach 10 to add more), at most " + p.hd + " in one skill. Rank buttons appear only while there are ranks to place." + ' Class skill +3 once a skill has a rank. All are animal companion class skills. Misc: Skill Focus and Stealthy on Stealth, Skill Focus and Alertness on Perception, Alertness on Sense Motive, Stealthy on Escape Artist, and her forest and favored enemy bonuses when those are on. Speed 50 ft gives +8 on Acrobatics checks to jump. Hover or tap a skill for the arithmetic.</p>', true);
 
@@ -1103,7 +1120,7 @@
   }
 
   function d0level(st) { return levelOf(st); }
-  var api = { flankMode: flankMode, flankLabel: flankLabel, hastedOn: hastedOn, derive: derive, render: render, renderPet: renderPet, PET: PET, petRanks: petRanks, ranksOf: ranksOf, SKILLS: SKILLS, hpMaxOf: hpMaxOf, levelOf: levelOf, FX_UNITS: FX_UNITS, LETTERS: LETTERS, letterHtml: letterHtml, featHtml: featHtml, featGroups: featGroups, classData: classData, featInfo: featInfo, hasFeat: hasFeat, BASE_FEATS: BASE_FEATS, fxLeft: fxLeft, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
+  var api = { takes: takes, flankMode: flankMode, flankLabel: flankLabel, hastedOn: hastedOn, derive: derive, render: render, renderPet: renderPet, PET: PET, petRanks: petRanks, ranksOf: ranksOf, SKILLS: SKILLS, hpMaxOf: hpMaxOf, levelOf: levelOf, FX_UNITS: FX_UNITS, LETTERS: LETTERS, letterHtml: letterHtml, featHtml: featHtml, featGroups: featGroups, classData: classData, featInfo: featInfo, hasFeat: hasFeat, BASE_FEATS: BASE_FEATS, fxLeft: fxLeft, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
   root.SheetEngine = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
