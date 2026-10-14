@@ -63,22 +63,22 @@ Built as an all-round scout, not a fighter: his job is to find things, follow he
 tracking) and flank so her stealth attack lands.
 ----------------------------------------------------------------------------
 Skills                    Total  Ranks  Abil   Class  Misc
-Stealth           (Dex)    +16  =  2  +  6  +  3  +  5   Skill Focus 3, Stealthy 2
-Escape Artist     (Dex)    +12  =  1  +  6  +  3  +  2   Stealthy
-Perception        (Wis)    +10  =  1  +  1  +  3  +  5   Skill Focus 3, Alertness 2
+Stealth           (Dex)    +16  =  4  +  6  +  3  +  3   Skill Focus 3
+Perception        (Wis)    +12  =  3  +  1  +  3  +  5   Skill Focus 3, Alertness 2
+Escape Artist     (Dex)    +11  =  2  +  6  +  3  +  0
+Acrobatics        (Dex)    +10  =  1  +  6  +  3  +  0   +8 to jump (speed 50)
 Climb             (Str)     +8  =  1  +  4  +  3  +  0
 Swim              (Str)     +8  =  1  +  4  +  3  +  0
-Acrobatics        (Dex)     +6  =  0  +  6  +  0  +  0   +8 to jump (speed 50)
-Survival          (Wis)     +5  =  1  +  1  +  3  +  0
+Survival          (Wis)     +6  =  2  +  1  +  3  +  0
 Sense Motive      (Wis)     +3  =  0  +  1  +  0  +  2   Alertness
 Intimidate        (Cha)     -2  =  0  -  2  +  0  +  0
-- 7 ranks (1 per Hit Die), spread so he is useful everywhere. +4 Perception, Stealth and Survival in forest (shared).
+- 14 ranks (2 per Hit Die with Cunning), spread so he is useful everywhere. +4 Perception, Stealth and Survival in forest (shared).
 - Scent and low-light vision.
 ----------------------------------------------------------------------------
 Feats (4 at 7 HD)
 - Skill Focus (Stealth)    : +3 Stealth (+6 at 10 ranks).
 - Skill Focus (Perception) : +3 Perception (+6 at 10 ranks).
-- Stealthy                 : +2 Stealth and Escape Artist.
+- Cunning                  : +1 skill rank per Hit Die (7 now, +1 per new Hit Die).
 - Alertness                : +2 Perception and Sense Motive (legal at Int 3).
 - Bonded Mind (teamwork, from Daerlieth's Coordinated Companion, while within 30 ft of her): silent messages
   between them while they can see each other.

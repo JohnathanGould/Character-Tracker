@@ -306,7 +306,7 @@
     p.skills.slice().sort(function (x, y) { return y.total - x.total; }).forEach(function (s) {
       push(pad(s.name, 18) + "(" + s.key.charAt(0).toUpperCase() + s.key.slice(1) + ")   " + lpad(sg(s.total), 4) + "  =  " + s.ranks + (s.abil < 0 ? "  -  " + (-s.abil) : "  +  " + s.abil) + "  +  " + (s.cls ? 3 : 0) + "  +  " + s.misc);
     });
-    push("- " + p.ranksMax + " ranks (1 per Hit Die). +" + PR.forest + " Perception, Stealth and Survival in forest (shared).", "- Scent and low-light vision.");
+    push("- " + p.ranksMax + " ranks (" + (p.cunning ? "2 per Hit Die with Cunning" : "1 per Hit Die") + "). +" + PR.forest + " Perception, Stealth and Survival in forest (shared).", "- Scent and low-light vision.");
     push(RULE);
     push("Feats (" + cp.feats + " at " + cp.hd + " HD)");
     p.feats.forEach(function (f) { var i = S().featInfo(f); push("- " + pad(f, 25) + ": " + (i ? i[1] : "")); });

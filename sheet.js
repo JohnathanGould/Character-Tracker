@@ -143,18 +143,19 @@
      is her level; HD, BAB, saves, natural armor, Str/Dex bonus, skill ranks, feats and tricks follow the companion
      table (Levels.prog(L).pet). Improved Animal Companion (her Enhanced Companion feat): +1d8 hp, +1 Dex, +2 natural.
      Build (an all-round scout: Stealth and Perception lead, every useful skill trained): the HD 4 ability increase to Int
-     (2 to 3, which lets him take any feat he can use); feats Skill Focus (Stealth), Skill Focus (Perception), Stealthy,
-     Alertness; ranks at 7 HD Stealth 2, Perception 1, Climb 1, Swim 1, Survival 1, Escape Artist 1. Later increases, feats and ranks are her level-up picks. */
+     (2 to 3, which lets him take any feat he can use); feats Skill Focus (Stealth), Skill Focus (Perception),
+     Cunning (+1 rank per Hit Die), Alertness;
+     14 ranks at 7 HD: Stealth 4, Perception 3, Survival 2, Escape Artist 2, Climb 1, Swim 1, Acrobatics 1. Later increases, feats and ranks are her level-up picks. */
   var PET = {
     dead: 15, nat: 1, speed: 50,
     base: { str: 12, dex: 21, con: 13, int: 2, wis: 12, cha: 6 },        /* small cat */
     adv4: { str: 4, dex: -2, con: 2 },                                      /* 4th-level advancement, Medium */
-    feats: ["Skill Focus (Stealth)", "Skill Focus (Perception)", "Stealthy", "Alertness"],
+    feats: ["Skill Focus (Stealth)", "Skill Focus (Perception)", "Cunning", "Alertness"],
     /* name, ability, ranks at 7 HD, class skill, misc [label, value] */
     skills: [
-      ["Acrobatics", "dex", 0, 1, [["speed 50 ft, jumping only", 0]]], ["Climb", "str", 1, 1, []], ["Escape Artist", "dex", 1, 1, [["Stealthy", 2]]],
-      ["Intimidate", "cha", 0, 1, []], ["Perception", "wis", 1, 1, [["Skill Focus", 3], ["Alertness", 2]]], ["Sense Motive", "wis", 0, 0, [["Alertness", 2]]], ["Stealth", "dex", 2, 1, [["Skill Focus", 3], ["Stealthy", 2]]],
-      ["Survival", "wis", 1, 1, []], ["Swim", "str", 1, 1, []]
+      ["Acrobatics", "dex", 1, 1, [["speed 50 ft, jumping only", 0]]], ["Climb", "str", 1, 1, []], ["Escape Artist", "dex", 2, 1, []],
+      ["Intimidate", "cha", 0, 1, []], ["Perception", "wis", 3, 1, [["Skill Focus", 3], ["Alertness", 2]]], ["Sense Motive", "wis", 0, 0, [["Alertness", 2]]], ["Stealth", "dex", 4, 1, [["Skill Focus", 3]]],
+      ["Survival", "wis", 2, 1, []], ["Swim", "str", 1, 1, []]
     ]
   };
   /* his ranks: state.petRanks once new ranks are placed at level-up, else the 7-HD build */
@@ -211,7 +212,8 @@
         tip: parts([["ranks", ranks], [key[0].toUpperCase() + key.slice(1), m[key]], ["class skill", cls]].concat(misc)).replace(/^ /, "") };
     });
     p.ranksUsed = 0; p.skills.forEach(function (s) { p.ranksUsed += s.ranks; });
-    p.ranksMax = cp.ranks;
+    p.cunning = PET.feats.indexOf("Cunning") >= 0 || Object.keys(pk).some(function (id) { return /^pfeat-/.test(id) && /^cunning$/i.test(String(pk[id]).trim()); });
+    p.ranksMax = cp.ranks + (p.cunning ? hd : 0); /* Cunning: +1 rank per Hit Die */
     p.feats = PET.feats.concat(Object.keys(pk).filter(function (id) { return /^pfeat-/.test(id) && pk[id]; }).map(function (id) { return pk[id]; }));
     var fe = tgt ? [["favored enemy", tgt]] : [], hsT = hs ? [["haste", 1]] : [];
     p.t = {
@@ -713,6 +715,7 @@
     "skill focus": ["General feat", "+3 on one skill (+6 at 10 ranks).", "+3 on all checks with the chosen skill, rising to +6 once he has 10 ranks in it."],
     "skill focus (stealth)": ["General feat", "+3 Stealth (+6 at 10 ranks).", "+3 on Stealth checks, rising to +6 at 10 ranks."],
     "skill focus (perception)": ["General feat", "+3 Perception (+6 at 10 ranks).", "+3 on Perception checks, rising to +6 at 10 ranks."],
+    "cunning": ["General feat", "+1 skill rank per Hit Die.", "He gains 1 additional skill rank per Hit Die: as many ranks as his Hit Dice right away when he takes it, and 1 more every time he gains a Hit Die. Taken in place of Stealthy for an all-round companion."],
     "stealthy": ["General feat", "+2 Stealth and Escape Artist.", "+2 on Stealth and Escape Artist checks (+4 with 10 ranks in a skill)."],
     "alertness": ["General feat", "+2 Perception and Sense Motive.", "+2 on Perception and Sense Motive checks (+4 with 10 ranks in a skill). Not on the animal feat list; his Int 3 lets him take any feat he can use."],
     "multiattack": ["Monster feat (bonus at effective druid level 9)", "Secondary natural attacks at −2 instead of −5.", "His secondary natural attacks (the claws) take only −2 on attack rolls instead of −5."]
@@ -1084,12 +1087,12 @@
         return [featBtn("skill:" + s.name, s.name, s.tip + " = " + sg(s.total) + "." + takeText(s.name, s.total)) + (s.ranks ? "" : ' <small class="hint">untrained</small>'),
           rc, sg(s.abil) + ' <small class="hint">' + s.key.toUpperCase() + "</small>", s.cls ? "+3" : "", s.misc ? sg(s.misc) : "", "<b>" + sg(s.total) + "</b>", takeCell(s.name, s.total)];
       }), "sk pk") +
-      '<p class="hint">' + p.ranksMax + " ranks: 1 per Hit Die from the companion table (Int would need to reach 10 to add more), at most " + p.hd + " in one skill. Rank buttons appear only while there are ranks to place." + ' Class skill +3 once a skill has a rank. All are animal companion class skills. Misc: Skill Focus and Stealthy on Stealth, Skill Focus and Alertness on Perception, Alertness on Sense Motive, Stealthy on Escape Artist, and her forest and favored enemy bonuses when those are on. Speed 50 ft gives +8 on Acrobatics checks to jump. Hover or tap a skill for the arithmetic.</p>', true);
+      '<p class="hint">' + p.ranksMax + " ranks: 1 per Hit Die from the companion table" + (p.cunning ? " and 1 per Hit Die from Cunning" : "") + " (Int would need to reach 10 to add more), at most " + p.hd + " in one skill. Rank buttons appear only while there are ranks to place." + ' Class skill +3 once a skill has a rank. All are animal companion class skills. Misc: Skill Focus on Stealth, Skill Focus and Alertness on Perception, Alertness on Sense Motive, and her forest and favored enemy bonuses when those are on. Speed 50 ft gives +8 on Acrobatics checks to jump. Hover or tap a skill for the arithmetic.</p>', true);
 
     h += sec("Feats", "<ul>" +
       "<li>" + featBtn("Skill Focus (Stealth)") + "</li>" +
       "<li>" + featBtn("Skill Focus (Perception)") + "</li>" +
-      "<li>" + featBtn("Stealthy") + "</li>" +
+      "<li>" + featBtn("Cunning") + "</li>" +
       "<li>" + featBtn("Alertness") + "</li>" +
       p.feats.slice(4).map(function (f) { return "<li>" + featBtn(f) + ' <span class="hint">picked at level-up</span></li>'; }).join("") +
       (LV().prog(levelOf(st)).pet.multiattack ? "<li>" + featBtn("Multiattack") + ' <span class="hint">bonus</span></li>' : "") +
