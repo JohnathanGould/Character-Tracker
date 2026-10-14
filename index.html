@@ -1113,11 +1113,13 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var h = '<div class="duo"><div class="group pickbox"><h3>Known spells · ' + mine.length + "</h3>" +
       '<label class="field">Spell to cast<select id="knownSel">' + kOpts + "</select></label>" +
       withCol("k", function (sp) { return castHtml(sp, "k"); }) + "</div>";
-    var expOpts = '<optgroup label="Common picks">' + EXP.map(function (e) { return '<option value="' + e.id + '"' + (e.id === state.exp ? " selected" : "") + ">" + e.name + " (" + ordinal(e.lvl) + ")</option>"; }).join("") + "</optgroup>";
-    var presetNames = EXP.map(function (e) { return e.name.toLowerCase(); });
+    /* every spell sits under its level; the six with hand-written notes (haste, fly...) keep their own ids */
+    var expOpts = "", presetBy = {};
+    EXP.forEach(function (e) { presetBy[e.name.toLowerCase()] = e; });
     for (var xl = 1; xl <= LP().expMax; xl++) {
-      expOpts += '<optgroup label="Spell bank, ' + ordinal(xl) + ' level">' + BANK.filter(function (b) { return b.lvl === xl && presetNames.indexOf(b.name.toLowerCase()) < 0; }).map(function (b) {
-        return '<option value="' + b.id + '"' + (b.id === state.exp ? " selected" : "") + ">" + esc(b.name) + (SCHOOLS[b.sch] ? " (" + SCHOOLS[b.sch] + ")" : "") + "</option>";
+      expOpts += '<optgroup label="' + ordinal(xl) + ' level">' + BANK.filter(function (b) { return b.lvl === xl; }).map(function (b) {
+        var pre = presetBy[b.name.toLowerCase()], v = pre && pre.lvl === xl ? pre.id : b.id;
+        return '<option value="' + v + '"' + (v === state.exp ? " selected" : "") + ">" + esc(b.name) + (SCHOOLS[b.sch] ? " (" + SCHOOLS[b.sch] + ")" : "") + "</option>";
       }).join("") + "</optgroup>";
     }
     var ex = expSpell();
