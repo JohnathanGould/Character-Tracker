@@ -469,9 +469,9 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       </div>
     </div>
     <div class="clock">
-      <div class="round"><span class="lbl">Round</span><b id="round" class="num">1</b><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects. Burnout carries over.">Reset</button></div>
+      <div class="round"><span class="lbl">Round</span><b id="round" class="num">1</b><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects and turns off favored enemy and terrain. Burnout carries over.">Reset</button></div>
       <button class="btn primary" data-act="nocast" title="End the round: durations count down, and burnout drops by 1 if she gained none this round. The round's actions move to Last round.">End round</button>
-      <button class="btn" id="dayBtn" data-act="newday" title="Start a new day after 8 hours of sleep. Refills overdrive and mythic power and clears burnout and active spells, and heals 1 Strength damage.">New day</button>
+      <button class="btn" id="dayBtn" data-act="newday" title="Start a new day after 8 hours of sleep. Refills overdrive and mythic power and clears burnout and active spells, turns off favored enemy and terrain, and heals 1 Strength damage.">New day</button>
     </div>
   </div>
   <nav class="tabs" role="tablist" aria-label="View">
@@ -977,12 +977,19 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     });
   }
 
+  /* a new fight or a new day: the favored enemy target and favored terrain (forest) toggles go back off */
+  function clearScene(s) {
+    if (!s.cond) return;
+    delete s.cond.target; delete s.cond.forest;
+  }
+
   function resetRound() {
     mutate(function (s) {
       s.round = 1;
       s.gained = false;
       s.active = []; s.pending = []; s.turn = { her: [], pet: [] };
-      log("Round counter reset to 1, concentration cleared");
+      clearScene(s);
+      log("Round counter reset to 1, concentration cleared, favored enemy and terrain off");
     });
   }
 
@@ -992,12 +999,13 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       s.burnout = 0; s.overdrive = odMax(); s.mythic = 7;
       s.lightUsed = false; s.active = []; s.pending = []; s.stun = LP().stunUses;
       s.expLocked = false; /* a new day: she may pick a different experimental spell */
+      clearScene(s);
       var healed = s.strDmg > 0;
       if (healed) s.strDmg -= 1;
       /* natural healing after 8 hours of rest: 1 hp per level, the panther 1 per Hit Die */
       var lv = s.level, hdP = Levels.prog(lv).pet.hd;
       s.hp = Math.min(hpMax(), s.hp + lv); s.petHp = Math.min(petMax(), s.petHp + hdP);
-      log("New day: overdrive " + s.overdrive + ", mythic power 7, burnout 0, Stunning Fist " + s.stun + ", hp +" + lv + " (panther +" + hdP + ")" + (healed ? ", Strength damage −1" : ""));
+      log("New day: overdrive " + s.overdrive + ", mythic power 7, burnout 0, Stunning Fist " + s.stun + ", hp +" + lv + " (panther +" + hdP + ")" + (healed ? ", Strength damage −1" : "") + ", favored enemy and terrain off");
     });
     render();
   }

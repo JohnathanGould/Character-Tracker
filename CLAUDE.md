@@ -51,7 +51,7 @@ Keep the look (black background, silver-blue accent, Marcellus / Albert Sans / I
 - **Mythic.** 7 power per day. Wild Arcana costs 1, is a standard action (per the Mythic Adventures FAQ), casts any spell on her list, known or not, with casting time 1 standard action or less, and gives +2 CL. Elemental Bond (fire) gives +2 CL to fire-descriptor spells and fire resistance 10. Eldritch Breach rolls caster level checks twice.
 - **Blood Money** is a swift action: 1d6 damage, and blood replaces one material component this round. Components over 1 gp cost 1 Strength damage plus 1 per full 500 gp.
 - **Detonate**: costs 50 gp in vials, max 10d8, holds a concentration slot for 1 round.
-- Top bar order: Reset, End round, New day (spells are cast from the Spells panel only). Reset clears concentration. New day needs two taps.
+- Top bar order: Reset, End round, New day (spells are cast from the Spells panel only). Reset clears concentration. Reset and New day both turn off favored enemy (`cond.target`) and favored terrain (`cond.forest`) (`clearScene`). New day needs two taps.
 - **Hit points.** Daerlieth 82 max; Hard to Kill: stabilizes below 0, dies at -32 (twice Con 16). Gwathfaron (panther companion) 50 max, dies at -15. New day heals 8 and 7 (natural healing).
 - **Stunning Fist** 2/day, refills on New day. **Mythic Surge** (+1d6 to a d20) and **Amazing Initiative** (extra standard action, no spells or artillery) each cost 1 mythic power.
 - **Mythic spells** (Mythic Spell Lore): fireball (d10s, burning 2d6/round on a failed save) and dimension door (one-way portal for up to CL allies), +1 mythic power each.
