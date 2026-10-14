@@ -219,6 +219,8 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
 .scard-text p { margin: 0 0 8px; }
 .scard-text h3 { font-family: var(--font-display); font-weight: 400; font-size: 1rem; margin: 10px 0 6px; color: var(--moon); }
 .helpform a { color: var(--moon); }
+.helpform ul.letter { margin: 0; padding-left: 18px; font-size: 0.9rem; line-height: 1.5; }
+.helpform ul.letter li { margin-bottom: 6px; }
 .helpform .explain { margin-top: 0; padding-top: 0; border-top: 0; }
 .big { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
 .bignum { font-family: var(--font-display); font-size: 3.2rem; line-height: 1; min-width: 2ch; }
@@ -1455,6 +1457,14 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   $("helpForm").addEventListener("submit", function (e) { e.preventDefault(); closeHelp(); });
   $("helpSheet").addEventListener("click", function (e) { if (e.target === $("helpSheet")) closeHelp(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("helpSheet").hidden) closeHelp(); });
+  /* letters of travel (her sheet): picking one shows it; works in the GM's view too */
+  document.addEventListener("change", function (e) {
+    var sel = e.target.closest && e.target.closest("select[data-letter]");
+    if (!sel || !sel.value) return;
+    var l = SheetEngine.LETTERS.filter(function (x) { return x.id === sel.value; })[0];
+    sel.value = "";
+    if (l) openInfo(l.name + " letter of travel", SheetEngine.letterHtml(l.id));
+  });
   function closeLevelUp() { $("lvlSheet").hidden = true; }
   $("lvlCancel").addEventListener("click", closeLevelUp);
   $("lvlSheet").addEventListener("click", function (e) { if (e.target === $("lvlSheet")) closeLevelUp(); });

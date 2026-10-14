@@ -583,13 +583,71 @@
     /* prose */
     var prose = [["Racial traits and feats", "feats"], ["Spell-less Ranger", "ranger"], ["Eternal Mage", "mage"], ["Mythic", "mythic"],
       ["Daily resources", "daily"], ["Gear and money", "gear"], ["Languages", "lang"], ["Description and background", "bg"]];
-    prose.forEach(function (p) { if (P[p[1]]) h += sec(p[0], P[p[1]], false); });
+    prose.forEach(function (p) { if (P[p[1]]) h += sec(p[0], P[p[1]], false); if (p[1] === "gear") h += lettersSec(); });
     h += '<p class="hint foot">Numbers above are live. The text sections come from the printed sheet and don\'t change with the toggles.</p>';
     return h;
   }
 
 
 
+
+  /* ---------- letters of travel: picked from a list on her sheet, each opens in the info dialog ---------- */
+  var MG_BASE = [
+    "A sheet of sturdy parchment with a lacquer seal and a small colour-coded ribbon attached.",
+    "It holds your given and sworn-to name, a description of your likeness, your given and sworn-to place of origin, and whether or not you're a magic-user (a tick box).",
+    "If the box is ticked, a second sheet is attached: your sworn statement that you're not an aberration cultist, nor a necromancer.",
+    "The seal at the bottom bears a simplified version of the High King's crest: a crown with rays connecting it to fields, valleys, a city and mountains, like rays of the sun. The symbols of Heironeous, St. Cuthbert and Pelor, together known as the Tri-theon, sit on the raised border of the seal at the cardinal West, East and South."
+  ];
+  var LETTERS = [
+    { id: "kibrat", name: "Kibrat Erbetsim", sub: "Issued to people who wish to travel abroad; not used inside Kibrat Erbetsim", items: [
+      "A square piece of vellum with a Celtic knot border, hand-drawn on each one.",
+      "It specifies which Duchy you're from.",
+      "It gives your name, or at least the name given at registration.",
+      "It carries a small drawing of your likeness as it was at registration.",
+      "A box to tick or leave for magic-use.",
+      "For a magic-user, room to describe any familiar, with at least its species and name.",
+      "Your signature or mark on a line, swearing the information given is correct.",
+      "A stamp at the bottom shows the sigil of the Duke or Duchess reigning at the time of registration."] },
+    { id: "mg-se", name: "Morningglory Kingdom: Southeast", ribbon: "Brown, with a single white line down the middle",
+      covers: "the Uestor Provinces: Georglant, Bolotastna, Dolistrana, Elderhoch, Steegildye, Kritzen, Kapsil and Bergeston", items: MG_BASE },
+    { id: "mg-ge", name: "Morningglory Kingdom: The Great East", ribbon: "Yellow, with a white border",
+      covers: "Königsland, Sosserfann, Tempenkirn, Püresienstadt and Osterfeldte", items: MG_BASE },
+    { id: "mg-ne", name: "Morningglory Kingdom: The Northeast", ribbon: "White, with a black border",
+      covers: "Atmodtor, Dekkenholt, Barnheloff, Seeventor, Gausweer, Nortvoll, Eschen, Lassensil and Osterweer", items: MG_BASE },
+    { id: "mg-nw", name: "Morningglory Kingdom: Neesenwald", ribbon: "Green, with a black border", covers: "Neesenwald",
+      items: MG_BASE.concat(["It contains a small text in the Elven alphabet, though the language is Welorlarfe.",
+        "You also sign a declaration that you're not a lycanthrope."]) },
+    { id: "mg-radia", name: "Morningglory Kingdom: Radia", ribbon: "Cerulean, with three concentric circles in white",
+      covers: "the city of Radia, a special case: it lies within the borders of Königsland",
+      items: MG_BASE.concat(["Otherwise the same as the Great East letter."]) },
+    { id: "eniran", name: "Eniran", ribbon: "Light blue; letters issued later than 1089 have a white starburst on the ribbon",
+      items: ["Basically a copy of a Morningglory Kingdom letter of travel, except for the seal and ribbon."].concat(MG_BASE.slice(0, 3), [
+        "The lacquer seal shows a silhouette of Mount Kashurra as seen from the East, and the holy symbols of the Tri-theon."]) },
+    { id: "ekur", name: "Ekuran", items: [
+      "An alchemically treated sheet of paper with the city seal embossed in the lower right corner.",
+      "It has your name, at least the one you gave at registration.",
+      "It states Ekur as your residence or nationality (one of the two is blotted out).",
+      "People arriving without a letter of travel are made to register for one at the gate and are marked as Resident.",
+      "A description of your likeness.",
+      "A line quoting your own description of your potential magic-use.",
+      "If you're a magic-user, a line describing any familiar you might have."] },
+    { id: "serasole", name: "Serasole", items: [
+      "It has the name you've given, where you have said you're from, and a description of your likeness.",
+      "They will have asked whether you're a magic-user.",
+      "Then a wax seal is added, made by stamping the heads side of a local Aûn (a platinum piece) into the hot wax."] }
+  ];
+  function letterHtml(id) {
+    var l = LETTERS.filter(function (x) { return x.id === id; })[0];
+    if (!l) return "";
+    return (l.sub ? '<p class="hint">' + esc(l.sub) + "</p>" : "") +
+      '<dl class="rows">' + (l.covers ? "<dt>Covers</dt><dd>" + esc(l.covers) + "</dd>" : "") + (l.ribbon ? "<dt>Ribbon</dt><dd>" + esc(l.ribbon) + "</dd>" : "") + "</dl>" +
+      '<ul class="letter">' + l.items.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul>";
+  }
+  function lettersSec() {
+    return sec("Letters of travel", '<label class="field lettpick">Choose a letter to see it<select data-letter="1"><option value="">Choose…</option>' +
+      LETTERS.map(function (l) { return '<option value="' + l.id + '">' + esc(l.name) + "</option>"; }).join("") + "</select></label>" +
+      '<p class="hint">' + LETTERS.length + " letters: " + LETTERS.map(function (l) { return esc(l.name); }).join(" · ") + "</p>", false);
+  }
 
   /* ---------- level-up picks ----------
      Every pick she makes herself (Levels.choices), grouped by level, each saved in state.picks[id] as she types.
@@ -782,7 +840,7 @@
   }
 
   function d0level(st) { return levelOf(st); }
-  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, petRanks: petRanks, ranksOf: ranksOf, SKILLS: SKILLS, hpMaxOf: hpMaxOf, levelOf: levelOf, FX_UNITS: FX_UNITS, fxLeft: fxLeft, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
+  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, petRanks: petRanks, ranksOf: ranksOf, SKILLS: SKILLS, hpMaxOf: hpMaxOf, levelOf: levelOf, FX_UNITS: FX_UNITS, LETTERS: LETTERS, letterHtml: letterHtml, fxLeft: fxLeft, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
   root.SheetEngine = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
