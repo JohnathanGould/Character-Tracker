@@ -756,7 +756,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
     switch (sp.calc) {
       case "art": {
-        var n = Math.max(0, 6 - Math.floor(s.burnout / 2)), f = d8 ? 8 : 6;
+        var n = Math.max(0, LP().artDice - Math.floor(s.burnout / 2)), f = d8 ? 8 : 6;
         rows.push(["Damage", n + "d" + f + "+" + dv().sp.artFlat + " arcane, avg " + avg(n, f, dv().sp.artFlat) + (d8 ? " (artillery overdrive d8)" : "")]);
         if (ui.mode === "std") rows.push(["Delivery", "Ranged touch +" + dv().rtouch + ", 30 ft, standard action"]);
         if (ui.mode === "sniper") rows.push(["Delivery", "Ranged touch +" + dv().rtouch + ", 120 ft (Artillery Sniper)"]);
@@ -834,6 +834,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       rows.push(["Duration", sp.dtext ? (sp.dtext + (dur > 0 ? " = " + fmtDur(dur) : "") + ", uses a concentration slot") : (sp.fixed ? "1 round, then instantaneous" : dur < 0 ? "While she concentrates" : fmtDur(dur)) + ", uses a concentration slot until it goes off"]);
     }
 
+    if (sp.custom) rows.push(["Wild Arcana", "Standard action, 1 mythic power, CL +2"]);
+    if (sp.exp && SPELLS.concat(knownSpells()).some(function (k) { return k.name.toLowerCase() === sp.name.toLowerCase(); })) rows.push(["Note", "She already knows this spell; the experimental pick only adds +1 burnout."]);
     var mythCost = (wa ? 1 : 0) + (myth ? 1 : 0);
     if (s.mythic < mythCost) problems.push(mythCost > 1 ? "Wild Arcana and the mythic version need 2 mythic power; she has " + s.mythic + "." : wa ? "No mythic power left for Wild Arcana." : "No mythic power left for the mythic version.");
 
@@ -1060,8 +1062,12 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       "<p><b>What it is.</b> Daerlieth has no spell slots. Burnout is the only limit on how much she casts, and it builds up as she does.</p>" +
       "<p><b>When it goes up.</b> Each time she casts a spell of 1st level or higher. Press Cast spell in the top bar and choose a spell under its level, or cast one from the list. Either way the round advances. The + and − buttons are only for fixing a mistake.</p>" +
       '<div class="costs">' +
-      '<span class="chip">Orisons: 0</span><span class="chip">1st and 2nd level: 0</span><span class="chip hot">3rd level: +1</span><span class="chip hot">4th level: +2</span><span class="chip hot">Experimental spell: +1 extra</span></div>' +
-      "<p>Arcane artillery is treated as a spell of half her level, so 4th level (+2). Haste as the experimental spell is 3rd level plus 1, so +2. Spending 1 overdrive on a cast ignores up to 4 burnout from it.</p>" +
+      '<span class="chip">Orisons: 0</span>' + (function () {
+        var out = "", P = LP();
+        for (var l = 1; l <= P.maxSpell; l++) { var g = Math.max(0, l - P.buffer); out += '<span class="chip' + (g ? " hot" : "") + '">' + ordinal(l) + " level: " + (g ? "+" + g : "0") + "</span>"; }
+        return out;
+      })() + '<span class="chip hot">Experimental spell: +1 extra</span></div>' +
+      "<p>Arcane artillery is treated as a spell of half her level, so " + ordinal(LP().artLvl) + " level (+" + Math.max(0, LP().artLvl - LP().buffer) + "). Spending 1 overdrive on a cast ignores up to " + LP().odIgnore + " burnout from it.</p>" +
       "<p><b>When it goes down.</b> At the end of any round where she gained no burnout, she recovers 1. Press No cast to pass a round without casting. A cast that adds no burnout, such as an orison or a 1st or 2nd level spell, also lets her recover 1.</p>" +
       "<p><b>What it does while it is up.</b> Each point lowers her caster level by 1, which shortens durations and cuts dice such as fireball's. Every 2 points also lower spell DCs by 1 and artillery damage by 1d6. The burnout bar marks each step.</p>" +
       "</div>";
@@ -1128,7 +1134,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       withCol("x", function (sp) { return castHtml(sp, "x"); }) + "</div>";
     var waCur = bankFind(ui.customName, ui.customLvl), waOpts = '<option value="">Choose a spell…</option>';
     for (var wl = 1; wl <= LP().maxSpell; wl++) {
-      waOpts += '<optgroup label="' + ordinal(wl) + ' level">' + BANK.filter(function (b) { return b.lvl === wl; }).map(function (b) {
+      waOpts += '<optgroup label="' + ordinal(wl) + ' level">' + BANK.filter(function (b) { return b.lvl === wl && !b.slow; }).map(function (b) {
         return '<option value="' + b.id + '"' + (waCur && waCur.id === b.id ? " selected" : "") + ">" + esc(b.name) + (SCHOOLS[b.sch] ? " (" + SCHOOLS[b.sch] + ")" : "") + "</option>";
       }).join("") + "</optgroup>";
     }
@@ -1175,17 +1181,17 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         "</select></label></div>";
     }
     var odDis = state.overdrive < 1 || !c.odUseful;
-    var odHint = state.overdrive < 1 ? "Pool is empty" : !c.odUseful ? "No burnout to ignore" : "Free action. Ignores up to 4 burnout from this cast";
+    var odHint = state.overdrive < 1 ? "Pool is empty" : !c.odUseful ? "No burnout to ignore" : "Free action. Ignores up to " + LP().odIgnore + " burnout from this cast";
     var d8Dis = !c.d8 && (state.overdrive - (c.od ? 1 : 0)) < 1;
     var d8Hint = d8Dis ? "No overdrive left after the other spend" : "Damage die becomes d8";
-    var waDis = state.mythic < 1 || sp.custom;
+    var waDis = state.mythic < 1;
     var mythDis = !c.myth && state.mythic < 1;
-    var waHint = sp.custom ? "Always used for a spell outside her known list" : state.mythic < 1 ? "No mythic power left" : "Standard action, CL +2 for this spell";
+    var waHint = state.mythic < 1 ? "No mythic power left" : "Standard action, CL +2 for this spell";
     opts += '<div class="opts">' +
       '<label class="opt' + (odDis ? " dis" : "") + '"><input type="checkbox" id="odChk' + X + '"' + (c.od ? " checked" : "") + (odDis ? " disabled" : "") + '><span>Spend 1 overdrive to ignore burnout<small>' + odHint + "</small></span></label>" +
       (sp.art ? '<label class="opt' + (d8Dis ? " dis" : "") + '"><input type="checkbox" id="d8Chk' + X + '"' + (c.d8 ? " checked" : "") + (d8Dis ? " disabled" : "") + '><span>Artillery overdrive, 1 more overdrive<small>' + d8Hint + "</small></span></label>" : "") +
       (sp.myth ? '<label class="opt' + (mythDis ? " dis" : "") + '"><input type="checkbox" id="mythChk' + X + '"' + (c.myth ? " checked" : "") + (mythDis ? " disabled" : "") + '><span>Mythic version, 1 mythic power<small>' + (mythDis ? "No mythic power left" : sp.calc === "fb" ? "d10s instead of d6s, and targets that fail catch fire" : "One-way portal her chosen allies can use") + "</small></span></label>" : "") +
-      '<label class="opt' + (waDis ? " dis" : "") + '"><input type="checkbox" id="waChk' + X + '"' + (c.wa ? " checked" : "") + (waDis ? " disabled" : "") + '><span>Wild Arcana, 1 mythic power<small>' + waHint + "</small></span></label>" +
+      "" +
       "</div>";
 
     var gainCls = c.burn > 0 ? "gain" : "zero";
@@ -1313,14 +1319,17 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     $("pLog").innerHTML = '<div class="ph"><h2>Log</h2><button class="btn sm" data-act="clearlog"' + (state.log.length ? "" : " disabled") + ">Clear log</button></div>" + h;
   }
 
+  var rulesLvl = 0;
   function renderRules() {
+    if (rulesLvl === state.level) return; /* only when her numbers change, so open sections stay open */
+    rulesLvl = state.level;
     $("pRules").innerHTML =
       '<div class="ph"><h2>Rules at the table</h2></div>' +
       "<details open><summary>How burnout works</summary><ul>" +
-      "<li>Casting a spell of 1st level or higher adds its level in burnout, minus 2 from arcane buffer (minimum 0), plus 1 for the experimental spell.</li>" +
+      "<li>Casting a spell of 1st level or higher adds its level in burnout, minus " + LP().buffer + " from arcane buffer (minimum 0), plus 1 for the experimental spell.</li>" +
       "<li>Burnout points each give −1 caster level. Every 2 points give −1 DC and −1d6 artillery damage.</li>" +
       "<li>At the end of any round where she gained no burnout, she recovers 1.</li>" +
-      "<li>Spending 1 overdrive point (a free action) ignores up to 4 burnout from one spell. A cast that ends at 0 burnout still counts as a clean round. The pool refills after 8 hours of sleep.</li>" +
+      "<li>Spending 1 overdrive point (a free action) ignores up to " + LP().odIgnore + " burnout from one spell. A cast that ends at 0 burnout still counts as a clean round. The pool refills after 8 hours of sleep.</li>" +
       "<li>At caster level 0 she can only cast orisons.</li></ul></details>" +
       "<details><summary>Mythic</summary><ul>" +
       "<li>Wild Arcana (per the Mythic Adventures FAQ): standard action, 1 mythic power. Cast any arcane spell from her list, known or not, with a casting time of 1 standard action or less, CL +2. Metamagic allowed if the adjusted level stays within her highest castable level.</li>" +
@@ -1330,7 +1339,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
   function trayOptions(L) {
     var out = [];
-    SPELLS.forEach(function (sp) {
+    SPELLS.concat(knownSpells()).forEach(function (sp) {
       if (sp.lvl !== L || sp.calc === "bm") return;
       if (sp.calc === "det") {
         ["fire", "acid", "cold", "electricity"].forEach(function (el) { out.push({ v: sp.id + "|" + el, t: "Detonate, " + el, g: baseGain(sp) }); });
@@ -1351,7 +1360,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     tray.hidden = !ui.tray;
     if (!ui.tray) return;
     var h = '<span class="lbl">Cast a spell</span>';
-    for (var L = 0; L <= 4; L++) {
+    for (var L = 0; L <= Math.max(4, LP().maxSpell); L++) {
+      if (L > 4 && !trayOptions(L).length) continue;
       var opts = '<option value="">Choose a spell</option>' + trayOptions(L).map(function (o) {
         return '<option value="' + o.v + '">' + esc(o.t) + (o.g > 0 ? " (+" + o.g + ")" : "") + "</option>";
       }).join("");
@@ -1369,7 +1379,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     $("dayBtn").textContent = ui.dayArmed ? "Confirm new day" : "New day";
     $("dayBtn").classList.toggle("warn", ui.dayArmed);
     renderTray();
-    renderBurn(); renderOver(); renderMyth(); renderSpells(); renderSlots(); renderBody(); renderLog();
+    renderBurn(); renderOver(); renderMyth(); renderSpells(); renderSlots(); renderBody(); renderLog(); renderRules();
     renderSheet();
   }
 
