@@ -126,8 +126,8 @@
     ["Sense Motive", "wis", 8, 1, 0, 0], ["Spellcraft", "int", 8, 1, 1, 0], ["Stealth", "dex", 8, 1, 0, 0, 1], ["Survival", "wis", 8, 1, 0, 0],
     ["Swim", "str", 1, 1, 0, 0, 1], ["Use Magic Device", "cha", 8, 1, 1, 0],
     ["Appraise", "int", 0, 0, 0, 1], ["Artistry", "int", 0, 0, 0, 1], ["Craft", "int", 0, 0, 0, 1], ["Handle Animal", "cha", 8, 1, 1, 1],
-    ["Knowledge (history)", "int", 4, 1, 1, 1], ["Linguistics", "int", 4, 1, 1, 1], ["Lore", "int", 0, 0, 0, 1], ["Perform", "cha", 0, 0, 0, 1],
-    ["Profession", "wis", 0, 0, 1, 1], ["Sleight of Hand", "dex", 0, 0, 1, 1, 1]
+    ["Knowledge (history)", "int", 3, 1, 1, 1], ["Linguistics", "int", 4, 1, 1, 1], ["Lore", "int", 0, 0, 0, 1], ["Perform", "cha", 0, 0, 0, 1],
+    ["Profession", "wis", 0, 0, 1, 1], ["Sleight of Hand", "dex", 1, 0, 1, 1, 1]
   ];
   /* her ranks: state.ranks {skill: n} once she places new ranks at level-up, else the printed sheet's */
   function ranksOf(st) {
@@ -736,7 +736,7 @@
   }
   function takeCell(name, total) {
     var t = takes(name, total);
-    return '<span class="num">' + (t.t10 == null ? "—" : t.t10) + "/" + (t.t20 == null ? "—" : t.t20) + "</span>";
+    return '<span class="num">' + (t.t10 == null ? "--" : t.t10) + "/" + (t.t20 == null ? "--" : t.t20) + "</span>";
   }
   function takeText(name, total) {
     var t = takes(name, total);
