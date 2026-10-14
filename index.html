@@ -237,6 +237,7 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
 .scard-text p { margin: 0 0 8px; }
 .scard-text h3 { font-family: var(--font-display); font-weight: 400; font-size: 1rem; margin: 10px 0 6px; color: var(--moon); }
 .helpform a { color: var(--moon); }
+.helpform .feattext { font-size: 0.92rem; line-height: 1.5; margin: 8px 0; }
 .helpform ul.letter { margin: 0; padding-left: 18px; font-size: 0.9rem; line-height: 1.5; }
 .helpform ul.letter li { margin-bottom: 6px; }
 .helpform .explain { margin-top: 0; padding-top: 0; border-top: 0; }
@@ -1531,6 +1532,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-help]");
     if (t) { openInfo("How burnout works", burnHelpHtml()); return; }
+    t = e.target.closest("[data-feat]");
+    if (t) { var fn = t.getAttribute("data-feat"); openInfo(fn, SheetEngine.featHtml(fn)); return; }
     t = e.target.closest("[data-spell]");
     if (!t) return;
     e.preventDefault();

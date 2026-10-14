@@ -583,13 +583,116 @@
     /* prose */
     var prose = [["Racial traits and feats", "feats"], ["Spell-less Ranger", "ranger"], ["Eternal Mage", "mage"], ["Mythic", "mythic"],
       ["Daily resources", "daily"], ["Gear and money", "gear"], ["Languages", "lang"], ["Description and background", "bg"]];
-    prose.forEach(function (p) { if (P[p[1]]) h += sec(p[0], P[p[1]], false); if (p[1] === "gear") h += lettersSec(); });
+    /* the feat list is built (featsSec) with a button per feat; the printed sheet's feat paragraph is left out */
+    h += featsSec(st);
+    prose.forEach(function (p) { if (p[1] !== "feats" && P[p[1]]) h += sec(p[0], P[p[1]], false); if (p[1] === "gear") h += lettersSec(); });
     h += '<p class="hint foot">Numbers above are live. The text sections come from the printed sheet and don\'t change with the toggles.</p>';
     return h;
   }
 
 
 
+
+  /* ---------- feats, traits and talents: a button per entry (hover = summary, tap = full text in the info dialog) ---------- */
+  var FEAT_INFO = {
+    /* racial (moon elf, alternate features) */
+    "low-light vision": ["Racial", "Sees twice as far as a human in dim light.", "She can see twice as far as a human in starlight, moonlight, torchlight and similar dim light, and still tells colours and details apart in those conditions."],
+    "keen senses": ["Racial", "+2 Perception.", "Elves have keen senses: +2 racial bonus on Perception checks."],
+    "silver-tongued diplomacy": ["Racial (alternate)", "+2 Diplomacy and Bluff, 1 extra language.", "+2 racial bonus on Diplomacy and Bluff checks, and one extra bonus language. Replaces Elven Magic."],
+    "wanderer's stride": ["Racial (alternate)", "+5 ft speed; ignores natural difficult terrain.", "Her base speed rises by 5 ft and she moves through natural difficult terrain (undergrowth, rubble, shallow bog) at normal speed. Replaces Elven Weapon Familiarity."],
+    "moonlight resilience": ["Racial (alternate)", "Cold resistance 5; light or dancing lights 1/day.", "Cold resistance 5. Once a day she can produce light or dancing lights as a spell-like ability (no burnout). Replaces Elven Immunities."],
+    /* traits */
+    "reactionary": ["Trait (combat)", "+2 initiative.", "+2 trait bonus on initiative checks."],
+    "friend in every town": ["Trait (social)", "+1 Diplomacy and Knowledge (local); Diplomacy is a class skill.", "+1 trait bonus on Diplomacy and Knowledge (local) checks, and Diplomacy is always a class skill for her."],
+    /* her feats */
+    "weapon finesse": ["Combat feat", "Dex instead of Str on attack rolls with light weapons, unarmed strikes included.", "With light weapons (unarmed strikes and natural weapons count), rapiers, whips and spiked chains she adds her Dex modifier instead of Str to attack rolls. Damage still uses Str. A shield's armor check penalty applies to these attack rolls."],
+    "improved unarmed strike": ["Combat feat", "Unarmed strikes count as armed: no attacks of opportunity, lethal damage.", "She is considered armed when unarmed: attacking unarmed doesn't provoke attacks of opportunity, she threatens squares with her fists, and she chooses lethal or nonlethal damage freely."],
+    "two-weapon fighting": ["Combat feat", "Penalties for fighting with two weapons drop to −2/−2 with a light off-hand.", "Two-weapon penalties fall by 2 on the primary hand and 6 on the off hand. With a light off-hand weapon (an unarmed strike counts) that is −2 on every attack. She gets one extra off-hand attack in a full attack."],
+    "weapon focus": ["Combat feat", "+1 on attack rolls with the chosen weapon (unarmed strike).", "+1 on all attack rolls with the chosen weapon. Hers is the unarmed strike. A prerequisite for Dazzling Display and other weapon feats."],
+    "weapon focus (unarmed strike)": ["Combat feat", "+1 on attack rolls with unarmed strikes.", "+1 on all attack rolls with her unarmed strikes. A prerequisite for Dazzling Display and other weapon feats."],
+    "improved two-weapon fighting": ["Combat feat", "A second off-hand attack at −5.", "In a full attack she gets a second attack with her off hand, at a −5 penalty (on top of the usual two-weapon penalties)."],
+    "greater two-weapon fighting": ["Combat feat", "A third off-hand attack at −10.", "In a full attack she gets a third attack with her off hand, at a −10 penalty. The tracker adds this strike to her Attacks table when the feat is picked."],
+    "expanded arcana": ["General feat", "One extra spell known (hers: detonate).", "Adds one spell from her class list to her spells known, of any level she can cast. (Or two spells, both at least one level below her highest.) Hers is detonate, 4th level."],
+    "combat reflexes": ["Combat feat", "Extra attacks of opportunity (Dex bonus), and while flat-footed.", "She can make a number of extra attacks of opportunity each round equal to her Dex bonus, and can make them while flat-footed."],
+    "dodge": ["Combat feat", "+1 dodge bonus to AC.", "+1 dodge bonus to AC. Lost whenever she loses her Dex bonus to AC."],
+    "mobility": ["Combat feat", "+4 AC against attacks of opportunity from moving.", "+4 dodge bonus to AC against attacks of opportunity provoked by moving out of or within a threatened area."],
+    "combat expertise": ["Combat feat", "Trade attack for AC: −1 attack, +1 dodge AC per 4 BAB.", "Before attacking she can take −1 on melee attacks and combat maneuver checks for +1 dodge bonus to AC, plus another −1/+1 per 4 points of base attack bonus. A prerequisite for many maneuver and teamwork feats (Pack Flanking among them)."],
+    "dazzling display": ["Combat feat", "Full-round action: Intimidate every foe within 30 ft that can see her.", "While wielding a weapon she has Weapon Focus in (her unarmed strike), a full-round action to demoralize every foe within 30 ft that can see her, with one Intimidate check."],
+    "shatter defenses": ["Combat feat", "Shaken foes she hits are flat-footed to her until the end of her next turn.", "Any shaken, frightened or panicked opponent she hits this round is flat-footed against her attacks until the end of her next turn, including the hit that triggered it. Flat-footed means denied its Dex bonus, which turns on her stealth attack (ranged within 30 ft too)."],
+    "point-blank shot": ["Combat feat", "+1 attack and damage with ranged attacks within 30 ft.", "+1 on attack and damage rolls with ranged weapons at ranges up to 30 ft."],
+    "precise shot": ["Combat feat", "No −4 for shooting into melee.", "She can shoot or throw ranged weapons at an opponent engaged in melee without the −4 penalty."],
+    /* teamwork */
+    "coordinated companion": ["Teamwork (archetype bonus, 4th)", "Gwathfaron counts as having every teamwork feat she has.", "Her animal companion is considered to have any teamwork feat she possesses, while he is within 30 ft and can see or hear her (or is otherwise aware of her position). He can only coordinate with her this way, not with other allies."],
+    "bonded mind": ["Teamwork (archetype bonus, 4th)", "Silent messages with an ally who has the feat, while in sight.", "While she and an ally with the feat can see each other, they can trade messages as the message spell, with no whispering or pointing, and nobody can overhear. Gwathfaron can use it with her through Coordinated Companion."],
+    "outflank": ["Teamwork", "Flanking bonus +4 instead of +2; a crit gives the partner an attack of opportunity.", "When she and an ally with this feat flank the same creature, the flanking bonus on attack rolls is +4 instead of +2. When either of them scores a critical hit against the flanked creature, the other may make an attack of opportunity against it. Melee only. Prerequisite: BAB +4."],
+    "precise strike": ["Teamwork", "+1d6 precision damage on melee hits while flanking with a partner.", "Whenever she and an ally with this feat flank the same creature, each deals +1d6 precision damage with every melee hit. Not multiplied on a critical; creatures immune to precision damage ignore it. Melee only. Prerequisites: Dex 13, BAB +1."],
+    "stealth synergy": ["Teamwork", "Stealth together: each uses the best roll among them.", "When she and allies with this feat within 30 ft make Stealth checks at the same time, each takes the highest result of the group as their own. With Gwathfaron (+18) that lifts her Stealth to his."],
+    "pack flanking": ["Teamwork", "Flank automatically while her companion is adjacent.", "When she and her companion both have this feat, the companion is adjacent to her, and both threaten the same opponent, they count as flanking it regardless of positioning. Prerequisites: Int 13, Combat Expertise."],
+    "tandem trip": ["Teamwork", "Trips against a foe a partner threatens: roll twice, take the better.", "When she or a partner with this feat attempts a trip against an opponent the other threatens, roll the combat maneuver check twice and take the better result. Pairs with Gwathfaron's free trip on a bite."],
+    "lookout": ["Teamwork", "Act in the surprise round if an adjacent partner can.", "When she is adjacent to an ally with this feat and the ally is aware of the enemy in a surprise round, she can act too. If she would act anyway, she uses the higher initiative."],
+    "allied spellcaster": ["Teamwork", "+2 on checks to beat spell resistance next to a partner.", "When adjacent to an ally with this feat, +2 competence bonus on caster level checks to overcome spell resistance (more if the ally knows the same spell)."],
+    "paired opportunists": ["Teamwork", "+4 on attacks of opportunity against foes both threaten.", "When adjacent to an ally with this feat, +4 on attacks of opportunity against creatures you both threaten, and an enemy that provokes from the ally provokes from her too."],
+    /* combat style (unarmed, prerequisites waived) */
+    "monastic legacy": ["Combat style (unarmed, 2nd)", "Unarmed damage as a monk of half her other levels (1d8 now).", "Her unarmed strikes deal damage as a monk whose level is half her levels in other classes, plus any monk levels. At 8th level that is an effective monk level of 4: 1d8."],
+    "stunning fist": ["Combat style (unarmed, 6th)", "Declare before an unarmed hit: Fort save or stunned 1 round.", "Declared before the attack roll, once per round. If the unarmed strike hits, the target makes a Fortitude save (DC 10 + half her level + Wis) or is stunned until just before her next turn. Uses per day are tracked under Hit points; a missed attack still spends the use."],
+    /* ranger talents */
+    "skirmishing attack": ["Ranger talent", "Move 10 ft and attack: the first attack counts as against a flat-footed foe.", "Whenever she moves at least 10 ft and attacks in the same round, she can apply stealth attack damage (if she otherwise qualifies by terrain or favored enemy) to her first attack, as though the target were flat-footed."],
+    "improved stealth attack": ["Ranger talent", "+1d6 stealth attack damage.", "Adds 1d6 to her stealth attack damage."],
+    "deadly range": ["Ranger talent", "Stealth attack range +10 ft (stacks).", "Increases the range at which her ranged stealth attacks work by 10 ft (from 30 ft). Can be taken more than once; the effects stack."],
+    "hawk's eyes": ["Ranger talent", "Standard action: a ranged attack ignoring concealment and partial/soft cover.", "As a standard action, a ranged attack that ignores concealment (not total concealment), soft cover and partial cover, and can still deal stealth attack damage."],
+    /* enhanced companion */
+    "improved animal companion": ["Ranger bonus feat (Enhanced Companion, 7th)", "Gwathfaron: +1d8 hp, +1 Dex, +2 natural armor.", "Her animal companion gains an extra Hit Die's worth of hit points (+1d8), +1 Dex and +2 natural armor. All are counted on Gwathfaron's tab."],
+    "greater animal companion": ["Ranger bonus feat (Enhanced Companion)", "A bonus animal feat for Gwathfaron; share stealth attack and fast movement.", "Gwathfaron gains a bonus feat, and as a move action she can grant him her stealth attack and fast movement for a time."],
+    /* mythic */
+    "mythic spell lore": ["Mythic feat (tier 1)", "Mythic versions of fireball and dimension door.", "She learns mythic spells equal to her tier (2 now: fireball and dimension door) and can spend 1 mythic power when casting them to use the mythic version. See the Mythic version option on those spells."],
+    /* Gwathfaron's */
+    "skill focus": ["General feat", "+3 on one skill (+6 at 10 ranks).", "+3 on all checks with the chosen skill, rising to +6 once he has 10 ranks in it."],
+    "skill focus (stealth)": ["General feat", "+3 Stealth (+6 at 10 ranks).", "+3 on Stealth checks, rising to +6 at 10 ranks."],
+    "skill focus (perception)": ["General feat", "+3 Perception (+6 at 10 ranks).", "+3 on Perception checks, rising to +6 at 10 ranks."],
+    "stealthy": ["General feat", "+2 Stealth and Escape Artist.", "+2 on Stealth and Escape Artist checks (+4 with 10 ranks in a skill)."],
+    "alertness": ["General feat", "+2 Perception and Sense Motive.", "+2 on Perception and Sense Motive checks (+4 with 10 ranks in a skill). Not on the animal feat list; his Int 3 lets him take any feat he can use."],
+    "multiattack": ["Monster feat (bonus at effective druid level 9)", "Secondary natural attacks at −2 instead of −5.", "His secondary natural attacks (the claws) take only −2 on attack rolls instead of −5."]
+  };
+  function featInfo(name) {
+    var n = String(name || "").trim(), k = n.toLowerCase();
+    return FEAT_INFO[k] || FEAT_INFO[k.replace(/\s*\(.*\)$/, "")] || null;
+  }
+  function featBtn(name, label) {
+    var f = featInfo(name);
+    return '<button type="button" class="featbtn tip" data-feat="' + esc(name) + '" data-tip="' + esc(f ? f[1] : "Tap for details") + '">' + esc(label || name) + "</button>";
+  }
+  function featHtml(name) {
+    var f = featInfo(name);
+    var url = "https://aonprd.com/Search.aspx?Query=" + encodeURIComponent(String(name).replace(/\s*\(.*\)$/, ""));
+    return (f ? '<p class="hint">' + esc(f[0]) + '</p><p class="feattext">' + esc(f[2]) + "</p>" : '<p class="hint">No description recorded for this one yet.</p>') +
+      '<p class="hint"><a href="' + esc(url) + '" target="_blank" rel="noopener">Look it up on Archives of Nethys</a></p>';
+  }
+  /* her feats, traits and talents, built from the printed sheet plus her level-up picks */
+  function featsSec(st) {
+    var pk = picksOf(st), L = levelOf(st);
+    var row = function (lvl, name, note) { return "<li><span class=\"flv\">" + esc(lvl) + "</span>" + featBtn(name) + (note ? ' <span class="hint">' + esc(note) + "</span>" : "") + "</li>"; };
+    var open = function (lvl, id, what) { return pk[id] ? row(lvl, pk[id]) : "<li><span class=\"flv\">" + esc(lvl) + '</span><span class="hint">' + esc(what) + " (open, see Level-up picks)</span></li>"; };
+    var g = function (title, items) { return items.length ? '<div class="fgroup"><div class="gl">' + esc(title) + '</div><ul class="featlist">' + items.join("") + "</ul></div>" : ""; };
+    var regular = [row("L1", "Weapon Finesse"), row("L1", "Improved Unarmed Strike"), row("L3", "Two-Weapon Fighting"), row("L3", "Weapon Focus (unarmed strike)"),
+      open("L5", "feat-5a", "Feat"), open("L5", "feat-5b", "GM's extra feat"), row("L7", "Improved Two-Weapon Fighting"), row("L7", "Expanded Arcana", "detonate")];
+    var style = [row("L2", "Monastic Legacy"), row("L6", "Stunning Fist")], tal = [row("L4", "Skirmishing Attack"), row("L7", "Improved Stealth Attack")], ec = [row("L7", "Improved Animal Companion")];
+    for (var l = 9; l <= L; l++) {
+      if (l % 2) { regular.push(open("L" + l, "feat-" + l + "a", "Feat")); regular.push(open("L" + l, "feat-" + l + "b", "GM's extra feat")); }
+      if ([10, 14, 18].indexOf(l) >= 0) style.push(open("L" + l, "cs-" + l, "Combat style feat"));
+      if ([9, 11, 13, 16, 19].indexOf(l) >= 0) tal.push(open("L" + l, "tal-" + l, "Ranger talent"));
+      if ([10, 13, 16, 19].indexOf(l) >= 0) ec.push(open("L" + l, "ec-" + l, "Enhanced Companion feat"));
+    }
+    return sec("Feats, traits and talents",
+      '<p class="hint">Hover or tap a name for what it does; tap for the full text.</p>' +
+      g("Racial (moon elf, alternate features)", ["Low-Light Vision", "Keen Senses", "Silver-Tongued Diplomacy", "Wanderer's Stride", "Moonlight Resilience"].map(function (n) { return row("", n); })) +
+      g("Traits", [row("", "Reactionary"), row("", "Friend in Every Town")]) +
+      g("Feats (the normal feat plus the GM's extra feat at odd levels)", regular) +
+      g("Teamwork (Companion-Bound, 4th; Gwathfaron shares them)", [row("L4", "Coordinated Companion"), row("L4", "Bonded Mind")]) +
+      g("Combat style (unarmed, prerequisites waived)", style) +
+      g("Ranger talents", tal) +
+      g("Enhanced Companion", ec) +
+      g("Mythic", [row("T1", "Mythic Spell Lore")]), false);
+  }
 
   /* ---------- letters of travel: picked from a list on her sheet, each opens in the info dialog ---------- */
   var MG_BASE = [
@@ -804,12 +907,13 @@
       '<p class="hint">' + p.ranksMax + " ranks: 1 per Hit Die from the companion table (Int would need to reach 10 to add more), at most " + p.hd + " in one skill. Rank buttons appear only while there are ranks to place." + ' Class skill +3 once a skill has a rank. All are animal companion class skills. Misc: Skill Focus and Stealthy on Stealth, Skill Focus and Alertness on Perception, Alertness on Sense Motive, Stealthy on Escape Artist, and her forest and favored enemy bonuses when those are on. Speed 50 ft gives +8 on Acrobatics checks to jump. Hover or tap a skill for the arithmetic.</p>', true);
 
     h += sec("Feats", "<ul>" +
-      "<li><b>Skill Focus (Stealth)</b>: +3 Stealth (+6 at 10 ranks).</li>" +
-      "<li><b>Skill Focus (Perception)</b>: +3 Perception (+6 at 10 ranks).</li>" +
-      "<li><b>Stealthy</b>: +2 Stealth and Escape Artist.</li>" +
-      "<li><b>Alertness</b>: +2 Perception and Sense Motive. Not on the Animal Feats list; Int 3 makes it legal.</li>" +
-      p.feats.slice(4).map(function (f) { return "<li><b>" + esc(f) + "</b> (picked at level-up)</li>"; }).join("") +
-      "<li><b>Bonded Mind</b> (teamwork, from Daerlieth through Coordinated Companion): silent messages between them while they can see each other.</li></ul>" +
+      "<li>" + featBtn("Skill Focus (Stealth)") + "</li>" +
+      "<li>" + featBtn("Skill Focus (Perception)") + "</li>" +
+      "<li>" + featBtn("Stealthy") + "</li>" +
+      "<li>" + featBtn("Alertness") + "</li>" +
+      p.feats.slice(4).map(function (f) { return "<li>" + featBtn(f) + ' <span class="hint">picked at level-up</span></li>'; }).join("") +
+      (LV().prog(levelOf(st)).pet.multiattack ? "<li>" + featBtn("Multiattack") + ' <span class="hint">bonus</span></li>' : "") +
+      "<li>" + featBtn("Bonded Mind") + ' <span class="hint">teamwork, from Daerlieth through Coordinated Companion</span></li></ul>' +
       '<p class="hint">' + cp.feats + " feats at " + p.hd + " HD" + (p.feats.length < cp.feats ? " (" + (cp.feats - p.feats.length) + " still to pick on Daerlieth's tab, Level-up picks)" : "") + ".</p>", false);
 
     h += sec("Tricks", "<p>" + cp.tricks + " tricks (6 from Int, " + (cp.tricks - 6) + " bonus):</p><ul>" +
@@ -840,7 +944,7 @@
   }
 
   function d0level(st) { return levelOf(st); }
-  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, petRanks: petRanks, ranksOf: ranksOf, SKILLS: SKILLS, hpMaxOf: hpMaxOf, levelOf: levelOf, FX_UNITS: FX_UNITS, LETTERS: LETTERS, letterHtml: letterHtml, fxLeft: fxLeft, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
+  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, petRanks: petRanks, ranksOf: ranksOf, SKILLS: SKILLS, hpMaxOf: hpMaxOf, levelOf: levelOf, FX_UNITS: FX_UNITS, LETTERS: LETTERS, letterHtml: letterHtml, featHtml: featHtml, fxLeft: fxLeft, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
   root.SheetEngine = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
