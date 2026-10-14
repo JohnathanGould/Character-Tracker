@@ -488,7 +488,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       </div>
     </div>
     <div class="clock">
-      <div class="round"><div class="rframe" aria-label="Current round"><b id="round" class="num">1</b><span class="lbl">Round</span></div><div class="rstep"><button class="btn rplus" data-act="roundplus" title="Next round, nothing done: counts durations down, and burnout drops by 1 if she gained none." aria-label="Next round (no actions)">+</button><button class="btn rplus" id="roundMinus" data-act="roundminus" title="Undo the last round: puts back the round number, burnout, spell and effect durations and This round as they were." aria-label="Undo the last round">−</button></div><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects and turns off favored enemy and terrain. Burnout carries over.">Reset</button></div>
+      <div class="round"><div class="rframe" aria-label="Current round"><b id="round" class="num">1</b><span class="lbl">Round</span></div><div class="rstep"><button class="btn rplus" data-act="roundplus" title="Next round, nothing done: counts durations down, and burnout drops by 1 if she gained none." aria-label="Next round (no actions)">+</button><button class="btn rplus" id="roundMinus" data-act="roundminus" title="Undo the last round (up to 20 back): puts everything back as it was at the end of that round: round, burnout, hit points, overdrive, mythic power, spells, effects, conditions and This round." aria-label="Undo the last round">−</button></div><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects and turns off favored enemy and terrain. Burnout carries over.">Reset</button></div>
       <button class="btn primary" data-act="nocast" title="End the round: durations count down, and burnout drops by 1 if she gained none this round. The round's actions move to Last round.">End round</button>
       <button class="btn" id="dayBtn" data-act="newday" title="Start a new day after 8 hours of sleep. Refills overdrive and mythic power and clears burnout and active spells, turns off favored enemy and terrain, and heals 1 Strength damage.">New day</button>
     </div>
@@ -730,7 +730,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var tn = s.turn && typeof s.turn === "object" ? s.turn : {};
     s.turn = { her: Array.isArray(tn.her) ? tn.her : [], pet: Array.isArray(tn.pet) ? tn.pet : [] };
     s.prevOoc = typeof s.prevOoc === "string" ? s.prevOoc : "";
-    s.undo = Array.isArray(s.undo) ? s.undo.filter(function (u) { return u && typeof u === "object" && isFinite(+u.round); }).slice(-5) : [];
+    s.undo = Array.isArray(s.undo) ? s.undo.filter(function (u) { return u && typeof u === "object" && isFinite(+u.round); }).slice(-20) : [];
     s.log = s.log.slice(0, 40);
     return s;
   }
@@ -1050,12 +1050,21 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     });
   }
   /* End round: burnout recovers 1 only if none was gained this round; the round's actions become last round's OOC */
+  /* − beside the round number rolls back whole rounds, so the GM can retcon a fight to where a mistake was made.
+     Each End round / + keeps the full play state as it stood (everything except the log, the snapshots themselves
+     and her build: level, picks, hit point rolls and skill ranks), up to UNDO_MAX rounds. */
+  var UNDO_MAX = 20, UNDO_SKIP = { log: 1, undo: 1, level: 1, picks: 1, hpRolls: 1, ranks: 1, petRanks: 1, v: 1 };
+  function roundSnap(s) {
+    var o = {};
+    Object.keys(s).forEach(function (k) { if (!UNDO_SKIP[k]) o[k] = s[k]; });
+    return JSON.parse(JSON.stringify(o));
+  }
+
   /* End round, or + beside the round number for a round where she does nothing (same effect, logged as idle) */
   function noCast(idle) {
     mutate(function (s) {
       var before = s.burnout, r = s.round;
-      /* keep the last 5 rounds so − can step back */
-      s.undo = (s.undo || []).concat([JSON.parse(JSON.stringify({ round: s.round, burnout: s.burnout, gained: s.gained, blood: s.blood, active: s.active, pending: s.pending, fx: s.fx, turn: s.turn, prevOoc: s.prevOoc }))]).slice(-5);
+      s.undo = (s.undo || []).concat([roundSnap(s)]).slice(-UNDO_MAX);
       s.prevOoc = oocText(s);
       passRound(s, s.gained);
       log((idle ? "Round " + r + " passed, no actions" : "End of round " + r) + (before ? ": burnout " + before + " → " + s.burnout : ""));
@@ -1822,7 +1831,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     else if (a === "roundminus") mutate(function (s) {
       var u = (s.undo || []).pop();
       if (!u) return;
-      ["round", "burnout", "gained", "blood", "active", "pending", "fx", "turn", "prevOoc"].forEach(function (k) { s[k] = u[k]; });
+      Object.keys(s).forEach(function (k) { if (!UNDO_SKIP[k] && !(k in u)) delete s[k]; });
+      Object.keys(u).forEach(function (k) { if (!UNDO_SKIP[k]) s[k] = u[k]; });
       log("Back to round " + s.round + " (undid the end of round " + s.round + ")");
     });
     else if (a === "turnadd") {
