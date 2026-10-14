@@ -616,6 +616,8 @@
       var left = bg ? leftB : leftA, edit = !o.readOnly && left !== 0;
       var rows = d.skills.filter(function (s) { return !!s.bg === bg; }).map(function (s) {
         var rc = edit ? '<span class="rks"><button type="button" class="btn sm rk" data-act="rank" data-k="' + esc(s.name) + '" data-d="-1"' + (s.ranks < 1 ? " disabled" : "") + '>−</button><b class="num">' + s.ranks + '</b><button type="button" class="btn sm rk" data-act="rank" data-k="' + esc(s.name) + '" data-d="1"' + (left < 1 || s.ranks >= R_.cap ? " disabled" : "") + ">+</button></span>" : s.ranks;
+        /* Linguistics: each rank is a language; the table shows the languages, not a check bonus */
+        if (s.name === "Linguistics") return [featBtn("skill:" + s.name, s.name, s.ranks + " ranks: " + s.ranks + " extra language" + (s.ranks === 1 ? "" : "s") + " (one per rank). Deciphering writing or spotting a forgery uses " + sg(s.total) + "."), rc, s.ranks + " lang.", ""];
         return [featBtn("skill:" + s.name, s.name, s.tip + " = " + (s.usable ? sg(s.total) + "." + takeText(s.name, s.total) : "needs ranks")) + (s.ranks ? "" : ' <small class="hint">untrained</small>'), rc, s.usable ? sg(s.total) : "— (needs ranks)", s.usable ? takeCell(s.name, s.total) : ""];
       });
       return tbl(["Skill", "Ranks", "Total", "Take 10/20"], rows, "sk");

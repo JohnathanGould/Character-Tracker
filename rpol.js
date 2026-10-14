@@ -202,6 +202,7 @@
       return n.replace(/^Knowledge \(([^)]+)\)$/, function (m, k) { var t = k.charAt(0).toUpperCase() + k.slice(1); return "Knowledge:" + (t.length > 8 ? t.slice(0, 7) + "." : t); });
     };
     var skl = function (s) {
+      if (s.name === "Linguistics") return pad("Linguistics^", 19) + "(Int) " + s.ranks + " ranks: " + s.ranks + " extra languages (one per rank)";
       var key = (S().SKILLS.filter(function (x) { return x[0] === s.name; })[0] || [0, "int"])[1], am = ab[key].mod;
       var cs = /class skill/.test(s.tip) ? 3 : 0, misc = s.total - am - s.ranks - cs;
       var nm = short(s.name) + (s.trained ? "^" : ""), tot = s.usable ? (s.total < 0 ? "-" : "+") + lpad(Math.abs(s.total), 3) : "   -";

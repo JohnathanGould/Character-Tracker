@@ -231,7 +231,7 @@ Artistry           (Int) +  4  =  4  +  0  +  0  +  0
 Craft:_____        (Int) +  4  =  4  +  0  +  0  +  0
 Handle Animal^     (Cha) + 17  =  6  +  8  +  3  +  0
 Knowledge:History^ (Int) + 10  =  4  +  3  +  3  +  0
-Linguistics        (Int) + 11  =  4  +  4  +  3  +  0
+Linguistics^       (Int) 4 ranks: 4 extra languages (one per rank)
 Lore               (Int) +  4  =  4  +  0  +  0  +  0
 Perform:_____      (Cha) +  6  =  6  +  0  +  0  +  0
 Profession:_____^  (Wis) +  4  =  4  +  0  +  0  +  0   (trained only: can't be used)
