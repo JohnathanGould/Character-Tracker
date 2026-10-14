@@ -564,12 +564,12 @@
       var left = bg ? leftB : leftA, edit = !o.readOnly && left !== 0;
       var rows = d.skills.filter(function (s) { return !!s.bg === bg; }).map(function (s) {
         var rc = edit ? '<span class="rks"><button type="button" class="btn sm rk" data-act="rank" data-k="' + esc(s.name) + '" data-d="-1"' + (s.ranks < 1 ? " disabled" : "") + '>−</button><b class="num">' + s.ranks + '</b><button type="button" class="btn sm rk" data-act="rank" data-k="' + esc(s.name) + '" data-d="1"' + (left < 1 || s.ranks >= R_.cap ? " disabled" : "") + ">+</button></span>" : s.ranks;
-        return [tip(esc(s.name), s.tip + " = " + (s.usable ? sg(s.total) : "needs ranks")) + (s.ranks ? "" : ' <small class="hint">untrained</small>'), rc, s.usable ? sg(s.total) : "— (needs ranks)"];
+        return [featBtn("skill:" + s.name, s.name, s.tip + " = " + (s.usable ? sg(s.total) : "needs ranks")) + (s.ranks ? "" : ' <small class="hint">untrained</small>'), rc, s.usable ? sg(s.total) : "— (needs ranks)"];
       });
       return tbl(["Skill", "Ranks", "Total"], rows, "sk");
     };
     var rkHead = function (lbl, used, max) { var lf = max - used; return "<h3>" + lbl + " (" + used + " of " + max + " ranks" + (lf > 0 ? ", <b>" + lf + " to place</b>" : lf < 0 ? ", <b>" + (-lf) + " too many</b>" : "") + ")</h3>"; };
-    var bonusNote = "Hover or tap a skill name for the arithmetic. Ranks: (6 + Int " + sg(d.ab.int.mod) + ") a level plus 1 favored class bonus; background 2 a level; at most " + R_.cap + " in one skill. Wild Empathy " + sg(d.empathy) + " (+4 with Gwathfaron). Handle Animal with Gwathfaron +4.";
+    var bonusNote = "Hover a skill name for what it does and her arithmetic; tap for the full rules. Ranks: (6 + Int " + sg(d.ab.int.mod) + ") a level plus 1 favored class bonus; background 2 a level; at most " + R_.cap + " in one skill. Wild Empathy " + sg(d.empathy) + " (+4 with Gwathfaron). Handle Animal with Gwathfaron +4.";
     /* situational bonuses: added to the table only while the matching toggle (In forest, favored enemy target) is on */
     var favNote = '<div class="favnote"><b>Situational, not in the totals above unless the toggle is on:</b><ul>' +
       "<li>+" + PR.forest + " (Forest) on Perception, Stealth, Survival and Knowledge (geography), and initiative (turn on <i>In forest</i> under Conditions).</li>" +
@@ -590,8 +590,9 @@
     var prose = [["Racial traits and feats", "feats"], ["Spell-less Ranger", "ranger"], ["Eternal Mage", "mage"], ["Mythic", "mythic"],
       ["Daily resources", "daily"], ["Gear and money", "gear"], ["Languages", "lang"], ["Description and background", "bg"]];
     /* the feat list is built (featsSec) with a button per feat; the printed sheet's feat paragraph is left out */
-    h += featsSec(st);
-    prose.forEach(function (p) { if (p[1] !== "feats" && P[p[1]]) h += sec(p[0], P[p[1]], false); if (p[1] === "gear") h += lettersSec(); });
+    h += featsSec(st) + classSecs(st, d);
+    var built = { feats: 1, ranger: 1, mage: 1, mythic: 1 };
+    prose.forEach(function (p) { if (!built[p[1]] && P[p[1]]) h += sec(p[0], P[p[1]], false); if (p[1] === "gear") h += lettersSec(); });
     h += '<p class="hint foot">Numbers above are live. The text sections come from the printed sheet and don\'t change with the toggles.</p>';
     return h;
   }
@@ -659,19 +660,24 @@
     "alertness": ["General feat", "+2 Perception and Sense Motive.", "+2 on Perception and Sense Motive checks (+4 with 10 ranks in a skill). Not on the animal feat list; his Int 3 lets him take any feat he can use."],
     "multiattack": ["Monster feat (bonus at effective druid level 9)", "Secondary natural attacks at −2 instead of −5.", "His secondary natural attacks (the claws) take only −2 on attack rolls instead of −5."]
   };
+  /* one lookup for every info button: feats (by name), her class abilities ("ab:"), skills ("skill:"), tricks ("trick:"), Gwathfaron's abilities ("pet:") */
   function featInfo(name) {
-    var n = String(name || "").trim(), k = n.toLowerCase();
-    return FEAT_INFO[k] || FEAT_INFO[k.replace(/\s*\(.*\)$/, "")] || null;
+    var n = String(name || "").trim(), k = n.toLowerCase(), R = root.RulesInfo || {};
+    return DYN_INFO[k] || R[k] || FEAT_INFO[k] || FEAT_INFO[k.replace(/\s*\(.*\)$/, "")] || null;
   }
-  function featBtn(name, label) {
-    var f = featInfo(name);
-    return '<button type="button" class="featbtn tip" data-feat="' + esc(name) + '" data-tip="' + esc(f ? f[1] : "Tap for details") + '">' + esc(label || name) + "</button>";
+  function plainName(key) { return String(key).replace(/^(ab|skill|trick|pet):/i, ""); }
+  /* label: what shows; extra: her own numbers, added to the hover and the dialog */
+  function featBtn(key, label, extra) {
+    var f = featInfo(key), nm = label || plainName(key);
+    var tipTxt = (f ? f[1] : "Tap for details") + (extra ? " · " + extra : "");
+    return '<button type="button" class="featbtn tip" data-feat="' + esc(key) + '" data-title="' + esc(nm) + '"' + (extra ? ' data-extra="' + esc(extra) + '"' : "") + ' data-tip="' + esc(tipTxt) + '">' + esc(nm) + "</button>";
   }
-  function featHtml(name) {
-    var f = featInfo(name);
-    var url = "https://aonprd.com/Search.aspx?Query=" + encodeURIComponent(String(name).replace(/\s*\(.*\)$/, ""));
+  function featHtml(key, extra) {
+    var f = featInfo(key), nm = plainName(key);
+    var url = "https://aonprd.com/Search.aspx?Query=" + encodeURIComponent(nm.replace(/\s*\(.*\)$/, ""));
     return (f ? '<p class="hint">' + esc(f[0]) + '</p><p class="feattext">' + esc(f[2]) + "</p>" : '<p class="hint">No description recorded for this one yet.</p>') +
-      '<p class="hint"><a href="' + esc(url) + '" target="_blank" rel="noopener">Look it up on Archives of Nethys</a></p>';
+      (extra ? '<p class="featextra"><b>Hers:</b> ' + esc(extra) + "</p>" : "") +
+      (/^(ab|pet|trick):/i.test(key) ? "" : '<p class="hint"><a href="' + esc(url) + '" target="_blank" rel="noopener">Look it up on Archives of Nethys</a></p>');
   }
   /* her feats, traits and talents, built from the printed sheet plus her level-up picks */
   function featsSec(st) {
@@ -698,6 +704,79 @@
       g("Ranger talents", tal) +
       g("Enhanced Companion", ec) +
       g("Mythic", [row("T1", "Mythic Spell Lore")]), false);
+  }
+
+  /* ---------- class and mythic abilities: built per render so the numbers follow her level ---------- */
+  var DYN_INFO = {};
+  function classSecs(st, d) {
+    var PR = d.prog, sp = d.sp, L = d.level, fe = d.fe, cha = sp.cha, sd = PR.stealthDice;
+    var A = function (key, type, short, full) { DYN_INFO["ab:" + key.toLowerCase()] = [type, short, full]; return key; };
+    var list = function (items) { return '<ul class="featlist">' + items.map(function (k) { return "<li>" + featBtn("ab:" + k.toLowerCase(), k) + ' <span class="hint">' + esc(DYN_INFO["ab:" + k.toLowerCase()][1]) + "</span></li>"; }).join("") + "</ul>"; };
+    var feTxt = fe.map(function (f) { return f.name + " +" + f.b; }).join(", ");
+    var ranger = [
+      A("Favored Enemy", "Spell-less Ranger (1st, more at 5th, 10th...)", feTxt + " on attack and damage.",
+        "Her favored enemies: " + feTxt + ". Against them she adds the bonus to weapon attack and damage rolls (her unarmed strikes count) and to Bluff, Knowledge, Perception, Sense Motive and Survival checks. Gwathfaron shares it (Companion-Bound). Choose the target under Conditions to add it to the sheet."),
+      A("Favored Terrain (forest)", "Companion-Bound (single terrain)", "+" + PR.forest + " initiative, Perception, Stealth, Survival, Knowledge (geography) in forest.",
+        "Companion-Bound gives one favored terrain whose bonus grows instead of adding new terrains: forest +" + PR.forest + " on initiative, Knowledge (geography), Perception, Stealth and Survival there. It also turns on her stealth attack and fast movement in forest, and Gwathfaron shares it. Turn on In forest under Conditions."),
+      A("Track", "Spell-less Ranger (1st)", "+" + PR.track + " Survival to follow tracks.",
+        "She adds half her level (+" + PR.track + ") to Survival checks made to follow or identify tracks. Swift Tracker (8th): she moves at normal speed while tracking without the −5 penalty, and takes only −10 (not −20) at up to twice normal speed."),
+      A("Wild Empathy", "Spell-less Ranger (1st)", "Improve an animal's attitude: " + (d.empathy >= 0 ? "+" : "") + d.empathy + ".",
+        "Like Diplomacy, but for animals (and magical beasts with Int 1 or 2 at −4): 1d20 + her level + Cha (" + (d.empathy >= 0 ? "+" : "") + d.empathy + "), +4 with Gwathfaron. She and the animal must be within 30 ft and able to study each other; it usually takes 1 minute."),
+      A("Combat Style (unarmed)", "Spell-less Ranger (2nd, 6th, 10th...)", "Bonus unarmed style feats, prerequisites waived.",
+        "She chose the unarmed combat style: bonus feats at 2nd, 6th, 10th, 14th and 18th level from that style's list, without needing the prerequisites. Hers: Monastic Legacy and Stunning Fist so far. Style feats only work in light, medium or no armor."),
+      A("Stealth Attack", "Spell-less Ranger (2nd, +1d6 every 4 levels)", "+" + sd + "d6 when the target is denied Dex or flanked.",
+        "Extra " + sd + "d6 damage (with Improved Stealth Attack) when the target is denied its Dex bonus to AC or she flanks it, but only in a favored terrain or against a favored enemy, and only in light, medium or no armor. Not multiplied on a critical hit. Ranged attacks (arcane artillery included) count only within 30 ft, and flanking never counts at range."),
+      A("Nature's Healing", "Spell-less Ranger (3rd)", "+2 Heal in a favored terrain, better care in forest.",
+        "+2 on Heal checks in a favored terrain. In forest she also gives long-term care (3 hp per character level for 8 hours of rest, or 6 for a full day; the same for ability damage), treats deadly wounds for an extra 1d6 + 1 hp per 3 levels with no healer's kit, and gives +8 on the patient's save when her Heal check beats a poison or disease DC by 5."),
+      A("Animal Companion", "Companion-Bound (3rd)", "Gwathfaron, effective druid level " + PR.pet.druid + ".",
+        "Companion-Bound gives her an animal companion at her full level (effective druid level " + PR.pet.druid + "): Gwathfaron, a panther. +4 on wild empathy and Handle Animal with him; he shares her favored enemy and terrain bonuses. His full sheet is on his tab. Replaces Endurance."),
+      A("Teamwork", "Companion-Bound (4th)", "Coordinated Companion plus one teamwork feat (Bonded Mind).",
+        "At 4th level she gains Coordinated Companion and another teamwork feat as bonus feats (she must meet its prerequisites). Through Coordinated Companion, Gwathfaron counts as having all her teamwork feats. Replaces hunter's bond."),
+      A("Fast Movement", "Spell-less Ranger (5th)", "+" + PR.fastMove + " ft speed in a favored terrain.",
+        "+" + PR.fastMove + " ft to her base speed while in a favored terrain (forest), only in light, medium or no armor. Speed " + (35 + PR.fastMove) + " ft in forest."),
+      A("Enhanced Companion", "Companion-Bound (7th)", "Bonus companion feat: Improved Animal Companion.",
+        "At 7th level, and again at 10th, 13th, 16th and 19th, she gains a bonus feat from Greater Animal Companion, Improved Animal Companion, Increased Devotion or Invulnerable Animal Companion, or an animal feat for Gwathfaron instead. Taken: Improved Animal Companion. Replaces woodland stride."),
+      A("Swift Tracker", "Spell-less Ranger (8th)", "Track at normal speed with no penalty.",
+        "She can move at her normal speed while using Survival to follow tracks without the normal −5 penalty, and takes only −10 (instead of −20) when moving at up to twice normal speed."),
+      A("Proficiencies", "Spell-less Ranger", "Simple and martial weapons, light and medium armor, shields.",
+        "All simple and martial weapons, light and medium armor, and shields except tower shields (from the ranger side; Eternal Mage adds nothing). Her unarmed strikes count as armed through Improved Unarmed Strike.")
+    ];
+    var mage = [
+      A("Eternal Spellcasting", "Eternal Mage (1st)", "No slots: casting is limited only by burnout and concentration.",
+        "Cha-based arcane casting from the wizard list with no spell slots and no preparation. She can cast any spell she knows as often as she likes, limited only by eldritch burnout and limited concentration. She needs Cha 10 + spell level to learn or cast a spell."),
+      A("Eldritch Burnout", "Eternal Mage (1st)", "Each cast of 1st level or higher adds (level − " + PR.buffer + ") burnout.",
+        "Casting a spell of 1st level or higher adds burnout equal to its level minus her arcane buffer (" + PR.buffer + ", minimum 0), +1 for the experimental spell. Each point is −1 caster level; every 2 points −1 spell DC and −1d6 artillery damage. At caster level 0 she can cast only cantrips. She recovers 1 at the end of any round with no burnout gained. Tracked in the Resources panel."),
+      A("Arcane Buffer", "Eternal Mage (4th, 8th, 12th...)", "Every spell gives " + PR.buffer + " less burnout.",
+        "Reduces the burnout from every spell she casts by " + PR.buffer + " (minimum 0). So 1st and 2nd-level spells cost nothing at 8th level."),
+      A("Arcane Overdrive", "Eternal Mage (1st)", "Pool of " + sp.od + "; 1 point ignores up to " + sp.odIgnore + " burnout.",
+        "A pool of " + sp.od + " points (Cha " + (cha >= 0 ? "+" : "") + cha + " + half her level). As a free action when casting she spends 1 to ignore up to " + sp.odIgnore + " burnout from that spell. Refills after 8 hours of sleep (New day). Some secrets spend overdrive too."),
+      A("Limited Concentration", "Eternal Mage (1st; Expanded Focus at 7th)", PR.slots + " spells with a duration at once.",
+        "She can keep only " + PR.slots + " spells with a duration (other than instantaneous or permanent) active at once (Expanded Focus adds one at 7th and 14th). Casting another ends the oldest. Shown under Concentration."),
+      A("School Focus", "Eternal Mage (1st, more at 5th...)", "Evocation, Abjuration, Transmutation, Conjuration.",
+        "She learns spells only from her focus schools (plus universal spells): Evocation, Abjuration, Transmutation, and Conjuration as her additional school at 5th. An additional school at 10th, 15th and 20th. Experimental spells and Wild Arcana ignore this."),
+      A("Arcane Artillery", "Eternal secret (Artillery Adept, 1st)", sp.artDice + "d6+" + sp.artFlat + " ranged touch, 30 ft.",
+        "Standard action: a ranged touch attack within 30 ft for " + sp.artDice + "d6 + Cha untyped arcane damage. Artillery Adept makes it cost no overdrive; instead it counts as a spell of half her level (" + LV().ord(PR.artLvl) + ") for burnout, and her buffer applies. Each 2 burnout: −1d6 and −1 DC. Only one secret modifies each shot."),
+      A("Artillery Overdrive", "Artillery Expert (2nd)", "1 overdrive: artillery dice become d8s.",
+        "She can spend 1 overdrive point when using arcane artillery to roll d8s instead of d6s. A separate spend from the overdrive that ignores burnout."),
+      A("Artillery Burst", "Eternal secret", "A 15-ft burst around her instead, Reflex half.",
+        "Instead of a single ranged touch, arcane artillery explodes in a 15-ft burst centered on her (she is unaffected). Reflex half, DC " + sp.secretDc + ". No attack roll, so no stealth attack."),
+      A("Artillery Sniper", "Eternal secret", "Arcane artillery reaches 120 ft.",
+        "Arcane artillery's range becomes 120 ft. A stealth attack still needs the target within 30 ft."),
+      A("Experimental Spell", "Eternal Mage (6th)", "One spell a day from the whole list, +1 burnout.",
+        "Each day she may learn one spell from the sorcerer/wizard list (any school), of any level except her highest (up to " + LV().ord(PR.expMax) + "), as her experimental spell; it costs +1 burnout. At 11th it may be her highest level for +1 more; at 17th she gets a second. Locked in from the Spells panel."),
+      A("Expanded Concentration", "Eternal Mage (7th)", "One more duration spell at once.", "At 7th level (and 14th) she can keep one more spell with a duration active at once. She has " + PR.slots + " now.")
+    ];
+    var myth = [
+      A("Mythic Power", "Mythic (tier 1)", "7 uses a day.", "3 + 2 × tier = 7 uses a day, refilled by 8 hours of rest. Spent on Surge, Amazing Initiative's extra action, Wild Arcana, and the mythic versions of her mythic spells."),
+      A("Surge", "Mythic (Su, tier 1)", "1 mythic power: +1d6 on a d20 roll she just made.", "Immediate action, after seeing the result but before the outcome is known: spend 1 mythic power to add 1d6 to a d20 roll she just made (1d8 at tier 4, 1d10 at tier 7)."),
+      A("Hard to Kill", "Mythic (Ex, tier 1)", "Stabilizes automatically; dies at −32.", "Below 0 hit points she stabilizes automatically, and she dies only at negative hit points equal to double her Con score (−32). Bleed damage still hurts."),
+      A("Amazing Initiative", "Mythic (Ex, tier 2)", "+2 initiative; 1 mythic power for an extra standard action.", "+2 on initiative (her tier). Once per round, as a free action on her turn, she can spend 1 mythic power for an extra standard action that turn. It can't be used to cast a spell, so no spells or artillery."),
+      A("Wild Arcana", "Archmage arcana (Su, tier 1)", "1 mythic power: cast any wizard spell she doesn't know, CL +2.", "Standard action (Mythic Adventures FAQ): spend 1 mythic power to cast any arcane spell on her list, known or not, with a casting time of 1 standard action or less. Its caster level counts as 2 higher. Burnout still applies; her focus schools don't restrict it. Cast it from the Wild Arcana column."),
+      A("Eldritch Breach", "Archmage path ability (Su, tier 1)", "Roll caster level checks twice, take the higher.", "When she rolls a caster level check to dispel, to overcome spell resistance, or to see whether her magic affects a target, she rolls twice and takes the higher result."),
+      A("Elemental Bond (fire)", "Archmage path ability (Su, tier 2)", "+2 CL on fire spells; fire resistance 10.", "Spells with the fire descriptor get her tier (+2) on caster level (fireball 10d6, scorching ray at CL 10). Fire resistance 10 (20 at tier 6, 30 at tier 9). Detonate counts only when she casts it as fire."),
+      A("Mythic Ability Score", "Mythic (tier 2)", "+2 Int (counted).", "At tier 2 she raised Int by 2 (16 to 18). Already counted on the sheet.")
+    ];
+    return sec("Spell-less Ranger abilities", list(ranger), false) + sec("Eternal Mage abilities", list(mage), false) + sec("Mythic abilities", list(myth), false);
   }
 
   /* ---------- letters of travel: picked from a list on her sheet, each opens in the info dialog ---------- */
@@ -907,7 +986,7 @@
     h += sec("Skills", '<p class="rkhead"><b>' + p.ranksUsed + " of " + p.ranksMax + "</b> ranks" + (pLeft > 0 ? " · <b>" + pLeft + " to place</b>" : pLeft < 0 ? " · <b>" + (-pLeft) + " too many</b>" : "") + "</p>" +
       tbl(["Skill", "Ranks", "Ability", "Class", "Misc", "Total"], p.skills.map(function (s) {
         var rc = pEdit ? '<span class="rks"><button type="button" class="btn sm rk" data-act="prank" data-k="' + esc(s.name) + '" data-d="-1"' + (s.ranks < 1 ? " disabled" : "") + '>−</button><b class="num">' + s.ranks + '</b><button type="button" class="btn sm rk" data-act="prank" data-k="' + esc(s.name) + '" data-d="1"' + (pLeft < 1 || s.ranks >= p.hd ? " disabled" : "") + ">+</button></span>" : String(s.ranks);
-        return [tip(esc(s.name), s.tip + " = " + sg(s.total)) + (s.ranks ? "" : ' <small class="hint">untrained</small>'),
+        return [featBtn("skill:" + s.name, s.name, s.tip + " = " + sg(s.total)) + (s.ranks ? "" : ' <small class="hint">untrained</small>'),
           rc, sg(s.abil) + ' <small class="hint">' + s.key.toUpperCase() + "</small>", s.cls ? "+3" : "", s.misc ? sg(s.misc) : "", "<b>" + sg(s.total) + "</b>"];
       }), "sk pk") +
       '<p class="hint">' + p.ranksMax + " ranks: 1 per Hit Die from the companion table (Int would need to reach 10 to add more), at most " + p.hd + " in one skill. Rank buttons appear only while there are ranks to place." + ' Class skill +3 once a skill has a rank. All are animal companion class skills. Misc: Skill Focus and Stealthy on Stealth, Skill Focus and Alertness on Perception, Alertness on Sense Motive, Stealthy on Escape Artist, and her forest and favored enemy bonuses when those are on. Speed 50 ft gives +8 on Acrobatics checks to jump. Hover or tap a skill for the arithmetic.</p>', true);
@@ -923,21 +1002,18 @@
       '<p class="hint">' + cp.feats + " feats at " + p.hd + " HD" + (p.feats.length < cp.feats ? " (" + (cp.feats - p.feats.length) + " still to pick on Daerlieth's tab, Level-up picks)" : "") + ".</p>", false);
 
     h += sec("Tricks", "<p>" + cp.tricks + " tricks (6 from Int, " + (cp.tricks - 6) + " bonus):</p><ul>" +
-      "<li><b>Attack</b>, any creature (counts as 2 tricks)</li><li><b>Come</b></li><li><b>Down</b></li><li><b>Guard</b></li>" +
-      "<li><b>Heel</b></li><li><b>Seek</b></li><li><b>Stay</b></li><li><b>Track</b></li></ul>" +
+      "<li>" + featBtn("trick:Attack", "Attack") + ' <span class="hint">any creature (counts as 2 tricks)</span></li>' +
+      ["Come", "Down", "Guard", "Heel", "Seek", "Stay", "Track"].map(function (t) { return "<li>" + featBtn("trick:" + t, t) + "</li>"; }).join("") + "</ul>" +
       '<p class="hint">Handle Animal +21 with him (+4 bond). Bonded Mind lets her give these silently.</p>', false);
 
     h += sec("Special abilities", "<ul>" +
-      "<li><b>Link</b>: she handles him as a free action, or pushes him as a move action, with +4 on wild empathy and Handle Animal.</li>" +
-      "<li><b>Share spells</b>: she can cast a spell with a target of “you” on him instead, as a touch spell.</li>" +
-      (cp.impEvasion ? "<li><b>Improved evasion</b>: half damage even on a failed Reflex save, none on a success.</li>" : "<li><b>Evasion</b>: no damage on a successful Reflex save for half.</li>") +
-      (cp.multiattack ? "<li><b>Multiattack</b>: his claws take −2 instead of −5.</li>" : "") +
-      "<li><b>Devotion</b>: +4 morale bonus on Will saves against enchantment.</li>" +
-      "<li><b>Scent</b> and <b>low-light vision</b>.</li>" +
-      "<li><b>Sprint</b> (Ex): once an hour, charge at ten times his speed.</li>" +
-      "<li><b>Trip</b> (bite).</li>" +
-      "<li><b>Improved Animal Companion</b> (Daerlieth's Enhanced Companion feat, 7th level): +1d8 hp, +1 Dex, +2 natural armor, all counted above.</li>" +
-      "<li><b>Shared with Daerlieth</b>: her favored enemy bonuses (" + fes.map(function (f) { return f.name + " +" + f.b; }).join(", ") + ") and forest bonus (+" + PRp.forest + ").</li></ul>", false);
+      "<li>" + featBtn("pet:Link", "Link") + "</li>" +
+      "<li>" + featBtn("pet:Share spells", "Share spells") + "</li>" +
+      (cp.impEvasion ? "<li>" + featBtn("pet:Improved evasion", "Improved evasion") + "</li>" : "<li>" + featBtn("pet:Evasion", "Evasion") + "</li>") +
+      (cp.multiattack ? "<li>" + featBtn("pet:Multiattack", "Multiattack") + "</li>" : "") +
+      ["Devotion", "Scent", "Low-light vision", "Sprint", "Trip"].map(function (n) { return "<li>" + featBtn("pet:" + n, n) + "</li>"; }).join("") +
+      "<li>" + featBtn("Improved Animal Companion") + ' <span class="hint">Daerlieth\'s Enhanced Companion feat, counted above</span></li>' +
+      "<li>" + featBtn("pet:Shared bonuses", "Shared with Daerlieth", fes.map(function (f) { return f.name + " +" + f.b; }).join(", ") + ", forest +" + PRp.forest) + "</li></ul>", false);
 
     h += sec("Equipment", "<p>None.</p>" +
       '<p class="hint">Room for later: barding (he would need Light Armor Proficiency to wear it without penalty) and a collar in the neck slot (amulet of natural armor or amulet of mighty fists). Carrying capacity, Medium quadruped (1.5×) at Str ' + p.ab.str + ': light ' + Math.floor(maxLoad(p.ab.str) * 1.5 / 3) + ' lb, medium ' + Math.floor(maxLoad(p.ab.str) * 1.5 * 2 / 3) + ' lb, heavy ' + Math.floor(maxLoad(p.ab.str) * 1.5) + ' lb.</p>', true);

@@ -237,6 +237,8 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
 .scard-text p { margin: 0 0 8px; }
 .scard-text h3 { font-family: var(--font-display); font-weight: 400; font-size: 1rem; margin: 10px 0 6px; color: var(--moon); }
 .helpform a { color: var(--moon); }
+.helpform .featextra { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); margin: 8px 0; }
+.helpform .featextra b { color: var(--moon); font-family: var(--font-body); }
 .helpform .feattext { font-size: 0.92rem; line-height: 1.5; margin: 8px 0; }
 .helpform ul.letter { margin: 0; padding-left: 18px; font-size: 0.9rem; line-height: 1.5; }
 .helpform ul.letter li { margin-bottom: 6px; }
@@ -539,6 +541,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
 <script src="config.js"></script>
 <script src="levels.js"></script>
+<script src="rules-info.js"></script>
 <script src="sheet.js"></script>
 <script src="sheet-prose.js"></script>
 <script src="vendor/firebase-app-compat.js"></script>
@@ -1533,7 +1536,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var t = e.target.closest("[data-help]");
     if (t) { openInfo("How burnout works", burnHelpHtml()); return; }
     t = e.target.closest("[data-feat]");
-    if (t) { var fn = t.getAttribute("data-feat"); openInfo(fn, SheetEngine.featHtml(fn)); return; }
+    if (t) { var fn = t.getAttribute("data-feat"); openInfo(t.getAttribute("data-title") || fn, SheetEngine.featHtml(fn, t.getAttribute("data-extra"))); return; }
     t = e.target.closest("[data-spell]");
     if (!t) return;
     e.preventDefault();
