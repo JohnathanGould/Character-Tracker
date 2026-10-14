@@ -162,3 +162,5 @@ table.atk td:nth-child(2), table.atk th:nth-child(2) { white-space: nowrap; }
 .featbtn { background: none; border: 0; padding: 0; color: var(--moon); font: inherit; font-weight: 600; cursor: pointer; text-align: left; }
 .featbtn:hover { text-decoration-style: solid; }
 #sheetView .featbtn { text-decoration: underline dotted var(--line-strong); text-underline-offset: 3px; }
+.favnote { margin: 10px 0 6px; padding: 8px 10px; border-left: 2px solid var(--moon); background: rgba(169, 193, 255, 0.06); font-size: 0.84rem; line-height: 1.45; }
+.favnote b { color: var(--moon); font-weight: 600; }
