@@ -210,11 +210,13 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
   .gsec + .gsec { border-top: 0; border-left: 1px solid var(--line); }
 }
 .helpform { max-width: 560px !important; }
-.duo { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); align-items: start; }
-.pickbox { min-width: 0; margin-bottom: 0; display: flex; flex-direction: column; gap: 8px; }
+.duo { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); align-items: stretch; }
+.group.pickbox { min-width: 0; margin-bottom: 0; display: flex; flex-direction: column; gap: 8px; }
 .pickbox .field select { width: 100%; }
 .spells.one { grid-template-columns: 1fr; }
-.castbox { border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--surface-2); min-width: 0; }
+/* equal-height columns: each cast block fills its column and the Cast button sits at the bottom, so all three line up */
+.castbox { border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--surface-2); min-width: 0; flex: 1; display: flex; flex-direction: column; }
+.castbox > [data-act="cast"] { margin-top: auto; }
 .castbox .ph { margin-bottom: 8px; }
 .castbox .cast-name { font-size: 1.05rem; }
 .castbox .btn.primary { width: 100%; }
