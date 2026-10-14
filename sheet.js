@@ -53,7 +53,9 @@
   var FLANK_MODES = ["plain", "out", "prec", "both"];
   function flankMode(c, who) {
     var v = (c || {})[who === "pet" ? "petFlank" : "flank"];
-    return v === true ? "both" : FLANK_MODES.indexOf(v) >= 0 ? v : "";
+    var m = v === true ? "both" : FLANK_MODES.indexOf(v) >= 0 ? v : "";
+    /* Coordinated Companion: he has her teamwork feats only with her, so with anyone else it is a plain flank */
+    return who === "pet" && (m === "out" || m === "prec") ? "plain" : m;
   }
   function flankAtk(st, mode) { return !mode ? 0 : (mode === "out" || mode === "both") && hasFeat(st, "Outflank") ? 4 : 2; }
   function flankPrec(st, mode) { return (mode === "prec" || mode === "both") && precise(st); }
@@ -65,11 +67,11 @@
     var sub = function (md) { var b = flankAtk(st, md), pr = flankPrec(st, md); return "+" + b + " melee" + (pr ? ", +1d6 precision" : ""); };
     return '<div class="seg" role="group" aria-label="Flanking">' +
       tg("cond", k, "Not flanking", !m, "", "") +
-      tg("cond", k, "Flanking", m === "plain", "+2 melee, no teamwork feat" + (who === "pet" ? "" : "; any flank turns on her stealth attack in forest or vs a favored enemy"), "plain") +
-      (out ? tg("cond", k, "With an Outflank ally", m === "out", sub("out"), "out") : "") +
-      (ps ? tg("cond", k, "With a Precise Strike ally", m === "prec", sub("prec"), "prec") : "") +
-      (out && ps ? tg("cond", k, who === "pet" ? "With Daerlieth" : "With Gwathfaron", m === "both", sub("both") + (who === "pet" ? "" : " for both") + " (or an ally with both feats)", "both") : "") +
-      (who === "pet" && (out || ps) ? '<p class="hint">Her teamwork feats are his while he is within 30 ft of her (Coordinated Companion).</p>' : "") +
+      tg("cond", k, who === "pet" ? "Flanking with another ally" : "Flanking", m === "plain", "+2 melee" + (who === "pet" ? ": her teamwork feats work only with her" : ", no teamwork feat; any flank turns on her stealth attack in forest or vs a favored enemy"), "plain") +
+      (out && who !== "pet" ? tg("cond", k, "With an Outflank ally", m === "out", sub("out"), "out") : "") +
+      (ps && who !== "pet" ? tg("cond", k, "With a Precise Strike ally", m === "prec", sub("prec"), "prec") : "") +
+      (out && ps ? tg("cond", k, who === "pet" ? "With Daerlieth" : "With Gwathfaron", m === "both", sub("both") + (who === "pet" ? " (her Outflank and Precise Strike)" : " for both (or an ally with both feats)"), "both") : "") +
+      (who === "pet" && (out || ps) ? '<p class="hint">Coordinated Companion: her teamwork feats are his only while he is within 30 ft of her and aware of her, and only when he works with her, not with other allies.</p>' : "") +
       "</div>";
   }
   var LOAD = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 115, 130, 150, 175, 200, 230, 260, 300, 350, 400, 460, 530, 610, 700, 800, 920, 1040, 1200, 1380];
@@ -120,14 +122,14 @@
   /* skills: key ability, ranks, class skill, trained only, background. Ranks are the table in the printed sheet. */
   var SKILLS = [
     ["Acrobatics", "dex", 5, 1, 0, 0, 1], ["Bluff", "cha", 0, 0, 0, 0], ["Climb", "str", 1, 1, 0, 0, 1], ["Diplomacy", "cha", 8, 1, 0, 0],
-    ["Disable Device", "dex", 8, 0, 1, 0], ["Disguise", "cha", 0, 0, 0, 0], ["Escape Artist", "dex", 0, 0, 0, 0, 1], ["Fly", "dex", 0, 0, 0, 0, 1],
-    ["Heal", "wis", 1, 1, 0, 0], ["Intimidate", "cha", 0, 0, 0, 0], ["Knowledge (arcana)", "int", 4, 1, 1, 0], ["Knowledge (dungeoneering)", "int", 4, 1, 1, 0],
-    ["Knowledge (nature)", "int", 4, 1, 1, 0], ["Knowledge (religion)", "int", 4, 1, 1, 0], ["Perception", "wis", 8, 1, 0, 0], ["Ride", "dex", 0, 0, 0, 0, 1],
+    ["Disable Device", "dex", 8, 0, 1, 0], ["Disguise", "cha", 0, 0, 0, 0], ["Escape Artist", "dex", 0, 0, 0, 0, 1], ["Fly", "dex", 0, 1, 0, 0, 1],
+    ["Heal", "wis", 1, 1, 0, 0], ["Intimidate", "cha", 0, 1, 0, 0], ["Knowledge (arcana)", "int", 4, 1, 1, 0], ["Knowledge (dungeoneering)", "int", 4, 1, 1, 0],
+    ["Knowledge (nature)", "int", 4, 1, 1, 0], ["Knowledge (religion)", "int", 4, 1, 1, 0], ["Perception", "wis", 8, 1, 0, 0], ["Ride", "dex", 0, 1, 0, 0, 1],
     ["Sense Motive", "wis", 8, 1, 0, 0], ["Spellcraft", "int", 8, 1, 1, 0], ["Stealth", "dex", 8, 1, 0, 0, 1], ["Survival", "wis", 8, 1, 0, 0],
     ["Swim", "str", 1, 1, 0, 0, 1], ["Use Magic Device", "cha", 8, 1, 1, 0],
-    ["Appraise", "int", 0, 0, 0, 1], ["Artistry", "int", 0, 0, 0, 1], ["Craft", "int", 0, 0, 0, 1], ["Handle Animal", "cha", 8, 1, 1, 1],
+    ["Appraise", "int", 0, 1, 0, 1], ["Artistry", "int", 0, 0, 0, 1], ["Craft", "int", 0, 1, 0, 1], ["Handle Animal", "cha", 8, 1, 1, 1],
     ["Knowledge (history)", "int", 3, 1, 1, 1], ["Linguistics", "int", 4, 1, 1, 1], ["Lore", "int", 0, 0, 0, 1], ["Perform", "cha", 0, 0, 0, 1],
-    ["Profession", "wis", 0, 0, 1, 1], ["Sleight of Hand", "dex", 1, 0, 1, 1, 1]
+    ["Profession", "wis", 0, 1, 1, 1], ["Sleight of Hand", "dex", 1, 0, 1, 1, 1]
   ];
   /* her ranks: state.ranks {skill: n} once she places new ranks at level-up, else the printed sheet's */
   function ranksOf(st) {
@@ -713,7 +715,7 @@
     "hawk's eyes": ["Ranger talent", "Standard action: a ranged attack ignoring concealment and partial/soft cover.", "As a standard action, a ranged attack that ignores concealment (not total concealment), soft cover and partial cover, and can still deal stealth attack damage."],
     /* enhanced companion */
     "improved animal companion": ["Ranger bonus feat (Enhanced Companion, 7th)", "Gwathfaron: +1d8 hp, +1 Dex, +2 natural armor.", "Her animal companion gains an extra Hit Die's worth of hit points (+1d8), +1 Dex and +2 natural armor. All are counted on Gwathfaron's tab."],
-    "greater animal companion": ["Ranger bonus feat (Enhanced Companion)", "A bonus animal feat for Gwathfaron; share stealth attack and fast movement.", "Gwathfaron gains a bonus feat, and as a move action she can grant him her stealth attack and fast movement for a time."],
+    "greater animal companion": ["Ranger feat (needs Improved Animal Companion, stealth attack and fast movement)", "A bonus feat for Gwathfaron; move action: lend him her stealth attack and fast movement.", "Gwathfaron gains a bonus feat (an animal feat, or any feat he can physically use since his Int is 3). As a move action she can also grant him the benefits of her stealth attack and fast movement for rounds equal to twice her Wis modifier (minimum 1), while he stays within 30 ft and can see, hear or sense her."],
     /* mythic */
     "mythic spell lore": ["Mythic feat (tier 1)", "Mythic versions of fireball and dimension door.", "She learns mythic spells equal to her tier (2 now: fireball and dimension door) and can spend 1 mythic power when casting them to use the mythic version. See the Mythic version option on those spells."],
     /* Gwathfaron's */
@@ -863,7 +865,7 @@
       A("Surge", "Mythic (Su, tier 1)", "1 mythic power: +1d6 on a d20 roll she just made.", "Immediate action, after seeing the result but before the outcome is known: spend 1 mythic power to add 1d6 to a d20 roll she just made (1d8 at tier 4, 1d10 at tier 7)."),
       A("Hard to Kill", "Mythic (Ex, tier 1)", "Stabilizes automatically; dies at −32.", "Below 0 hit points she stabilizes automatically, and she dies only at negative hit points equal to double her Con score (−32). Bleed damage still hurts."),
       A("Amazing Initiative", "Mythic (Ex, tier 2)", "+2 initiative; 1 mythic power for an extra standard action.", "+2 on initiative (her tier). Once per round, as a free action on her turn, she can spend 1 mythic power for an extra standard action that turn. It can't be used to cast a spell, so no spells or artillery."),
-      A("Wild Arcana", "Archmage arcana (Su, tier 1)", "1 mythic power: cast any wizard spell she doesn't know, CL +2.", "Standard action (Mythic Adventures FAQ): spend 1 mythic power to cast any arcane spell on her list, known or not, with a casting time of 1 standard action or less. Its caster level counts as 2 higher. Burnout still applies; her focus schools don't restrict it. Metamagic is allowed if the adjusted spell level stays within her highest castable level. Cast it from the Wild Arcana column."),
+      A("Wild Arcana", "Archmage arcana (Su, tier 1)", "1 mythic power: cast any wizard spell she doesn't know, CL +2.", "Standard action (Mythic Adventures FAQ): spend 1 mythic power to cast any arcane spell on her list, known or not, with a casting time of 1 standard action or less. Its caster level counts as 2 higher. Burnout still applies; her focus schools don't restrict it. No metamagic: she knows no metamagic feats, and an eternal mage can't apply metamagic at all without the Metamagic Adept secret. Cast it from the Wild Arcana column."),
       A("Eldritch Breach", "Archmage path ability (Su, tier 1)", "Roll caster level checks twice, take the higher.", "When she rolls a caster level check to dispel, to overcome spell resistance, or to see whether her magic affects a target, she rolls twice and takes the higher result."),
       A("Elemental Bond (fire)", "Archmage path ability (Su, tier 2)", "+2 CL on fire spells; fire resistance 10.", "Spells with the fire descriptor get her tier (+2) on caster level (fireball 10d6, scorching ray at CL 10). Fire resistance 10 (20 at tier 6, 30 at tier 9). Detonate counts only when she casts it as fire."),
       A("Mythic Ability Score", "Mythic (tier 2)", "+2 Int (counted).", "At tier 2 she raised Int by 2 (16 to 18). Already counted on the sheet.")
