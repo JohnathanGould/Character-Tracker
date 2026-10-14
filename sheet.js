@@ -571,10 +571,11 @@
     var rkHead = function (lbl, used, max) { var lf = max - used; return "<h3>" + lbl + " (" + used + " of " + max + " ranks" + (lf > 0 ? ", <b>" + lf + " to place</b>" : lf < 0 ? ", <b>" + (-lf) + " too many</b>" : "") + ")</h3>"; };
     var bonusNote = "Hover or tap a skill name for the arithmetic. Ranks: (6 + Int " + sg(d.ab.int.mod) + ") a level plus 1 favored class bonus; background 2 a level; at most " + R_.cap + " in one skill. Wild Empathy " + sg(d.empathy) + " (+4 with Gwathfaron). Handle Animal with Gwathfaron +4.";
     /* situational bonuses: added to the table only while the matching toggle (In forest, favored enemy target) is on */
-    var favNote = '<p class="favnote"><b>Situational, not in the totals above unless the toggle is on:</b> ' +
-      "Forest +" + PR.forest + " on Perception, Stealth, Survival and Knowledge (geography), and initiative (turn on <i>In forest</i> under Conditions). " +
-      d.fe.map(function (f) { return esc(f.name) + " +" + f.b; }).join(" / ") + " on Bluff, Knowledge, Perception, Sense Motive and Survival against them, and on attack and damage (choose the target under Conditions). " +
-      "Track +" + PR.track + " Survival to follow tracks. Nature's Healing: Heal +2 in forest.</p>";
+    var favNote = '<div class="favnote"><b>Situational, not in the totals above unless the toggle is on:</b><ul>' +
+      "<li>+" + PR.forest + " (Forest) on Perception, Stealth, Survival and Knowledge (geography), and initiative (turn on <i>In forest</i> under Conditions).</li>" +
+      "<li>" + d.fe.map(function (f) { return "+" + f.b + " (" + esc(f.name) + ")"; }).join(" ") + " on Bluff, Knowledge, Perception, Sense Motive and Survival against them, and on attack and damage (choose the target under Conditions).</li>" +
+      "<li>+" + PR.track + " Track (Survival) to follow tracks.</li>" +
+      "<li>+2 (Forest) to Heal using Nature's Healing.</li></ul></div>";
     h += sec("Skills", '<div class="two"><div>' + rkHead("Adventuring", R_.adv, R_.advMax) + sk(false) + '</div><div>' + rkHead("Background", R_.bg, R_.bgMax) + sk(true) +
       "</div></div>" + favNote + "<p class=\"hint\">Also trained only, no ranks, can't be used: " + esc(UNUSABLE.join(", ")) + ". " + esc(bonusNote) + "</p>", true);
 
