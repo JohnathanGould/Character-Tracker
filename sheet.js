@@ -47,6 +47,31 @@
   /* teamwork with Gwathfaron (Coordinated Companion gives him her teamwork feats): Outflank makes flanking +4, Precise Strike adds 1d6 */
   function flankBonus(st) { return hasFeat(st, "Outflank") ? 4 : 2; }
   function precise(st) { return hasFeat(st, "Precise Strike"); }
+  /* who she (or Gwathfaron) flanks with: a teamwork feat only counts when the partner has it too.
+     cond.flank is hers, cond.petFlank his: "" not flanking, plain (+2), out (partner with Outflank), prec (partner with
+     Precise Strike), both (partner with both: Gwathfaron for her, Daerlieth for him). An old true reads as both. */
+  var FLANK_MODES = ["plain", "out", "prec", "both"];
+  function flankMode(c, who) {
+    var v = (c || {})[who === "pet" ? "petFlank" : "flank"];
+    return v === true ? "both" : FLANK_MODES.indexOf(v) >= 0 ? v : "";
+  }
+  function flankAtk(st, mode) { return !mode ? 0 : (mode === "out" || mode === "both") && hasFeat(st, "Outflank") ? 4 : 2; }
+  function flankPrec(st, mode) { return (mode === "prec" || mode === "both") && precise(st); }
+  function flankLabel(mode, who) {
+    return { plain: "flanking", out: "flanking with an Outflank ally", prec: "flanking with a Precise Strike ally", both: who === "pet" ? "flanking with Daerlieth" : "flanking with Gwathfaron" }[mode] || "";
+  }
+  function flankSeg(st, who) {
+    var c = st.cond || {}, m = flankMode(c, who), k = who === "pet" ? "petFlank" : "flank", out = hasFeat(st, "Outflank"), ps = precise(st);
+    var sub = function (md) { var b = flankAtk(st, md), pr = flankPrec(st, md); return "+" + b + " melee" + (pr ? ", +1d6 precision" : ""); };
+    return '<div class="seg" role="group" aria-label="Flanking">' +
+      tg("cond", k, "Not flanking", !m, "", "") +
+      tg("cond", k, "Flanking", m === "plain", "+2 melee, no teamwork feat" + (who === "pet" ? "" : "; any flank turns on her stealth attack in forest or vs a favored enemy"), "plain") +
+      (out ? tg("cond", k, "With an Outflank ally", m === "out", sub("out"), "out") : "") +
+      (ps ? tg("cond", k, "With a Precise Strike ally", m === "prec", sub("prec"), "prec") : "") +
+      (out && ps ? tg("cond", k, who === "pet" ? "With Daerlieth" : "With Gwathfaron", m === "both", sub("both") + (who === "pet" ? "" : " for both") + " (or an ally with both feats)", "both") : "") +
+      (who === "pet" && (out || ps) ? '<p class="hint">Her teamwork feats are his while he is within 30 ft of her (Coordinated Companion).</p>' : "") +
+      "</div>";
+  }
   var LOAD = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 115, 130, 150, 175, 200, 230, 260, 300, 350, 400, 460, 530, 610, 700, 800, 920, 1040, 1200, 1380];
 
   /* gear that can come off. wt counts toward her load only while it is worn. */
@@ -65,7 +90,7 @@
     charge: "Charging",
     ffoot: "Flat-footed",
     sneak: "Target flat-footed (denied Dex)",
-    flank: "Flanking with Gwathfaron",
+    flank: "Flanking",
     shaken: "Shaken",
     sickened: "Sickened",
     fatigued: "Fatigued",
@@ -172,8 +197,8 @@
     p.init = m.dex + pf;
     p.ac = 10 + m.dex + natT + hs; p.touch = 10 + m.dex + hs; p.ff = 10 + natT; /* haste: +1 dodge, lost when flat-footed */
     p.fort = cp.good + m.con; p.ref = cp.good + m.dex + hs; p.will = cp.poor + m.wis;
-    var fl = c.flank ? flankBonus(st) : 0, sec2 = cp.multiattack ? 2 : 5;
-    p.flank = fl; p.secPen = sec2;
+    var pfm = flankMode(c, "pet"), fl = flankAtk(st, pfm), sec2 = cp.multiattack ? 2 : 5;
+    p.flank = fl; p.flankMode = pfm; p.flankPrec = flankPrec(st, pfm); p.secPen = sec2;
     p.bite = cp.bab + m.str + tgt + fl + hs; p.biteD = m.str + tgt;
     p.claw = cp.bab + m.str - sec2 + tgt + fl + hs; p.clawD = Math.floor(m.str / 2) + tgt; /* secondary attacks */
     p.cmb = cp.bab + m.str; p.cmd = 10 + cp.bab + m.str + m.dex;
@@ -287,7 +312,7 @@
     var fin = Math.max(S, D), stat = -sp2;
     var defAtk = c.defend === "fight" ? -4 : 0;
     var hasteAtk = haste ? 1 : 0;
-    var flank = c.flank ? flankBonus(st) : 0; /* flanking: +2 on melee attacks, +4 with Outflank */
+    var fm = flankMode(c, "her"), flank = flankAtk(st, fm); /* flanking: +2 on melee attacks, +4 when both have Outflank */
     var common = BAB + fin + 1 + tgt + hasteAtk + defAtk + stat + flank;
     var half = S > 0 ? Math.floor(S / 2) : S;
     var dmgM = S + tgt - (c.sickened ? 2 : 0), dmgO = half + tgt - (c.sickened ? 2 : 0);
@@ -304,8 +329,8 @@
       stunUses: P.stunUses, stealthDice: P.stealthDice,
       dmgM: dmgM, dmgO: dmgO, haste: haste,
       stunDc: 10 + Math.floor(LEVEL / 2) + W,
-      flank: flank,
-      sneak: !!((c.sneak || c.flank) && (c.forest || tgt))
+      flank: flank, flankMode: fm, flankPrec: flankPrec(st, fm),
+      sneak: !!((c.sneak || fm) && (c.forest || tgt))
     };
     var rtouch = BAB + D + hasteAtk + stat + defAtk;
     d.rtouch = rtouch;
@@ -423,8 +448,8 @@
       tg("cond", "defend", "Fighting defensively", c.defend === "fight", "−4 attacks, +3 dodge AC", "fight") +
       tg("cond", "defend", "Total defense", c.defend === "total", "+6 dodge AC, no attacks", "total") + "</div>" +
       tg("cond", "ffoot", CONDS.ffoot, c.ffoot, "loses Dex and dodge to AC") +
-      tg("cond", "flank", CONDS.flank, c.flank, "+" + flankBonus(st) + " melee attack for both" + (precise(st) ? ", +1d6 precision on every hit" : "") + "; her stealth attack +" + SD + " if forest or favored enemy") +
-      tg("cond", "sneak", CONDS.sneak, c.sneak, "stealth attack +" + SD + " if forest or favored enemy") + "</div>" +
+      tg("cond", "sneak", CONDS.sneak, c.sneak, "stealth attack +" + SD + " if forest or favored enemy") +
+      '<div class="gl">Flanking</div>' + flankSeg(st, "her") + "</div>" +
       '<div class="grp"><div class="gl">Status</div>' +
       tg("cond", "shaken", CONDS.shaken, c.shaken, "−2 attacks, saves, skills") +
       tg("cond", "sickened", CONDS.sickened, c.sickened, "−2 attacks, damage, saves, skills") +
@@ -486,7 +511,7 @@
     /* attacks */
     var tgtTxt = a.tgt ? " (" + sg(a.tgt) + " favored enemy)" : "";
     var wrapNote = a.wrap ? "With the bodywrap on a strike: +1 attack and damage, 2 uses a round." : "Bodywrap off: no bonus strikes.";
-    var psD = c.flank && precise(st) ? " +1d6 precision" : "";
+    var psD = a.flankPrec ? " +1d6 precision" : "";
     var dm = function (n) { return a.die + (n ? sg(n) : "") + (a.sneak ? " +" + SD : "") + psD; };
     var dmW = function (n) { return a.die + sg(n + a.wrap) + (a.sneak ? " +" + SD : "") + psD; };
     /* attack picker: action (standard, full attack, charge, attack of opportunity) and one or two weapons, saved in cond */
@@ -533,7 +558,7 @@
       else atkRows.push(["<b>If hasted: " + (order.length + 1) + " strikes</b>", strikes([tm[0] + 1, of[0] + 1, tm[0] + 1].concat(order.slice(2).map(function (x) { return x[1] + 1; }))), "", "Haste gives +1 on every attack and one extra main-hand strike at her highest bonus"]);
     }
     if (a.canAttack) atkRows.push(["Stunning Fist", "on a hit", "", "Declare before the roll on any strike, 1 a round: Fort DC " + a.stunDc + " or stunned. " + a.stunUses + " a day (" + (st.stun == null ? a.stunUses : st.stun) + " left)"]);
-    var sneakOn = (c.sneak || c.flank), sneakTxt = sneakOn ? ((c.forest || a.tgt) ? "Stealth attack +" + SD + " on every hit now (" + (c.flank ? "flanking" : "target flat-footed") + "); it isn't multiplied on a critical." : "Stealth attack needs forest or a favored enemy as well.") : "Stealth attack +" + SD + " when the target is flat-footed or flanked, in forest or against a favored enemy. Skirmishing Attack: move 10+ ft first and the first attack counts as against a flat-footed target.";
+    var sneakOn = (c.sneak || a.flankMode), sneakTxt = sneakOn ? ((c.forest || a.tgt) ? "Stealth attack +" + SD + " on every hit now (" + (a.flankMode ? "flanking" : "target flat-footed") + "); it isn't multiplied on a critical." : "Stealth attack needs forest or a favored enemy as well.") : "Stealth attack +" + SD + " when the target is flat-footed or flanked, in forest or against a favored enemy. Skirmishing Attack: move 10+ ft first and the first attack counts as against a flat-footed target.";
     var art = sp.artDice + "d6" + sg(sp.artFlat), art8 = sp.artDice + "d8" + sg(sp.artFlat);
     /* artillery picker: delivery (secret) and die size, saved in cond */
     var artMode = c.art === "sniper" || c.art === "burst" ? c.art : "touch", d8 = !!c.artD8;
@@ -553,7 +578,7 @@
       ["Scorching ray", sg(d.rtouch) + " touch, " + sp.rays + (sp.rays > 1 ? " rays" : " ray"), "4d6 fire each", "Caster level " + sp.clRay + " (fire +2 Elemental Bond, +1 Gifted Adept). 3 rays at CL 11. Burnout 0"]
     ];
     h += sec("Attacks", pick + tbl(["Attack", "Bonus", "Damage", "Notes"], atkRows, "atk") +
-      '<p class="hint">Unarmed strikes with Weapon Finesse (' + (a.fin === d.ab.dex.mod ? "Dex" : "Str") + ' ' + sg(a.fin) + '), Weapon Focus +1' + esc(tgtTxt) + (a.flank ? ", flanking +" + a.flank + (a.flank > 2 ? " (Outflank)" : "") + (psD ? ", Precise Strike +1d6 on every hit" : "") : "") + ". Damage " + a.die + " (Monastic Legacy, effective monk level " + Math.floor(L / 2) + "). Crit 20/x2. " + esc(wrapNote) + " " + esc(sneakTxt) + "</p>" +
+      '<p class="hint">Unarmed strikes with Weapon Finesse (' + (a.fin === d.ab.dex.mod ? "Dex" : "Str") + ' ' + sg(a.fin) + '), Weapon Focus +1' + esc(tgtTxt) + (a.flank ? ", " + flankLabel(a.flankMode) + " +" + a.flank + (a.flank > 2 ? " (Outflank)" : "") + (psD ? ", Precise Strike +1d6 on every hit" : "") : "") + ". Damage " + a.die + " (Monastic Legacy, effective monk level " + Math.floor(L / 2) + "). Crit 20/x2. " + esc(wrapNote) + " " + esc(sneakTxt) + "</p>" +
       artPick + tbl(["Spell attack", "Bonus", "Damage", "Notes"], spRows, "atk") +
       '<p class="hint">Companion bite: ' + sg(d.pet.bite) + ' for 1d6' + sg(d.pet.biteD) + ' plus trip, claws ' + sg(d.pet.claw) + ' for 1d3' + sg(d.pet.clawD) + ".</p>", true);
 
@@ -963,7 +988,7 @@
     var hpBtn = function (d) { return '<button class="btn sm" data-act="hp" data-k="petHp" data-d="' + d + '">' + (d > 0 ? "+" : "−") + Math.abs(d) + "</button>"; };
     var shared = '<div class="grp"><div class="gl">Shared with Daerlieth</div>' +
       tg("cond", "forest", CONDS.forest, c.forest, "+" + PRp.forest + " initiative, Perception, Stealth, Survival") +
-      tg("cond", "flank", "Flanking with Daerlieth", c.flank, "+" + flankBonus(st) + " melee attack for both" + (precise(st) ? ", +1d6 precision on every hit" : "") + "; her stealth attack +" + PRp.stealthDice + "d6") +
+      '<div class="gl">His flanking</div>' + flankSeg(st, "pet") +
       '<div class="seg" role="group" aria-label="Target">' +
       tg("cond", "target", "No favored enemy", !c.target, "", "") +
       fes.map(function (f) { return tg("cond", "target", f.name, c.target === f.k, "+" + f.b + " attack and damage", f.k); }).join("") + "</div></div>";
@@ -1006,7 +1031,7 @@
       tg("cond", "petAtk", "Full attack", pm === "full", "bite and 2 claws, 5-ft step only", "") +
       tg("cond", "petAtk", "Charge", pm === "charge", "full-round, bite at +2", "charge") +
       tg("cond", "petAtk", "Attack of opportunity", pm === "aoo", "bite, on their turn", "aoo") + "</div></div></div>";
-    var pps = c.flank && precise(st) ? " +1d6 precision" : "";
+    var pps = p.flankPrec ? " +1d6 precision" : "";
     var biteD = "1d6" + sg(p.biteD) + pps, clawD = "1d3" + sg(p.clawD) + pps, tripTxt = "On a hit: free trip attempt at CMB " + sg(p.cmb) + ", doesn't provoke";
     var pRows = [];
     if (pm === "full") {
@@ -1024,7 +1049,7 @@
       pRows.push(["Attack of opportunity", sg(p.bite), biteD, "One a round. He threatens 5 ft. " + tripTxt]);
     }
     h += sec("Offense", pPick + tbl(["Attack", "Bonus", "Damage", "Notes"], pRows, "atk") +
-      '<p class="hint">BAB ' + sg(cp.bab) + ', Str ' + sg(m.str) + ' on attack and damage. Space 5 ft, reach 5 ft. Built as a scout, not a fighter; his job is to flank so her stealth attack lands.' + (p.flank ? " Flanking +" + p.flank + (p.flank > 2 ? " (Outflank)" : "") + " counted" + (pps ? ", Precise Strike +1d6 on every hit" : "") + (p.flank > 2 || pps ? " (her teamwork feats, his while within 30 ft of her)." : ".") : "") + (p.tgt ? " Favored enemy " + sg(p.tgt) + " counted." : "") + " Tap a bonus at the top for its breakdown.</p>", true);
+      '<p class="hint">BAB ' + sg(cp.bab) + ', Str ' + sg(m.str) + ' on attack and damage. Space 5 ft, reach 5 ft. Built as a scout, not a fighter; his job is to flank so her stealth attack lands.' + (p.flank ? " " + flankLabel(p.flankMode, "pet").replace(/^f/, "F") + " +" + p.flank + (p.flank > 2 ? " (Outflank)" : "") + " counted" + (pps ? ", Precise Strike +1d6 on every hit" : "") + (p.flank > 2 || pps ? " (her teamwork feats, his while within 30 ft of her)." : ".") : "") + (p.tgt ? " Favored enemy " + sg(p.tgt) + " counted." : "") + " Tap a bonus at the top for its breakdown.</p>", true);
 
     var pLeft = p.ranksMax - p.ranksUsed, pEdit = !o.readOnly && pLeft !== 0;
     h += sec("Skills", '<p class="rkhead"><b>' + p.ranksUsed + " of " + p.ranksMax + "</b> ranks" + (pLeft > 0 ? " · <b>" + pLeft + " to place</b>" : pLeft < 0 ? " · <b>" + (-pLeft) + " too many</b>" : "") + "</p>" +
@@ -1071,7 +1096,7 @@
   }
 
   function d0level(st) { return levelOf(st); }
-  var api = { hastedOn: hastedOn, derive: derive, render: render, renderPet: renderPet, PET: PET, petRanks: petRanks, ranksOf: ranksOf, SKILLS: SKILLS, hpMaxOf: hpMaxOf, levelOf: levelOf, FX_UNITS: FX_UNITS, LETTERS: LETTERS, letterHtml: letterHtml, featHtml: featHtml, featGroups: featGroups, classData: classData, featInfo: featInfo, hasFeat: hasFeat, BASE_FEATS: BASE_FEATS, fxLeft: fxLeft, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
+  var api = { flankMode: flankMode, flankLabel: flankLabel, hastedOn: hastedOn, derive: derive, render: render, renderPet: renderPet, PET: PET, petRanks: petRanks, ranksOf: ranksOf, SKILLS: SKILLS, hpMaxOf: hpMaxOf, levelOf: levelOf, FX_UNITS: FX_UNITS, LETTERS: LETTERS, letterHtml: letterHtml, featHtml: featHtml, featGroups: featGroups, classData: classData, featInfo: featInfo, hasFeat: hasFeat, BASE_FEATS: BASE_FEATS, fxLeft: fxLeft, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
   root.SheetEngine = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

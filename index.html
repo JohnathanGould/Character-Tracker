@@ -1561,7 +1561,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     lines.push("Effects on Daerlieth: " + fxl("her") + ". On Gwathfaron: " + fxl("pet") + ".");
     var cd = [];
     if (c.forest) cd.push("in forest");
-    if (c.flank) cd.push("flanking (+" + D.atk.flank + (SheetEngine.hasFeat(s, "Precise Strike") ? ", +1d6 precision" : "") + ")");
+    if (D.atk.flankMode) cd.push(SheetEngine.flankLabel(D.atk.flankMode) + " (+" + D.atk.flank + (D.atk.flankPrec ? ", +1d6 precision" : "") + ")");
+    if (D.pet.flankMode) cd.push("Gwathfaron " + SheetEngine.flankLabel(D.pet.flankMode, "pet") + " (+" + D.pet.flank + (D.pet.flankPrec ? ", +1d6 precision" : "") + ")");
     if (c.target) { var fe = D.fe.filter(function (f) { return f.k === c.target; })[0]; if (fe) cd.push("favored enemy " + fe.name + " +" + fe.b); }
     if (c.defend === "fight") cd.push("fighting defensively"); if (c.defend === "total") cd.push("total defense");
     ["charge", "ffoot", "sneak", "shaken", "sickened", "fatigued", "exhausted", "evil"].forEach(function (k) { if (c[k]) cd.push(String(SheetEngine.CONDS && SheetEngine.CONDS[k] || k).toLowerCase()); });
@@ -1850,7 +1851,17 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     } else if (a === "cond") {
       var ck = t.getAttribute("data-k"), cv = t.getAttribute("data-v");
       mutate(function (s) {
-        if (ck === "target" || ck === "defend" || ck === "atk" || ck === "hands" || ck === "art" || ck === "artD8" || ck === "petAtk") { if (cv && s.cond[ck] !== cv) s.cond[ck] = cv; else delete s.cond[ck]; return; }
+        if (ck === "target" || ck === "defend" || ck === "atk" || ck === "hands" || ck === "art" || ck === "artD8" || ck === "petAtk" || ck === "flank" || ck === "petFlank") {
+          var was = s.cond[ck];
+          if (cv && s.cond[ck] !== cv) s.cond[ck] = cv; else delete s.cond[ck];
+          /* her "With Gwathfaron" and his "With Daerlieth" are the same flank: keep the two in step */
+          if (ck === "flank" || ck === "petFlank") {
+            var other = ck === "flank" ? "petFlank" : "flank";
+            if (s.cond[ck] === "both") s.cond[other] = "both";
+            else if ((was === "both" || was === true) && (s.cond[other] === "both" || s.cond[other] === true)) delete s.cond[other];
+          }
+          return;
+        }
         if (s.cond[ck]) delete s.cond[ck]; else s.cond[ck] = true;
         if (ck === "exhausted" && s.cond[ck]) delete s.cond.fatigued;
         if (ck === "fatigued" && s.cond[ck]) delete s.cond.exhausted;
