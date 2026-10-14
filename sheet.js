@@ -618,6 +618,7 @@
     "moonlight resilience": ["Racial (alternate)", "Cold resistance 5; light or dancing lights 1/day.", "Cold resistance 5. Once a day she can produce light or dancing lights as a spell-like ability (no burnout). Replaces Elven Immunities."],
     /* traits */
     "reactionary": ["Trait (combat)", "+2 initiative.", "+2 trait bonus on initiative checks."],
+    "umbral unmasking": ["Drawback (Champions of Corruption)", "She casts no shadow; a DC 15 Wisdom check notices it.", "She casts no shadow whatsoever (or a monstrous one). Under normal light it is not hard to observe but uncommon to notice: creatures that succeed at a DC 15 Wisdom check notice it plainly (a Perception check may also be needed, depending on conditions). This telltale sign of wickedness can't be concealed by misdirection, nondetection or illusions, except those that also affect shadows (such as invisibility). No penalty to her rolls; the cost is how people react."],
     "gifted adept": ["Trait (magic), taken with a drawback", "+1 caster level on scorching ray.", "Choose one spell: she casts it at +1 caster level. Hers is scorching ray, so with Elemental Bond it is cast at CL 11 and fires 3 rays (12d6 fire) for 0 burnout. Any burnout lowers her caster level, so the third ray needs a clean slate (or Wild Arcana's +2)."],
     "friend in every town": ["Trait (social)", "+1 Diplomacy and Knowledge (local); Diplomacy is a class skill.", "+1 trait bonus on Diplomacy and Knowledge (local) checks, and Diplomacy is always a class skill for her."],
     /* her feats */
@@ -706,8 +707,8 @@
     return sec("Feats, traits and talents",
       '<p class="hint">Hover or tap a name for what it does; tap for the full text.</p>' +
       g("Racial (moon elf, alternate features)", ["Low-Light Vision", "Keen Senses", "Silver-Tongued Diplomacy", "Wanderer's Stride", "Moonlight Resilience"].map(function (n) { return row("", n); })) +
-      g("Traits (a third trait for one drawback)", [row("", "Reactionary"), row("", "Friend in Every Town"), row("", "Gifted Adept", "scorching ray"),
-        "<li><span class=\"flv\"></span><span class=\"hint\">Drawback: to be agreed with the GM (pays for Gifted Adept)</span></li>"]) +
+      g("Traits and drawback", [row("", "Reactionary"), row("", "Friend in Every Town"), row("", "Gifted Adept", "scorching ray"),
+        row("", "Umbral Unmasking", "drawback, pays for Gifted Adept")]) +
       g("Feats (the normal feat plus the GM's extra feat at odd levels)", regular) +
       g("Teamwork (Companion-Bound, 4th; Gwathfaron shares them)", [row("L4", "Coordinated Companion", "Gwathfaron gets all her teamwork feats while within 30 ft of her"), row("L4", "Bonded Mind", "teamwork; Gwathfaron has it too (within 30 ft of her)")]) +
       g("Combat style (unarmed, prerequisites waived)", style) +
