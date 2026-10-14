@@ -1103,7 +1103,15 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     h += '<div class="group"><h3>Experimental spell · +1 burnout</h3>' +
       '<div class="fields"><label class="field">Today\'s pick<select id="expSel">' + expOpts + "</select></label></div>" +
       '<div class="spells">' + spellBtn(expSpell()) + "</div></div>";
-    h += '<div class="group"><h3>Wild Arcana · any spell on her list</h3><div class="spells">' + spellBtn(customSpell()) + "</div></div>";
+    var waCur = bankFind(ui.customName, ui.customLvl), waOpts = '<option value="">Choose a spell…</option>';
+    for (var wl = 1; wl <= LP().maxSpell; wl++) {
+      waOpts += '<optgroup label="' + ordinal(wl) + ' level">' + BANK.filter(function (b) { return b.lvl === wl; }).map(function (b) {
+        return '<option value="' + b.id + '"' + (waCur && waCur.id === b.id ? " selected" : "") + ">" + esc(b.name) + (SCHOOLS[b.sch] ? " (" + SCHOOLS[b.sch] + ")" : "") + "</option>";
+      }).join("") + "</optgroup>";
+    }
+    h += '<div class="group"><h3>Wild Arcana · any spell on her list, 1 mythic power</h3>' +
+      '<div class="fields"><label class="field">Spell to cast<select id="waSel">' + waOpts + "</select></label></div>" +
+      '<div class="spells">' + spellBtn(customSpell()) + "</div></div>";
     $("pSpells").innerHTML =
       '<div class="ph"><h2>Spells</h2><span class="hint">Badge shows burnout before overdrive</span></div>' + h;
   }
@@ -1135,17 +1143,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       opts += '<div class="fields">' + (sp.custom ? "" : "") +
         '<label class="field">Duration<select id="cDur">' + Object.keys(DURS).map(function (k) { return '<option value="' + k + '"' + (ui.customDur === k ? " selected" : "") + ">" + DURS[k].label + "</option>"; }).join("") + "</select></label></div>" +
         '<div class="opts"><label class="opt"><input type="checkbox" id="fireChk"' + (ui.unkFire ? " checked" : "") + '><span>Has the fire descriptor<small>Adds +2 caster level from Elemental Bond</small></span></label></div>';
-    }
-    if (sp.custom) {
-      var cb = bankFind(ui.customName, ui.customLvl);
-      opts += '<div class="fields">' +
-        '<label class="field">Level<select id="cLvl">' + LP().known.map(function (x, i) { return i; }).filter(function (i) { return i >= 1 && i <= LP().maxSpell; }).map(function (n) { return '<option value="' + n + '"' + (ui.customLvl === n ? " selected" : "") + ">" + ordinal(n) + " level</option>"; }).join("") + "</select></label>" +
-        '<label class="field">Spell name, type to search ' + ordinal(ui.customLvl) + ' level<input type="text" id="cName" list="bankList" autocomplete="off" maxlength="60" value="' + esc(ui.customName) + '" placeholder="Search ' + ordinal(ui.customLvl) + ' level spells"></label>' +
-        (cb ? "" :
-          '<label class="field">Duration<select id="cDur">' + Object.keys(DURS).map(function (k) { return '<option value="' + k + '"' + (ui.customDur === k ? " selected" : "") + ">" + DURS[k].label + "</option>"; }).join("") + "</select></label>") +
-        "</div>" +
-        '<datalist id="bankList">' + BANK.filter(function (b) { return b.lvl === ui.customLvl; }).map(function (b) { return '<option value="' + esc(b.name) + '">' + (SCHOOLS[b.sch] || "") + "</option>"; }).join("") + "</datalist>" +
-        (cb || !ui.customName.trim() ? "" : '<p class="hint">Not in the ' + ordinal(ui.customLvl) + ' level bank. Set its duration here.</p>');
     }
 
     if (sp.per) {
@@ -1681,6 +1678,10 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     else if (id === "elSel") { ui.element = e.target.value; renderCast(); }
     else if (id === "cLvl") { ui.customLvl = parseInt(e.target.value, 10); renderSpells(); renderCast(); }
     else if (id === "cDur") { ui.customDur = e.target.value; renderCast(); }
+    else if (id === "waSel") {
+      var wb = BANK.filter(function (b) { return b.id === e.target.value; })[0];
+      if (wb) { ui.customName = wb.name; ui.customLvl = wb.lvl; ui.sel = "custom"; render(); }
+    }
     else if (id === "expSel") {
       mutate(function (s) { s.exp = e.target.value; });
       if (/^exp-/.test(ui.sel)) ui.sel = "exp-" + e.target.value;
