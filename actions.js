@@ -52,6 +52,8 @@
     return "std";
   }
 
+  var MV = { moves: true }; /* actions that move her through space: no 5-ft step with them */
+
   function catalog(who, ctx) {
     var d = ctx.d, a = d.atk, sp = d.sp, p = d.pet, groups = [];
     var G = function (label, items) { groups.push({ label: label, items: items.filter(Boolean) }); };
@@ -60,16 +62,16 @@
       G("Attacks", [
         I("p-bite", "Bite " + sg(p.bite) + " (1d6" + sg(p.biteD) + ", free trip)", "std"),
         I("p-full", "Full attack: bite " + sg(p.bite) + ", claws " + sg(p.claw) + "/" + sg(p.claw), "full"),
-        I("p-charge", "Charge: bite " + sg(p.bite + 2) + ", −2 AC", "full"),
-        I("p-sprint", "Sprint: charge at ten times his speed (once an hour)", "full"),
+        I("p-charge", "Charge: bite " + sg(p.bite + 2) + ", −2 AC", "full", "", MV),
+        I("p-sprint", "Sprint: charge at ten times his speed (once an hour)", "full", "", MV),
         I("p-aoo", "Attack of opportunity: bite " + sg(p.bite), "none", "One a round, on an enemy's turn."),
         I("p-trip", "Trip (free on a bite hit), CMB " + sg(p.cmb), "free"),
         I("p-aid", "Aid another", "std"),
         I("p-totdef", "Total defense", "std")
       ]);
       G("Movement", [
-        I("p-move", "Move (50 ft)", "move"), I("p-step", "5-ft step", "step"), I("p-run", "Run (200 ft)", "full"),
-        I("p-stealth", "Move with Stealth " + sg(p.stealth), "move"), I("p-withdraw", "Withdraw", "full"), I("p-stand", "Stand up from prone", "move")
+        I("p-move", "Move (50 ft)", "move", "", MV), I("p-step", "5-ft step", "step"), I("p-run", "Run (200 ft)", "full", "", MV),
+        I("p-stealth", "Move with Stealth " + sg(p.stealth), "move", "", MV), I("p-withdraw", "Withdraw", "full", "", MV), I("p-stand", "Stand up from prone", "move")
       ]);
       G("Senses and tricks", [
         I("p-perc", "Search: Perception " + sg(p.perc), "move"), I("p-track", "Track by scent (trick)", "move"),
@@ -84,7 +86,7 @@
       I("h-single", "Unarmed strike " + sg(a.single) + " (" + dm + ")", "std"),
       I("h-full2", "Full attack, two weapons " + tw.map(sg).join("/") + " (" + dm + ")", "full"),
       I("h-full1", "Full attack, one weapon " + a.mains.map(sg).join("/") + " (" + dm + ")", "full"),
-      I("h-charge", "Charge " + sg(a.charge) + " (" + dm + "), −2 AC", "full"),
+      I("h-charge", "Charge " + sg(a.charge) + " (" + dm + "), −2 AC", "full", "", MV),
       I("h-aoo", "Attack of opportunity " + sg(a.single), "none", "One a round, on an enemy's turn."),
       I("h-stun", "Stunning Fist (declared before an unarmed attack, Fort DC " + a.stunDc + ")", "none", "Declared as part of an attack."),
       I("h-art", "Arcane artillery " + sg(d.rtouch) + " touch (" + sp.artDice + "d6" + sg(sp.artFlat) + ")", "std"),
@@ -109,8 +111,8 @@
       I("h-od", "Spend 1 overdrive (ignore burnout)", "free"), I("h-odd8", "Artillery overdrive: d8s (1 overdrive)", "free")
     ]);
     G("Movement", [
-      I("h-move", "Move (" + d.speed + " ft)", "move"), I("h-step", "5-ft step", "step"), I("h-run", "Run (" + d.speed * 4 + " ft)", "full"),
-      I("h-withdraw", "Withdraw", "full"), I("h-stand", "Stand up from prone", "move"), I("h-prone", "Drop prone", "free")
+      I("h-move", "Move (" + d.speed + " ft)", "move", "", MV), I("h-step", "5-ft step", "step"), I("h-run", "Run (" + d.speed * 4 + " ft)", "full", "", MV),
+      I("h-withdraw", "Withdraw", "full", "", MV), I("h-stand", "Stand up from prone", "move"), I("h-prone", "Drop prone", "free")
     ]);
     G("Skills", d.skills.map(function (s) {
       var sa = SKILL_ACT[s.name] || ["std", ""];
@@ -130,26 +132,43 @@
     return groups;
   }
 
-  /* budget: what a creature has used this round and what is over the limit */
+  /* budget: what a creature has used this round, what is left and what is over the limit.
+     A standard action can be traded down for a second move action; a full-round action takes both. */
   function budget(list) {
     var n = { std: 0, move: 0, swift: 0, imm: 0, free: 0, full: 0, step: 0, none: 0, long: 0 }, extra = 0, moved = false;
-    (list || []).forEach(function (e) { n[e.act] = (n[e.act] || 0) + 1; if (e.grants === "std") extra++; if (e.act === "move" && /^(Move|Run|Charge)/.test(e.name)) moved = true; });
+    (list || []).forEach(function (e) {
+      n[e.act] = (n[e.act] || 0) + 1;
+      if (e.grants === "std") extra++;
+      if (e.moves || /^(Move|Run|Charge|Withdraw|Sprint)/.test(e.name)) moved = true;
+    });
     var stdCap = 1 + extra, warn = [];
+    var stdUsed = n.std + Math.max(0, n.move - 1); /* a second move uses up the standard action */
     if (n.full > 1) warn.push("only one full-round action a round");
     if (n.full && (n.std || n.move)) warn.push("a full-round action uses both the standard and the move action");
-    if (n.std > stdCap) warn.push("only " + stdCap + " standard action" + (stdCap > 1 ? "s" : "") + " this round");
-    var moveCap = n.full ? 0 : 1 + Math.max(0, stdCap - n.std);
-    if (n.move > moveCap) warn.push("only " + moveCap + " move action" + (moveCap === 1 ? "" : "s") + " left (a move can replace the standard)");
+    if (stdUsed > stdCap) warn.push(n.move > 1 ? "only " + (1 + stdCap - n.std) + " move action" + (stdCap - n.std ? "s" : "") + " (a move can replace the standard)" : "only " + stdCap + " standard action" + (stdCap > 1 ? "s" : "") + " this round");
     if (n.swift + n.imm > 1) warn.push("one swift or immediate action a round");
     if (n.step > 1) warn.push("only one 5-ft step");
     if (n.step && moved) warn.push("no 5-ft step in a round she moves");
     if (n.long) warn.push("something here takes a minute or more: not a combat round");
+    var std = n.full ? 0 : Math.max(0, stdCap - stdUsed);
+    var move = n.full ? 0 : Math.max(0, 1 - n.move) + std;
     return {
-      n: n, warn: warn,
-      std: n.full ? 0 : Math.max(0, stdCap - n.std), move: n.full ? 0 : Math.max(0, moveCap - n.move),
+      n: n, warn: warn, moved: moved,
+      std: std, move: move, full: !n.full && !n.std && !n.move,
       swift: Math.max(0, 1 - n.swift - n.imm), step: n.step || moved ? 0 : 1
     };
   }
 
-  root.Actions = { ACT: ACT, SKILL_ACT: SKILL_ACT, castAct: castAct, catalog: catalog, budget: budget };
+  /* can this still be done this round, given budget b? */
+  function fits(act, b, moves) {
+    if (moves && b.n.step) return false; /* after a 5-ft step she can't move */
+    if (act === "std") return b.std > 0;
+    if (act === "move") return b.move > 0;
+    if (act === "full") return b.full;
+    if (act === "swift" || act === "imm") return b.swift > 0;
+    if (act === "step") return b.step > 0;
+    return true; /* free, no action, out of combat */
+  }
+
+  root.Actions = { ACT: ACT, SKILL_ACT: SKILL_ACT, castAct: castAct, catalog: catalog, budget: budget, fits: fits };
 })(typeof window !== "undefined" ? window : this);

@@ -217,6 +217,8 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
 .tname { flex: 1; font-size: 0.88rem; }
 .tlist .tx { min-height: 26px; padding: 0 8px; }
 .tadd { display: flex; flex-direction: column; gap: 6px; }
+.tleft { margin: 0; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--moon); text-decoration: underline; cursor: pointer; font: inherit; }
 .tadd select, .tadd input { width: 100%; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 10px; color: var(--fg); }
 .tinfo { margin: 0; }
 .tooc { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
@@ -1471,7 +1473,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   function turnCatalog(who) {
     return Actions.catalog(who, { d: dv(), spells: castable(), ct: function (n) { var c = codexFind(n); return c ? c.ct : /feather fall/i.test(n) ? "immediate action" : /blood money/i.test(n) ? "swift action" : "standard action"; } });
   }
-  var ui_turn = { her: "", pet: "" };
+  var ui_turn = { her: "", pet: "", all: { her: false, pet: false } };
   function oocText(s) {
     s = s || state;
     var A = Actions.ACT, D = SheetEngine.derive(s), c = s.cond || {}, lines = ["OOC: Round " + s.round];
@@ -1504,10 +1506,22 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   }
   function renderTurn() {
     var A = Actions.ACT;
+    var left = function (b) {
+      var used = [];
+      if (!b.std) used.push("standard"); if (!b.move) used.push("move"); if (!b.full) used.push("full-round");
+      if (!b.swift) used.push("swift"); if (!b.step) used.push("5-ft step");
+      return used.length > 1 ? used.slice(0, -1).join(", ") + " or " + used[used.length - 1] : used[0] || "";
+    };
     var col = function (who, label) {
       var list = state.turn[who] || [], b = Actions.budget(list);
       var chip = function (lbl, left, used) { return '<span class="chip' + (left ? "" : " used") + '">' + lbl + " " + (left ? "✓" : "used") + "</span>"; };
-      var cat = turnCatalog(who), sel = ui_turn[who];
+      var all = turnCatalog(who), hidden = 0, showAll = !!ui_turn.all[who];
+      /* leave out what she has no action left for (Show all brings them back) */
+      var cat = all.map(function (g) {
+        return { label: g.label, items: g.items.filter(function (it) { var ok = showAll || Actions.fits(it.act, b, it.moves); if (!ok) hidden++; return ok; }) };
+      }).filter(function (g) { return g.items.length; });
+      var sel = ui_turn[who];
+      if (sel && sel !== "custom" && !cat.some(function (g) { return g.items.some(function (it) { return it.id === sel; }); })) sel = ui_turn[who] = "";
       var opts = '<option value="">Add an action…</option>' + cat.map(function (g) {
         return '<optgroup label="' + esc(g.label) + '">' + g.items.map(function (it) { return '<option value="' + esc(it.id) + '"' + (it.id === sel ? " selected" : "") + ">" + esc(it.name) + " · " + A[it.act] + "</option>"; }).join("") + "</optgroup>";
       }).join("") + '<optgroup label="Something else"><option value="custom"' + (sel === "custom" ? " selected" : "") + '>Something else (describe it)…</option></optgroup>';
@@ -1521,7 +1535,9 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         }).join("") + "</ul>" : '<p class="hint">Nothing this round yet.</p>') +
         '<div class="tadd"><select class="turnsel" data-who="' + who + '">' + opts + "</select>" +
         (pick ? '<p class="hint tinfo"><b>' + A[pick.act] + ".</b> " + esc(pick.note || "") + "</p>" : "") +
-        (sel === "custom" ? '<select id="tAct-' + who + '">' + Object.keys(A).map(function (k) { return '<option value="' + k + '">' + A[k] + "</option>"; }).join("") + "</select>" : "") +
+        (hidden || showAll ? '<p class="hint tleft">' + (showAll ? "Showing every action." : hidden + " action" + (hidden === 1 ? "" : "s") + " hidden: no " + left(b) + " left.") +
+          ' <button type="button" class="linkbtn" data-act="turnall" data-who="' + who + '">' + (showAll ? "Only what's left" : "Show all") + "</button></p>" : "") +
+        (sel === "custom" ? '<select id="tAct-' + who + '">' + Object.keys(A).filter(function (k) { return showAll || Actions.fits(k, b); }).map(function (k) { return '<option value="' + k + '">' + A[k] + "</option>"; }).join("") + "</select>" : "") +
         '<input type="text" id="tNote-' + who + '" maxlength="80" placeholder="' + (sel === "custom" ? "What she does" : "Details: target, result… (optional)") + '">' +
         '<button type="button" class="btn primary sm" data-act="turnadd" data-who="' + who + '"' + (sel ? "" : " disabled") + ">Add</button></div></div>";
     };
@@ -1708,7 +1724,9 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       if (tid === "custom") { if (!tn.trim()) { $("tNote-" + tw).focus(); return; } it = { act: ($("tAct-" + tw) || {}).value || "std", name: tn.trim().slice(0, 80) }; tn = ""; }
       if (!it) return;
       ui_turn[tw] = "";
-      mutate(function (s) { turnAdd(s, tw, { act: it.act, name: it.name, note: tn.trim().slice(0, 80), grants: it.grants }); });
+      mutate(function (s) { turnAdd(s, tw, { act: it.act, name: it.name, note: tn.trim().slice(0, 80), grants: it.grants, moves: it.moves }); });
+    } else if (a === "turnall") {
+      var aw = t.getAttribute("data-who"); ui_turn.all[aw] = !ui_turn.all[aw]; renderTurn();
     } else if (a === "turnrm") {
       var rw = t.getAttribute("data-who"), rid = t.getAttribute("data-id");
       mutate(function (s) { s.turn[rw] = s.turn[rw].filter(function (e) { return e.id !== rid; }); });
