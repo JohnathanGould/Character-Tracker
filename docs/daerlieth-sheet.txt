@@ -58,7 +58,7 @@ Stunning Fist    |Melee | +15               | 1d8+3 | 20/x2 |   -   |   B   | De
 
 Attack: BAB 8 + Dex 6 (Weapon Finesse) + 1 Weapon Focus = +15. Two-Weapon Fighting: -2 on every strike (unarmed strikes count as light).
 Damage: 1d8 unarmed (Monastic Legacy, effective monk level 4) + Str 3 main hand, +1 off hand (half Str).
-Flanking with Gwathfaron: +2 on every melee attack.
+Flanking with Gwathfaron: +4 on every melee attack (Outflank) and +1d6 precision damage on every melee hit (Precise Strike), for both of them.
 
 Stunning Fist: 2 uses a day, 1 per round. Declare before the roll. Fort DC 18 (10 + 4 + Wis 4) or stunned until just before her next turn.
 
@@ -97,8 +97,8 @@ L1 – Weapon Finesse
 L1 – Improved Unarmed Strike
 L3 – Two-Weapon Fighting
 L3 – Weapon Focus (unarmed strike)
-L5 – Open (feat to be chosen later)
-L5 – Open (feat to be chosen later)
+L5 – Outflank (teamwork; Gwathfaron has it through Coordinated Companion): flanking bonus +4 instead of +2; a crit on the flanked foe gives the partner an attack of opportunity.
+L5 – Precise Strike (teamwork, GM's extra feat; Gwathfaron has it too): +1d6 precision damage on every melee hit while they flank the same foe.
 L7 – Improved Two-Weapon Fighting
 L7 – Expanded Arcana (adds 1 spell known: detonate, 4th level)
 

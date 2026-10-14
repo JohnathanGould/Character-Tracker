@@ -38,10 +38,15 @@
     return hp;
   }
   /* she has taken Greater Two-Weapon Fighting if any feat pick names it */
+  /* feats taken before the tracker's level-up picks (her 5th-level slots), plus any level-up pick */
+  var BASE_FEATS = ["Outflank", "Precise Strike"];
   function hasFeat(st, name) {
     var pk = picksOf(st), re = new RegExp(name, "i");
-    return Object.keys(pk).some(function (id) { return /^(feat|cs)-/.test(id) && re.test(String(pk[id])); });
+    return BASE_FEATS.some(function (f) { return re.test(f); }) || Object.keys(pk).some(function (id) { return /^(feat|cs)-/.test(id) && re.test(String(pk[id])); });
   }
+  /* teamwork with Gwathfaron (Coordinated Companion gives him her teamwork feats): Outflank makes flanking +4, Precise Strike adds 1d6 */
+  function flankBonus(st) { return hasFeat(st, "Outflank") ? 4 : 2; }
+  function precise(st) { return hasFeat(st, "Precise Strike"); }
   var LOAD = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 115, 130, 150, 175, 200, 230, 260, 300, 350, 400, 460, 530, 610, 700, 800, 920, 1040, 1200, 1380];
 
   /* gear that can come off. wt counts toward her load only while it is worn. */
@@ -157,7 +162,7 @@
     p.init = m.dex + pf;
     p.ac = 10 + m.dex + natT; p.touch = 10 + m.dex; p.ff = 10 + natT;
     p.fort = cp.good + m.con; p.ref = cp.good + m.dex; p.will = cp.poor + m.wis;
-    var fl = c.flank ? 2 : 0, sec2 = cp.multiattack ? 2 : 5;
+    var fl = c.flank ? flankBonus(st) : 0, sec2 = cp.multiattack ? 2 : 5;
     p.flank = fl; p.secPen = sec2;
     p.bite = cp.bab + m.str + tgt + fl; p.biteD = m.str + tgt;
     p.claw = cp.bab + m.str - sec2 + tgt + fl; p.clawD = Math.floor(m.str / 2) + tgt; /* secondary attacks */
@@ -272,7 +277,7 @@
     var fin = Math.max(S, D), stat = -sp2;
     var defAtk = c.defend === "fight" ? -4 : 0;
     var hasteAtk = haste ? 1 : 0;
-    var flank = c.flank ? 2 : 0; /* flanking: +2 on melee attacks */
+    var flank = c.flank ? flankBonus(st) : 0; /* flanking: +2 on melee attacks, +4 with Outflank */
     var common = BAB + fin + 1 + tgt + hasteAtk + defAtk + stat + flank;
     var half = S > 0 ? Math.floor(S / 2) : S;
     var dmgM = S + tgt - (c.sickened ? 2 : 0), dmgO = half + tgt - (c.sickened ? 2 : 0);
@@ -404,7 +409,7 @@
       tg("cond", "defend", "Fighting defensively", c.defend === "fight", "−4 attacks, +3 dodge AC", "fight") +
       tg("cond", "defend", "Total defense", c.defend === "total", "+6 dodge AC, no attacks", "total") + "</div>" +
       tg("cond", "ffoot", CONDS.ffoot, c.ffoot, "loses Dex and dodge to AC") +
-      tg("cond", "flank", CONDS.flank, c.flank, "+2 melee attack for both; her stealth attack +" + SD + " if forest or favored enemy") +
+      tg("cond", "flank", CONDS.flank, c.flank, "+" + flankBonus(st) + " melee attack for both" + (precise(st) ? ", +1d6 precision on every hit" : "") + "; her stealth attack +" + SD + " if forest or favored enemy") +
       tg("cond", "sneak", CONDS.sneak, c.sneak, "stealth attack +" + SD + " if forest or favored enemy") + "</div>" +
       '<div class="grp"><div class="gl">Status</div>' +
       tg("cond", "shaken", CONDS.shaken, c.shaken, "−2 attacks, saves, skills") +
@@ -467,8 +472,9 @@
     /* attacks */
     var tgtTxt = a.tgt ? " (" + sg(a.tgt) + " favored enemy)" : "";
     var wrapNote = a.wrap ? "With the bodywrap on a strike: +1 attack and damage, 2 uses a round." : "Bodywrap off: no bonus strikes.";
-    var dm = function (n) { return a.die + (n ? sg(n) : "") + (a.sneak ? " +" + SD : ""); };
-    var dmW = function (n) { return a.die + sg(n + a.wrap) + (a.sneak ? " +" + SD : ""); };
+    var psD = c.flank && precise(st) ? " +1d6 precision" : "";
+    var dm = function (n) { return a.die + (n ? sg(n) : "") + (a.sneak ? " +" + SD : "") + psD; };
+    var dmW = function (n) { return a.die + sg(n + a.wrap) + (a.sneak ? " +" + SD : "") + psD; };
     /* attack picker: action (standard, full attack, charge, attack of opportunity) and one or two weapons, saved in cond */
     var mode = { std: "std", charge: "charge", aoo: "aoo" }[c.atk] || "full", two = c.hands !== "one";
     var pick = '<div class="atkpick"><div class="grp"><div class="gl">Action</div><div class="seg seg-row" role="group" aria-label="Attack action">' +
@@ -533,7 +539,7 @@
       ["Scorching ray", sg(d.rtouch) + " touch, " + sp.rays + (sp.rays > 1 ? " rays" : " ray"), "4d6 fire each", "Caster level " + sp.clFire + " for fire. Burnout 0"]
     ];
     h += sec("Attacks", pick + tbl(["Attack", "Bonus", "Damage", "Notes"], atkRows, "atk") +
-      '<p class="hint">Unarmed strikes with Weapon Finesse (' + (a.fin === d.ab.dex.mod ? "Dex" : "Str") + ' ' + sg(a.fin) + '), Weapon Focus +1' + esc(tgtTxt) + (a.flank ? ", flanking +2" : "") + ". Damage " + a.die + " (Monastic Legacy, effective monk level " + Math.floor(L / 2) + "). Crit 20/x2. " + esc(wrapNote) + " " + esc(sneakTxt) + "</p>" +
+      '<p class="hint">Unarmed strikes with Weapon Finesse (' + (a.fin === d.ab.dex.mod ? "Dex" : "Str") + ' ' + sg(a.fin) + '), Weapon Focus +1' + esc(tgtTxt) + (a.flank ? ", flanking +" + a.flank + (a.flank > 2 ? " (Outflank)" : "") + (psD ? ", Precise Strike +1d6 on every hit" : "") : "") + ". Damage " + a.die + " (Monastic Legacy, effective monk level " + Math.floor(L / 2) + "). Crit 20/x2. " + esc(wrapNote) + " " + esc(sneakTxt) + "</p>" +
       artPick + tbl(["Spell attack", "Bonus", "Damage", "Notes"], spRows, "atk") +
       '<p class="hint">Companion bite: ' + sg(d.pet.bite) + ' for 1d6' + sg(d.pet.biteD) + ' plus trip, claws ' + sg(d.pet.claw) + ' for 1d3' + sg(d.pet.clawD) + ".</p>", true);
 
@@ -686,7 +692,7 @@
     var open = function (lvl, id, what) { return pk[id] ? row(lvl, pk[id]) : "<li><span class=\"flv\">" + esc(lvl) + '</span><span class="hint">' + esc(what) + " (open, see Level-up picks)</span></li>"; };
     var g = function (title, items) { return items.length ? '<div class="fgroup"><div class="gl">' + esc(title) + '</div><ul class="featlist">' + items.join("") + "</ul></div>" : ""; };
     var regular = [row("L1", "Weapon Finesse"), row("L1", "Improved Unarmed Strike"), row("L3", "Two-Weapon Fighting"), row("L3", "Weapon Focus (unarmed strike)"),
-      open("L5", "feat-5a", "Feat"), open("L5", "feat-5b", "GM's extra feat"), row("L7", "Improved Two-Weapon Fighting"), row("L7", "Expanded Arcana", "detonate")];
+      row("L5", "Outflank", "teamwork; Gwathfaron has it too"), row("L5", "Precise Strike", "teamwork, GM's extra feat; Gwathfaron has it too"), row("L7", "Improved Two-Weapon Fighting"), row("L7", "Expanded Arcana", "detonate")];
     var style = [row("L2", "Monastic Legacy"), row("L6", "Stunning Fist")], tal = [row("L4", "Skirmishing Attack"), row("L7", "Improved Stealth Attack")], ec = [row("L7", "Improved Animal Companion")];
     for (var l = 9; l <= L; l++) {
       if (l % 2) { regular.push(open("L" + l, "feat-" + l + "a", "Feat")); regular.push(open("L" + l, "feat-" + l + "b", "GM's extra feat")); }
@@ -921,7 +927,7 @@
     var hpBtn = function (d) { return '<button class="btn sm" data-act="hp" data-k="petHp" data-d="' + d + '">' + (d > 0 ? "+" : "−") + Math.abs(d) + "</button>"; };
     var shared = '<div class="grp"><div class="gl">Shared with Daerlieth</div>' +
       tg("cond", "forest", CONDS.forest, c.forest, "+" + PRp.forest + " initiative, Perception, Stealth, Survival") +
-      tg("cond", "flank", "Flanking with Daerlieth", c.flank, "+2 melee attack for both; her stealth attack +" + PRp.stealthDice + "d6") +
+      tg("cond", "flank", "Flanking with Daerlieth", c.flank, "+" + flankBonus(st) + " melee attack for both" + (precise(st) ? ", +1d6 precision on every hit" : "") + "; her stealth attack +" + PRp.stealthDice + "d6") +
       '<div class="seg" role="group" aria-label="Target">' +
       tg("cond", "target", "No favored enemy", !c.target, "", "") +
       fes.map(function (f) { return tg("cond", "target", f.name, c.target === f.k, "+" + f.b + " attack and damage", f.k); }).join("") + "</div></div>";
@@ -964,7 +970,8 @@
       tg("cond", "petAtk", "Full attack", pm === "full", "bite and 2 claws, 5-ft step only", "") +
       tg("cond", "petAtk", "Charge", pm === "charge", "full-round, bite at +2", "charge") +
       tg("cond", "petAtk", "Attack of opportunity", pm === "aoo", "bite, on their turn", "aoo") + "</div></div></div>";
-    var biteD = "1d6" + sg(p.biteD), clawD = "1d3" + sg(p.clawD), tripTxt = "On a hit: free trip attempt at CMB " + sg(p.cmb) + ", doesn't provoke";
+    var pps = c.flank && precise(st) ? " +1d6 precision" : "";
+    var biteD = "1d6" + sg(p.biteD) + pps, clawD = "1d3" + sg(p.clawD) + pps, tripTxt = "On a hit: free trip attempt at CMB " + sg(p.cmb) + ", doesn't provoke";
     var pRows = [];
     if (pm === "full") {
       pRows.push(["<b>Full attack: 3 attacks</b>", "<b>" + [p.bite, p.claw, p.claw].map(sg).join(" / ") + "</b>", "", "Full-round action; only a 5-ft step. Natural attacks, all at once."]);
@@ -980,7 +987,7 @@
       pRows.push(["Attack of opportunity", sg(p.bite), biteD, "One a round. He threatens 5 ft. " + tripTxt]);
     }
     h += sec("Offense", pPick + tbl(["Attack", "Bonus", "Damage", "Notes"], pRows, "atk") +
-      '<p class="hint">BAB ' + sg(cp.bab) + ', Str ' + sg(m.str) + ' on attack and damage. Space 5 ft, reach 5 ft. Built as a scout, not a fighter; his job is to flank so her stealth attack lands.' + (p.flank ? " Flanking +2 counted." : "") + (p.tgt ? " Favored enemy " + sg(p.tgt) + " counted." : "") + " Tap a bonus at the top for its breakdown.</p>", true);
+      '<p class="hint">BAB ' + sg(cp.bab) + ', Str ' + sg(m.str) + ' on attack and damage. Space 5 ft, reach 5 ft. Built as a scout, not a fighter; his job is to flank so her stealth attack lands.' + (p.flank ? " Flanking +" + p.flank + (p.flank > 2 ? " (Outflank)" : "") + " counted" + (pps ? ", Precise Strike +1d6 on every hit." : ".") : "") + (p.tgt ? " Favored enemy " + sg(p.tgt) + " counted." : "") + " Tap a bonus at the top for its breakdown.</p>", true);
 
     var pLeft = p.ranksMax - p.ranksUsed, pEdit = !o.readOnly && pLeft !== 0;
     h += sec("Skills", '<p class="rkhead"><b>' + p.ranksUsed + " of " + p.ranksMax + "</b> ranks" + (pLeft > 0 ? " · <b>" + pLeft + " to place</b>" : pLeft < 0 ? " · <b>" + (-pLeft) + " too many</b>" : "") + "</p>" +
@@ -998,7 +1005,7 @@
       "<li>" + featBtn("Alertness") + "</li>" +
       p.feats.slice(4).map(function (f) { return "<li>" + featBtn(f) + ' <span class="hint">picked at level-up</span></li>'; }).join("") +
       (LV().prog(levelOf(st)).pet.multiattack ? "<li>" + featBtn("Multiattack") + ' <span class="hint">bonus</span></li>' : "") +
-      "<li>" + featBtn("Bonded Mind") + ' <span class="hint">teamwork, from Daerlieth through Coordinated Companion</span></li></ul>' +
+      ["Bonded Mind"].concat(BASE_FEATS).map(function (f) { return "<li>" + featBtn(f) + ' <span class="hint">teamwork, from Daerlieth through Coordinated Companion</span></li>'; }).join("") + "</ul>" +
       '<p class="hint">' + cp.feats + " feats at " + p.hd + " HD" + (p.feats.length < cp.feats ? " (" + (cp.feats - p.feats.length) + " still to pick on Daerlieth's tab, Level-up picks)" : "") + ".</p>", false);
 
     h += sec("Tricks", "<p>" + cp.tricks + " tricks (6 from Int, " + (cp.tricks - 6) + " bonus):</p><ul>" +

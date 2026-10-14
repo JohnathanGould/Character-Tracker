@@ -55,7 +55,8 @@ Full attack      |Melee | +9/+4/+4     | as above              | Bite and 2 claw
 Charge           |Melee | +11          | 1d6+4 | 20/x2 |   -   | B/P/S | Bite only. -2 AC until his next turn.
 Attack of opp.   |Melee | +9           | 1d6+4 | 20/x2 |   -   | B/P/S | Bite.
 
-Flanking with Daerlieth: +2 on every melee attack (and it turns on her stealth attack).
+Flanking with Daerlieth: +4 on every melee attack (Outflank) and +1d6 precision damage on every hit (Precise Strike),
+both hers through Coordinated Companion; it also turns on her stealth attack.
 Favored enemy (shared from Daerlieth): +4 attack and damage vs elves (incl. drow), +2 vs undead.
 Sprint (Ex): once an hour, a charge at ten times his speed (500 ft).
 Built as a scout, not a fighter: his job is to find things and flank so her stealth attack lands.
@@ -80,6 +81,8 @@ Feats (4 at 7 HD)
 - Alertness                : +2 Perception and Sense Motive (legal at Int 3).
 - Bonded Mind (teamwork, from Daerlieth's Coordinated Companion): silent messages
   between them while they can see each other.
+- Outflank and Precise Strike (teamwork, from Daerlieth's Coordinated Companion): flanking
+  +4, and +1d6 precision damage on every melee hit while they flank together.
 ----------------------------------------------------------------------------
 Tricks (9: 6 from Int, 3 bonus)
 Attack (any creature, counts as 2), Come, Down, Guard, Heel, Seek, Stay, Track

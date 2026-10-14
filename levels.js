@@ -84,7 +84,7 @@
     L = clampL(L);
     var out = [];
     var add = function (lvl, id, group, label, type) { out.push({ lvl: lvl, id: id, group: group, label: label, type: type || "text" }); };
-    add(5, "feat-5a", "Feat", "Feat (5th level)"); add(5, "feat-5b", "Feat", "Feat, GM's extra (5th level)");
+    /* her 5th-level feats are taken (Outflank, Precise Strike: sheet.js BASE_FEATS) */
     for (var l = MIN + 1; l <= L; l++) {
       if (l % 2) { add(l, "feat-" + l + "a", "Feat", "Feat (" + ord(l) + " level)"); add(l, "feat-" + l + "b", "Feat", "Feat, GM's extra (" + ord(l) + " level)"); }
       if (l % 4 === 0) add(l, "asi-" + l, "Ability", "Ability score +1", "ability");
