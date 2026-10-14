@@ -77,6 +77,16 @@ table.t.sk td span { cursor: help; }
 .fxd { font-size: 0.8rem; color: var(--fg); white-space: nowrap; }
 .fxform { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); align-items: end; margin-bottom: 8px; }
 .fxform .fxwide { grid-column: 1 / -1; }
+.fxcombo { position: relative; }
+.fxcombo .field { display: flex; flex-direction: column; }
+.fxsug { position: absolute; left: 0; right: 0; top: 100%; z-index: 30; margin-top: 4px; max-height: min(320px, 50vh); overflow-y: auto; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55); }
+.fxsug .sg { display: block; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 8px 10px; color: var(--fg); cursor: pointer; font: inherit; }
+.fxsug .sg:last-child { border-bottom: 0; }
+.fxsug .sg.on, .fxsug .sg:hover { background: rgba(169, 193, 255, 0.14); }
+.fxsug .sg b { font-weight: 600; }
+.fxsug .sg mark { background: none; color: var(--moon); }
+.fxsug .sg small { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+.fxsug .more { padding: 8px 10px; color: var(--muted); font-size: 0.8rem; }
 .fxform input, .fxform select { width: 100%; min-width: 0; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 10px; color: var(--fg); }
 .fxdur { display: flex; gap: 6px; }
 .fxdur input { flex: 0 0 4.5em; }

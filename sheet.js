@@ -937,7 +937,8 @@
     });
     var form = o.readOnly ? "" :
       '<div class="fxform">' +
-      '<label class="field fxwide">Spell or effect<input type="text" id="fxName-' + who + '" list="codexList" autocomplete="off" maxlength="60" placeholder="Type to search any class\'s spells"></label>' +
+      '<div class="fxwide fxcombo"><label class="field">Spell or effect<input type="text" id="fxName-' + who + '" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="fxSug-' + who + '" autocomplete="off" maxlength="60" placeholder="Tap to pick, or type to narrow the list"></label>' +
+      '<div class="fxsug" id="fxSug-' + who + '" role="listbox" hidden></div></div>' +
       '<label class="field">Cast by<input type="text" id="fxFrom-' + who + '" maxlength="40" placeholder="Daerlieth, or the caster\'s name"></label>' +
       '<label class="field">Caster level<input type="text" inputmode="numeric" id="fxCL-' + who + '" maxlength="2" placeholder="e.g. 8"></label>' +
       '<label class="field">Type<select id="fxKind-' + who + '"><option value="good">Helpful</option><option value="bad">Harmful</option></select></label>' +
