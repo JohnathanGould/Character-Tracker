@@ -552,7 +552,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   var DEFAULT = {
     v: 1, round: 1, burnout: 0, gained: false,
     overdrive: 10, mythic: 7, eq: {}, cond: {}, fx: { her: [], pet: [] }, lightUsed: false, hp: 82, petHp: 50, stun: 2, level: 8, picks: {}, hpRolls: {},
-    vials: 2, strDmg: 0, blood: null, exp: "haste", active: [], pending: [], log: []
+    vials: 2, strDmg: 0, blood: null, exp: "", active: [], pending: [], log: []
   };
 
   var EXP = [
@@ -641,7 +641,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   var ui = {
     tray: false, qOd: false, qBlood: true, trayMsg: "", dayArmed: false, blood: false, bmChoice: "det", bmGp: 100,
     sel: "fireball", od: false, d8: false, wa: false, myth: false, castOn: "her", mode: "std", element: "fire",
-    customName: "", customLvl: 1, customDur: "none", unkFire: false, knownSel: "fireball", cols: {}
+    customName: "", customLvl: 1, customDur: "none", unkFire: false, knownSel: "", cols: {}
   };
   var readOnly = false, roLabel = "";
   var saving = false, dirty = false, saveTimer = null, dayTimer = null;
@@ -675,7 +675,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     s.vials = Math.max(0, Math.floor(+s.vials || 0));
     s.strDmg = Math.min(16, Math.max(0, Math.floor(+s.strDmg || 0)));
     s.round = Math.max(1, Math.floor(+s.round || 1));
-    if (!EXP.some(function (e) { return e.id === s.exp; }) && !BANK.some(function (b) { return b.id === s.exp && b.lvl <= Levels.prog(s.level).expMax; })) s.exp = "haste";
+    if (!EXP.some(function (e) { return e.id === s.exp; }) && !BANK.some(function (b) { return b.id === s.exp && b.lvl <= Levels.prog(s.level).expMax; })) s.exp = "";
     s.log = s.log.slice(0, 40);
     return s;
   }
@@ -686,7 +686,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     if (!e) {
       var bb = BANK.filter(function (x) { return x.id === state.exp; })[0];
       if (bb) return bankSpell(bb, { id: "exp-" + bb.id, exp: true, });
-      e = EXP[0];
+      return null; /* no pick yet today */
     }
     return { id: "exp-" + e.id, name: e.name, lvl: e.lvl, per: e.per, note: e.note, exp: true };
   }
@@ -715,7 +715,9 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     });
     return out;
   }
-  function allSpells() { return SPELLS.concat(knownSpells(), [expSpell(), customSpell()]); }
+  function allSpells() { return SPELLS.concat(knownSpells(), [expSpell(), customSpell()]).filter(Boolean); }
+  /* names of every spell she can already cast: left out of the experimental and Wild Arcana lists */
+  function knownNames() { var o = {}; SPELLS.concat(knownSpells()).forEach(function (x) { o[x.name.toLowerCase()] = true; }); return o; }
   function getSpell(id) { return allSpells().filter(function (s) { return s.id === id; })[0]; }
   /* burnout from a cast: spell level minus arcane buffer (artillery counts as half her level), +1 experimental */
   function baseGain(sp) {
@@ -835,7 +837,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     }
 
     if (sp.custom) rows.push(["Wild Arcana", "Standard action, 1 mythic power, CL +2"]);
-    if (sp.exp && SPELLS.concat(knownSpells()).some(function (k) { return k.name.toLowerCase() === sp.name.toLowerCase(); })) rows.push(["Note", "She already knows this spell; the experimental pick only adds +1 burnout."]);
     var mythCost = (wa ? 1 : 0) + (myth ? 1 : 0);
     if (s.mythic < mythCost) problems.push(mythCost > 1 ? "Wild Arcana and the mythic version need 2 mythic power; she has " + s.mythic + "." : wa ? "No mythic power left for Wild Arcana." : "No mythic power left for the mythic version.");
 
@@ -944,7 +945,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var sp = getSpell(parts[0]);
     if (!sp) return;
     ui.sel = sp.id;
-    if (!/^(exp-|custom)/.test(sp.id)) ui.knownSel = sp.id;
     ui.od = ui.qOd; ui.d8 = false; ui.wa = false; ui.myth = false; ui.castOn = "her";
     if (sp.calc === "det" && parts[1]) ui.element = parts[1];
     if (sp.art && parts[1]) ui.mode = parts[1];
@@ -1104,8 +1104,9 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
   function renderSpells() {
     /* known spells: one picker like the experimental and Wild Arcana ones, grouped by level */
-    var mine = SPELLS.concat(knownSpells()), kOpts = "";
-    if (!mine.some(function (x) { return x.id === ui.knownSel; })) ui.knownSel = "fireball";
+    var mine = SPELLS.concat(knownSpells());
+    if (!mine.some(function (x) { return x.id === ui.knownSel; })) ui.knownSel = "";
+    var known = knownNames(), CHOOSE = '<option value="">Choose a spell…</option>', kOpts = CHOOSE;
     for (var L = 0; L <= Math.max(4, LP().maxSpell); L++) {
       var items = mine.filter(function (s) { return s.lvl === L && !s.art; });
       if (L === 4) items = items.concat(SPELLS.filter(function (s) { return s.art; }));
@@ -1115,15 +1116,15 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         return '<option value="' + x.id + '"' + (x.id === ui.knownSel ? " selected" : "") + ">" + esc(x.name) + (x.lvl === 0 ? "" : " (" + (g > 0 ? "+" + g : "0") + " burnout)") + (isActive(x.id) ? " · active" : "") + "</option>";
       }).join("") + "</optgroup>";
     }
-    var ks = getSpell(ui.knownSel);
+    var pickHint = function (t) { return '<p class="hint">' + t + "</p>"; };
     var h = '<div class="duo"><div class="group pickbox"><h3>Known spells · ' + mine.length + "</h3>" +
       '<label class="field">Spell to cast<select id="knownSel">' + kOpts + "</select></label>" +
-      withCol("k", function (sp) { return castHtml(sp, "k"); }) + "</div>";
+      (ui.knownSel ? withCol("k", function (sp) { return castHtml(sp, "k"); }) : pickHint("Her own spells and arcane artillery. Choose one to cast it.")) + "</div>";
     /* every spell sits under its level; the six with hand-written notes (haste, fly...) keep their own ids */
-    var expOpts = "", presetBy = {};
+    var expOpts = CHOOSE, presetBy = {};
     EXP.forEach(function (e) { presetBy[e.name.toLowerCase()] = e; });
     for (var xl = 1; xl <= LP().expMax; xl++) {
-      expOpts += '<optgroup label="' + ordinal(xl) + ' level">' + BANK.filter(function (b) { return b.lvl === xl; }).map(function (b) {
+      expOpts += '<optgroup label="' + ordinal(xl) + ' level">' + BANK.filter(function (b) { return b.lvl === xl && !known[b.name.toLowerCase()]; }).map(function (b) {
         var pre = presetBy[b.name.toLowerCase()], v = pre && pre.lvl === xl ? pre.id : b.id;
         return '<option value="' + v + '"' + (v === state.exp ? " selected" : "") + ">" + esc(b.name) + (SCHOOLS[b.sch] ? " (" + SCHOOLS[b.sch] + ")" : "") + "</option>";
       }).join("") + "</optgroup>";
@@ -1131,16 +1132,16 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var ex = expSpell();
     h += '<div class="group pickbox"><h3>Experimental spell · +1 burnout</h3>' +
       '<label class="field">Today\'s pick<select id="expSel"' + (readOnly ? " disabled" : "") + '>' + expOpts + "</select></label>" +
-      withCol("x", function (sp) { return castHtml(sp, "x"); }) + "</div>";
-    var waCur = bankFind(ui.customName, ui.customLvl), waOpts = '<option value="">Choose a spell…</option>';
+      (ex ? withCol("x", function (sp) { return castHtml(sp, "x"); }) : pickHint("One spell a day from the whole wizard list, up to " + ordinal(LP().expMax) + " level, for +1 burnout.")) + "</div>";
+    var waCur = bankFind(ui.customName, ui.customLvl), waOpts = CHOOSE;
     for (var wl = 1; wl <= LP().maxSpell; wl++) {
-      waOpts += '<optgroup label="' + ordinal(wl) + ' level">' + BANK.filter(function (b) { return b.lvl === wl && !b.slow; }).map(function (b) {
+      waOpts += '<optgroup label="' + ordinal(wl) + ' level">' + BANK.filter(function (b) { return b.lvl === wl && !b.slow && !known[b.name.toLowerCase()]; }).map(function (b) {
         return '<option value="' + b.id + '"' + (waCur && waCur.id === b.id ? " selected" : "") + ">" + esc(b.name) + (SCHOOLS[b.sch] ? " (" + SCHOOLS[b.sch] + ")" : "") + "</option>";
       }).join("") + "</optgroup>";
     }
     h += '<div class="group pickbox"><h3>Wild Arcana · 1 mythic power</h3>' +
       '<label class="field">Spell to cast<select id="waSel">' + waOpts + "</select></label>" +
-      (waCur ? withCol("w", function (sp) { return castHtml(sp, "w"); }) : '<p class="hint">Any spell on her list, known or not. Choose one to see it here.</p>') +
+      (waCur ? withCol("w", function (sp) { return castHtml(sp, "w"); }) : pickHint("Any wizard spell she doesn't know, cast as a standard action at CL +2. Choose one to cast it.")) +
       "</div></div>";
     $("pSpells").innerHTML =
       '<div class="ph"><h2>Spells</h2><span class="hint">Badge shows burnout before overdrive</span></div>' + h;
@@ -1215,7 +1216,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   function colSpell(col) {
     if (col === "x") return expSpell();
     if (col === "w") return bankFind(ui.customName, ui.customLvl) ? customSpell() : null;
-    return getSpell(ui.knownSel) || getSpell("fireball");
+    return ui.knownSel ? getSpell(ui.knownSel) : null;
   }
   function withCol(col, fn) {
     var o = ui.cols[col] || (ui.cols[col] = { od: false, d8: false, wa: false, myth: false, castOn: "her" });
@@ -1350,7 +1351,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       }
     });
     var ex = expSpell();
-    if (ex.lvl === L) out.push({ v: ex.id, t: ex.name + " (experimental)", g: baseGain(ex) });
+    if (ex && ex.lvl === L) out.push({ v: ex.id, t: ex.name + " (experimental)", g: baseGain(ex) });
     return out;
   }
 
@@ -1399,7 +1400,10 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
           }).join("") + "</datalist>";
         }
         $("wizLists").innerHTML = dl;
-        renderSpells(); /* not the sheet: that would wipe a half-typed form */
+        /* only orisons learned at level-up need the spell data to show their durations; redraw for those alone,
+           never the sheet (it would wipe a half-typed form) or a spell picker in use */
+        var cantrips = Object.keys(state.picks || {}).some(function (k) { return /^sp-\d+-0-/.test(k) && state.picks[k]; });
+        if (cantrips && !$("pSpells").contains(document.activeElement)) renderSpells();
       });
       codexWait.catch(function () { codexWait = null; });
     }
