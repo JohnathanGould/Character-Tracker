@@ -1664,6 +1664,13 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     $("helpSheet").hidden = false;
     $("helpForm").scrollTop = 0;
   }
+  /* her portrait: the round thumbnail on her sheet opens the full picture (works in the GM view too) */
+  document.addEventListener("click", function (e) {
+    var p = e.target.closest && e.target.closest("[data-portrait]");
+    if (!p) return;
+    openInfo("Daerlieth Nightstar", '<img class="portrait-full" src="images/daerlieth.webp" alt="Daerlieth Nightstar, silver-haired moon elf in a mithral shirt and grey cloak, with Gwathfaron, a black panther, below a moonlit castle" width="1024" height="1536">' +
+      '<p class="hint">Daerlieth and Gwathfaron.</p>');
+  });
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-help]");
     if (t) { openInfo("How burnout works", burnHelpHtml()); return; }

@@ -464,7 +464,7 @@
 
     /* headline numbers */
     var acLbl = c.ffoot ? "AC (flat-footed)" : "AC";
-    h += '<div class="panel"><div class="ph"><div><h2>Daerlieth Nightstar</h2><span class="hint">Moon elf · Eternal Mage ' + L + ' (Artillery Expert) / Spell-less Ranger ' + L + ' (Companion-Bound) · Archmage tier 2</span></div>' +
+    h += '<div class="panel"><div class="ph"><div class="idhead"><button type="button" class="portrait" data-portrait="daerlieth" aria-label="Show Daerlieth\'s portrait"><img src="images/daerlieth-thumb.webp" alt="" width="64" height="64"></button><div><h2>Daerlieth Nightstar</h2><span class="hint">Moon elf · Eternal Mage ' + L + ' (Artillery Expert) / Spell-less Ranger ' + L + ' (Companion-Bound) · Archmage tier 2</span></div></div>' +
       (o.readOnly ? "" : '<div class="lvbtns">' + (L < LV().MAX ? '<button type="button" class="btn primary sm" data-act="lvlup">Level up to ' + (L + 1) + "</button>" : "") +
         (L > LV().MIN ? '<button type="button" class="btn sm" data-act="lvldown">Undo level ' + L + "</button>" : "") + "</div>") + "</div>" +
       '<div class="sgrid">' +

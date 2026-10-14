@@ -78,6 +78,11 @@ table.t.sk td span { cursor: help; }
 .fxform { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); align-items: end; margin-bottom: 8px; }
 .fxform .fxwide { grid-column: 1 / -1; }
 .fxcombo { position: relative; }
+.idhead { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.portrait { flex: none; padding: 0; border: 1px solid var(--line-strong); border-radius: 50%; overflow: hidden; width: 64px; height: 64px; background: var(--surface-2); cursor: zoom-in; }
+.portrait img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.portrait:hover, .portrait:focus-visible { border-color: var(--moon); }
+.portrait-full { display: block; width: 100%; height: auto; max-height: 78vh; object-fit: contain; border-radius: 8px; margin: 0 auto; }
 .fxcombo .field { display: flex; flex-direction: column; }
 .fxsug { position: absolute; left: 0; right: 0; top: 100%; z-index: 30; margin-top: 4px; max-height: min(320px, 50vh); overflow-y: auto; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55); }
 .fxsug .sg { display: block; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 8px 10px; color: var(--fg); cursor: pointer; font: inherit; }
