@@ -601,6 +601,7 @@
     h += featsSec(st) + classSecs(st, d);
     var built = { feats: 1, ranger: 1, mage: 1, mythic: 1 };
     prose.forEach(function (p) { if (!built[p[1]] && P[p[1]]) h += sec(p[0], P[p[1]], false); if (p[1] === "gear") h += lettersSec(); });
+    h += '<div class="panel rpolbar"><div><h2>RPoL character sheet</h2><span class="hint">Her sheet as plain text in her RPoL layout, with today\'s numbers. Copy it into her RPoL character sheet.</span></div><button type="button" class="btn primary" data-rpol="her">Generate RPoL sheet</button></div>';
     h += '<p class="hint foot">Numbers above are live. The text sections come from the printed sheet and don\'t change with the toggles.</p>';
     return h;
   }
@@ -690,39 +691,47 @@
       (/^(ab|pet|trick):/i.test(key) ? "" : '<p class="hint"><a href="' + esc(url) + '" target="_blank" rel="noopener">Look it up on Archives of Nethys</a></p>');
   }
   /* her feats, traits and talents, built from the printed sheet plus her level-up picks */
-  function featsSec(st) {
+  /* her feats, traits and talents as data: [[group title, [[level, name, note, isOpenSlot]]]], used by the sheet and the RPoL export */
+  function featGroups(st) {
     var pk = picksOf(st), L = levelOf(st);
-    var row = function (lvl, name, note) { return "<li><span class=\"flv\">" + esc(lvl) + "</span>" + featBtn(name) + (note ? ' <span class="hint">' + esc(note) + "</span>" : "") + "</li>"; };
-    var open = function (lvl, id, what) { return pk[id] ? row(lvl, pk[id]) : "<li><span class=\"flv\">" + esc(lvl) + '</span><span class="hint">' + esc(what) + " (open, see Level-up picks)</span></li>"; };
-    var g = function (title, items) { return items.length ? '<div class="fgroup"><div class="gl">' + esc(title) + '</div><ul class="featlist">' + items.join("") + "</ul></div>" : ""; };
-    var regular = [row("L1", "Weapon Finesse"), row("L1", "Improved Unarmed Strike"), row("L3", "Two-Weapon Fighting"), row("L3", "Weapon Focus (unarmed strike)"),
-      row("L5", "Outflank", "teamwork; Gwathfaron has it too (within 30 ft of her)"), row("L5", "Precise Strike", "GM's extra feat; teamwork; Gwathfaron has it too (within 30 ft of her)"), row("L7", "Improved Two-Weapon Fighting"), row("L7", "Expanded Arcana", "detonate")];
-    var style = [row("L2", "Monastic Legacy"), row("L6", "Stunning Fist")], tal = [row("L4", "Skirmishing Attack"), row("L7", "Improved Stealth Attack")], ec = [row("L7", "Improved Animal Companion")];
+    var R = function (lvl, name, note) { return [lvl, name, note || "", false]; };
+    var open = function (lvl, id, what) { return pk[id] ? R(lvl, pk[id]) : [lvl, what, "open, see Level-up picks", true]; };
+    var HN = "teamwork; Gwathfaron has it too (within 30 ft of her)";
+    var regular = [R("L1", "Weapon Finesse"), R("L1", "Improved Unarmed Strike"), R("L3", "Two-Weapon Fighting"), R("L3", "Weapon Focus (unarmed strike)"),
+      R("L5", "Outflank", HN), R("L5", "Precise Strike", "GM's extra feat; " + HN), R("L7", "Improved Two-Weapon Fighting"), R("L7", "Expanded Arcana", "detonate")];
+    var style = [R("L2", "Monastic Legacy"), R("L6", "Stunning Fist")], tal = [R("L4", "Skirmishing Attack"), R("L7", "Improved Stealth Attack")], ec = [R("L7", "Improved Animal Companion")];
     for (var l = 9; l <= L; l++) {
       if (l % 2) { regular.push(open("L" + l, "feat-" + l + "a", "Feat")); regular.push(open("L" + l, "feat-" + l + "b", "GM's extra feat")); }
       if ([10, 14, 18].indexOf(l) >= 0) style.push(open("L" + l, "cs-" + l, "Combat style feat"));
       if ([9, 11, 13, 16, 19].indexOf(l) >= 0) tal.push(open("L" + l, "tal-" + l, "Ranger talent"));
       if ([10, 13, 16, 19].indexOf(l) >= 0) ec.push(open("L" + l, "ec-" + l, "Enhanced Companion feat"));
     }
+    return [
+      ["Racial (moon elf, alternate features)", ["Low-Light Vision", "Keen Senses", "Silver-Tongued Diplomacy", "Wanderer's Stride", "Moonlight Resilience"].map(function (n) { return R("", n); })],
+      ["Traits and drawback", [R("", "Reactionary"), R("", "Friend in Every Town"), R("", "Gifted Adept", "scorching ray"), R("", "Umbral Unmasking", "drawback, pays for Gifted Adept")]],
+      ["Feats (the normal feat plus the GM's extra feat at odd levels)", regular],
+      ["Teamwork (Companion-Bound, 4th; Gwathfaron shares them)", [R("L4", "Coordinated Companion", "Gwathfaron gets all her teamwork feats while within 30 ft of her"), R("L4", "Bonded Mind", HN)]],
+      ["Combat style (unarmed, prerequisites waived)", style],
+      ["Ranger talents", tal],
+      ["Enhanced Companion", ec],
+      ["Mythic", [R("T1", "Mythic Spell Lore")]]
+    ];
+  }
+  function featsSec(st) {
+    var row = function (r) {
+      if (r[3]) return "<li><span class=\"flv\">" + esc(r[0]) + '</span><span class="hint">' + esc(r[1]) + " (" + esc(r[2]) + ")</span></li>";
+      return "<li><span class=\"flv\">" + esc(r[0]) + "</span>" + featBtn(r[1]) + (r[2] ? ' <span class="hint">' + esc(r[2]) + "</span>" : "") + "</li>";
+    };
     return sec("Feats, traits and talents",
       '<p class="hint">Hover or tap a name for what it does; tap for the full text.</p>' +
-      g("Racial (moon elf, alternate features)", ["Low-Light Vision", "Keen Senses", "Silver-Tongued Diplomacy", "Wanderer's Stride", "Moonlight Resilience"].map(function (n) { return row("", n); })) +
-      g("Traits and drawback", [row("", "Reactionary"), row("", "Friend in Every Town"), row("", "Gifted Adept", "scorching ray"),
-        row("", "Umbral Unmasking", "drawback, pays for Gifted Adept")]) +
-      g("Feats (the normal feat plus the GM's extra feat at odd levels)", regular) +
-      g("Teamwork (Companion-Bound, 4th; Gwathfaron shares them)", [row("L4", "Coordinated Companion", "Gwathfaron gets all her teamwork feats while within 30 ft of her"), row("L4", "Bonded Mind", "teamwork; Gwathfaron has it too (within 30 ft of her)")]) +
-      g("Combat style (unarmed, prerequisites waived)", style) +
-      g("Ranger talents", tal) +
-      g("Enhanced Companion", ec) +
-      g("Mythic", [row("T1", "Mythic Spell Lore")]), false);
+      featGroups(st).map(function (g) { return g[1].length ? '<div class="fgroup"><div class="gl">' + esc(g[0]) + '</div><ul class="featlist">' + g[1].map(row).join("") + "</ul></div>" : ""; }).join(""), false);
   }
 
   /* ---------- class and mythic abilities: built per render so the numbers follow her level ---------- */
   var DYN_INFO = {};
-  function classSecs(st, d) {
+  function classLists(st, d) {
     var PR = d.prog, sp = d.sp, L = d.level, fe = d.fe, cha = sp.cha, sd = PR.stealthDice;
     var A = function (key, type, short, full) { DYN_INFO["ab:" + key.toLowerCase()] = [type, short, full]; return key; };
-    var list = function (items) { return '<ul class="featlist">' + items.map(function (k) { return "<li>" + featBtn("ab:" + k.toLowerCase(), k) + ' <span class="hint">' + esc(DYN_INFO["ab:" + k.toLowerCase()][1]) + "</span></li>"; }).join("") + "</ul>"; };
     var feTxt = fe.map(function (f) { return f.name + " +" + f.b; }).join(", ");
     var ranger = [
       A("Favored Enemy", "Spell-less Ranger (1st, more at 5th, 10th...)", feTxt + " on attack and damage.",
@@ -787,7 +796,15 @@
       A("Elemental Bond (fire)", "Archmage path ability (Su, tier 2)", "+2 CL on fire spells; fire resistance 10.", "Spells with the fire descriptor get her tier (+2) on caster level (fireball 10d6, scorching ray at CL 10). Fire resistance 10 (20 at tier 6, 30 at tier 9). Detonate counts only when she casts it as fire."),
       A("Mythic Ability Score", "Mythic (tier 2)", "+2 Int (counted).", "At tier 2 she raised Int by 2 (16 to 18). Already counted on the sheet.")
     ];
-    return sec("Spell-less Ranger abilities", list(ranger), false) + sec("Eternal Mage abilities", list(mage), false) + sec("Mythic abilities", list(myth), false);
+    return [["Spell-less Ranger abilities", ranger], ["Eternal Mage abilities", mage], ["Mythic abilities", myth]];
+  }
+  /* [[section, [[name, summary, full]]]] for the RPoL export */
+  function classData(st, d) {
+    return classLists(st, d).map(function (g) { return [g[0], g[1].map(function (k) { var e = DYN_INFO["ab:" + k.toLowerCase()]; return [k, e[1], e[2]]; })]; });
+  }
+  function classSecs(st, d) {
+    var list = function (items) { return '<ul class="featlist">' + items.map(function (k) { return "<li>" + featBtn("ab:" + k.toLowerCase(), k) + ' <span class="hint">' + esc(DYN_INFO["ab:" + k.toLowerCase()][1]) + "</span></li>"; }).join("") + "</ul>"; };
+    return classLists(st, d).map(function (g) { return sec(g[0], list(g[1]), false); }).join("");
   }
 
   /* ---------- letters of travel: picked from a list on her sheet, each opens in the info dialog ---------- */
@@ -1034,11 +1051,12 @@
     h += sec("Advancement", d0level(st) >= LV().MAX ? "<p>Effective druid level 20: the table is complete.</p>" : "<ul>" +
       "<li><b>At her next level</b> (effective druid level " + nx.druid + "): " + nx.hd + " HD, BAB " + sg(nx.bab) + ", natural armor bonus +" + nx.natBonus + ", Str/Dex +" + nx.strDex + ", " + nx.ranks + " skill ranks, " + nx.feats + " feats, " + nx.tricks + " tricks" + (nx.multiattack && !cp.multiattack ? ", Multiattack" : "") + (nx.impEvasion && !cp.impEvasion ? ", improved evasion" : "") + ".</li>" +
       "<li><b>Greater Animal Companion</b> (her Enhanced Companion pick, later): a bonus animal feat for him, and a move action to give him her stealth attack and fast movement.</li></ul>", false);
+    h += '<div class="panel rpolbar"><div><h2>RPoL character sheet</h2><span class="hint">Gwathfaron\'s sheet as plain text in the RPoL layout, with today\'s numbers.</span></div><button type="button" class="btn primary" data-rpol="pet">Generate RPoL sheet</button></div>';
     return h;
   }
 
   function d0level(st) { return levelOf(st); }
-  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, petRanks: petRanks, ranksOf: ranksOf, SKILLS: SKILLS, hpMaxOf: hpMaxOf, levelOf: levelOf, FX_UNITS: FX_UNITS, LETTERS: LETTERS, letterHtml: letterHtml, featHtml: featHtml, fxLeft: fxLeft, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
+  var api = { derive: derive, render: render, renderPet: renderPet, PET: PET, petRanks: petRanks, ranksOf: ranksOf, SKILLS: SKILLS, hpMaxOf: hpMaxOf, levelOf: levelOf, FX_UNITS: FX_UNITS, LETTERS: LETTERS, letterHtml: letterHtml, featHtml: featHtml, featGroups: featGroups, classData: classData, featInfo: featInfo, hasFeat: hasFeat, BASE_FEATS: BASE_FEATS, fxLeft: fxLeft, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
   root.SheetEngine = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

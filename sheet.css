@@ -166,3 +166,7 @@ table.atk td:nth-child(2), table.atk th:nth-child(2) { white-space: nowrap; }
 .favnote b { color: var(--moon); font-weight: 600; }
 .favnote ul { margin: 6px 0 0; padding-left: 18px; }
 .favnote li { margin-bottom: 4px; }
+
+/* RPoL export bar at the bottom of each sheet */
+.rpolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
+.rpolbar h2 { margin: 0 0 4px; }

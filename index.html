@@ -210,6 +210,10 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
   .gsec + .gsec { border-top: 0; border-left: 1px solid var(--line); }
 }
 .helpform { max-width: 560px !important; }
+.helpform.wide { max-width: 980px !important; }
+.rpoltext { width: 100%; min-height: 55vh; background: var(--surface-2); color: var(--fg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 10px; font-family: var(--font-mono); font-size: 0.72rem; line-height: 1.35; white-space: pre; overflow: auto; resize: vertical; }
+.rpolrow { justify-content: flex-start !important; margin-top: 8px; }
+.rpolrow a.btn { text-decoration: none; display: inline-flex; align-items: center; }
 .duo { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); align-items: stretch; }
 .group.pickbox { min-width: 0; margin-bottom: 0; display: flex; flex-direction: column; gap: 8px; }
 .pickbox .field select { width: 100%; }
@@ -544,6 +548,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 <script src="rules-info.js"></script>
 <script src="sheet.js"></script>
 <script src="sheet-prose.js"></script>
+<script src="rpol.js"></script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-auth-compat.js"></script>
 <script src="vendor/firebase-firestore-compat.js"></script>
@@ -1527,7 +1532,28 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   }
   /* help dialog (works in the GM's read-only view too) */
   function closeHelp() { $("helpSheet").hidden = true; }
+  /* RPoL export: the printed sheets (docs/*.txt) give the layout and the static text; RpolSheet fills in the live numbers */
+  var rpolTpl = {};
+  function rpolOpen(who) {
+    var file = who === "pet" ? "docs/gwathfaron-sheet.txt" : "docs/daerlieth-sheet.txt";
+    var go = function () {
+      var now = new Date(), M = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      var ctx = { st: state, spells: castable(), exp: expSpell(), expLocked: !!state.expLocked, today: M[now.getMonth()] + " " + now.getDate() + " " + now.getFullYear() };
+      var txt = who === "pet" ? RpolSheet.pet(ctx, rpolTpl[file]) : RpolSheet.her(ctx, rpolTpl[file]);
+      var fname = (who === "pet" ? "gwathfaron" : "daerlieth") + "-rpol-sheet.txt";
+      openInfo((who === "pet" ? "Gwathfaron" : "Daerlieth") + ": RPoL sheet",
+        '<p class="hint">Plain text in her printed-sheet layout. RPoL shows it best in a fixed-width font, as on her current sheet.</p>' +
+        '<textarea id="rpolText" class="rpoltext" readonly spellcheck="false">' + esc(txt) + "</textarea>" +
+        '<div class="row rpolrow"><button type="button" class="btn primary" data-rpolcopy="1">Copy</button>' +
+        '<a class="btn" download="' + fname + '" href="data:text/plain;charset=utf-8,' + encodeURIComponent(txt) + '">Download .txt</a></div>');
+      $("helpForm").classList.add("wide");
+    };
+    if (rpolTpl[file] != null) return go();
+    openInfo("RPoL sheet", '<p class="hint">Loading the printed sheet…</p>');
+    fetch(file).then(function (r) { return r.ok ? r.text() : ""; }).catch(function () { return ""; }).then(function (t) { rpolTpl[file] = t; go(); });
+  }
   function openInfo(title, html) {
+    $("helpForm").classList.remove("wide");
     $("helpTitle").textContent = title;
     $("helpBody").innerHTML = html;
     $("helpSheet").hidden = false;
@@ -1536,6 +1562,11 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-help]");
     if (t) { openInfo("How burnout works", burnHelpHtml()); return; }
+    t = e.target.closest("[data-rpol]");
+    if (t) { rpolOpen(t.getAttribute("data-rpol")); return; }
+    t = e.target.closest("[data-rpolcopy]");
+    if (t) { var ta = $("rpolText"); ta.select(); var done = function () { t.textContent = "Copied"; setTimeout(function () { t.textContent = "Copy"; }, 1500); };
+      if (navigator.clipboard) navigator.clipboard.writeText(ta.value).then(done, function () { document.execCommand("copy"); done(); }); else { document.execCommand("copy"); done(); } return; }
     t = e.target.closest("[data-feat]");
     if (t) { var fn = t.getAttribute("data-feat"); openInfo(t.getAttribute("data-title") || fn, SheetEngine.featHtml(fn, t.getAttribute("data-extra"))); return; }
     t = e.target.closest("[data-spell]");

@@ -1,6 +1,6 @@
 /* App shell cache so the tracker opens offline. Bump VERSION when shipping changes. */
-var VERSION = "daerlieth-v31";
-var SHELL = ["./", "index.html", "config.js", "levels.js", "rules-info.js", "sheet.js", "sheet-prose.js", "sheet.css", "vendor/firebase-app-compat.js", "vendor/firebase-auth-compat.js", "vendor/firebase-firestore-compat.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "data/codex.json"];
+var VERSION = "daerlieth-v32";
+var SHELL = ["./", "index.html", "config.js", "levels.js", "rules-info.js", "sheet.js", "sheet-prose.js", "rpol.js", "docs/daerlieth-sheet.txt", "docs/gwathfaron-sheet.txt", "sheet.css", "vendor/firebase-app-compat.js", "vendor/firebase-auth-compat.js", "vendor/firebase-firestore-compat.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "data/codex.json"];
 
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(SHELL.map(function (u) { return new Request(u, { cache: "no-cache" }); })); }).then(function () { return self.skipWaiting(); }));
