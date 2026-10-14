@@ -135,7 +135,7 @@ h1 {
 .tray .warn-text { flex-basis: 100%; margin: 0; }
 
 /* view-only mode for anyone who cannot write */
-.ro .clock .btn, .ro .tray-wrap, .ro #pCast, .ro #pSpells .fields,
+.ro .clock .btn, .ro .tray-wrap, .ro .castbox .opts, .ro .castbox .fields, .ro .castbox [data-act="cast"], .ro .castbox .warn-text,
 .ro [data-act="str"], .ro [data-act="resolve"], .ro [data-act="endspell"], .ro [data-act="clearlog"],
 .ro [data-act="burn"], .ro [data-act="res"], .ro .passrow, .ro [data-act="hp"], .ro [data-act="mspend"] { display: none !important; }
 .ro .toggle, .ro .spell, .ro .cell, .ro .pip { pointer-events: none; }
@@ -214,6 +214,10 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
 .pickbox { min-width: 0; margin-bottom: 0; display: flex; flex-direction: column; gap: 8px; }
 .pickbox .field select { width: 100%; }
 .spells.one { grid-template-columns: 1fr; }
+.castbox { border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--surface-2); min-width: 0; }
+.castbox .ph { margin-bottom: 8px; }
+.castbox .cast-name { font-size: 1.05rem; }
+.castbox .btn.primary { width: 100%; }
 .brief { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--surface-2); }
 .brief .rows { margin: 0 0 8px; font-size: 0.8rem; gap: 2px 10px; }
 .brief .rows dt { font-size: 0.74rem; }
@@ -459,10 +463,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
   <section class="panel" id="pSpells"></section>
 
-  <section class="cols">
-    <div class="panel" id="pCast"></div>
-    <div class="panel" id="pSlots"></div>
-  </section>
+  <section class="panel" id="pSlots"></section>
 
   <section class="panel" id="pBody"></section>
 </main>
@@ -638,7 +639,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   var ui = {
     tray: false, qOd: false, qBlood: true, trayMsg: "", dayArmed: false, blood: false, bmChoice: "det", bmGp: 100,
     sel: "fireball", od: false, d8: false, wa: false, myth: false, castOn: "her", mode: "std", element: "fire",
-    customName: "", customLvl: 1, customDur: "none", unkFire: false, knownSel: "fireball"
+    customName: "", customLvl: 1, customDur: "none", unkFire: false, knownSel: "fireball", cols: {}
   };
   var readOnly = false, roLabel = "";
   var saving = false, dirty = false, saveTimer = null, dayTimer = null;
@@ -1109,8 +1110,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var ks = getSpell(ui.knownSel);
     var h = '<div class="duo"><div class="group pickbox"><h3>Known spells · ' + mine.length + "</h3>" +
       '<label class="field">Spell to cast<select id="knownSel">' + kOpts + "</select></label>" +
-      '<div class="spells one">' + spellBtn(ks) + "</div>" +
-      (ks.art ? artBrief() : spellBrief(ks.name)) + "</div>";
+      withCol("k", function (sp) { return castHtml(sp, "k"); }) + "</div>";
     var expOpts = '<optgroup label="Common picks">' + EXP.map(function (e) { return '<option value="' + e.id + '"' + (e.id === state.exp ? " selected" : "") + ">" + e.name + " (" + ordinal(e.lvl) + ")</option>"; }).join("") + "</optgroup>";
     var presetNames = EXP.map(function (e) { return e.name.toLowerCase(); });
     for (var xl = 1; xl <= LP().expMax; xl++) {
@@ -1121,7 +1121,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var ex = expSpell();
     h += '<div class="group pickbox"><h3>Experimental spell · +1 burnout</h3>' +
       '<label class="field">Today\'s pick<select id="expSel"' + (readOnly ? " disabled" : "") + '>' + expOpts + "</select></label>" +
-      '<div class="spells one">' + spellBtn(ex) + "</div>" + spellBrief(ex.name) + "</div>";
+      withCol("x", function (sp) { return castHtml(sp, "x"); }) + "</div>";
     var waCur = bankFind(ui.customName, ui.customLvl), waOpts = '<option value="">Choose a spell…</option>';
     for (var wl = 1; wl <= LP().maxSpell; wl++) {
       waOpts += '<optgroup label="' + ordinal(wl) + ' level">' + BANK.filter(function (b) { return b.lvl === wl; }).map(function (b) {
@@ -1130,43 +1130,43 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     }
     h += '<div class="group pickbox"><h3>Wild Arcana · 1 mythic power</h3>' +
       '<label class="field">Spell to cast<select id="waSel">' + waOpts + "</select></label>" +
-      (waCur ? '<div class="spells one">' + spellBtn(customSpell()) + "</div>" + spellBrief(waCur.name) : '<p class="hint">Any spell on her list, known or not. Choose one to see it here.</p>') +
+      (waCur ? withCol("w", function (sp) { return castHtml(sp, "w"); }) : '<p class="hint">Any spell on her list, known or not. Choose one to see it here.</p>') +
       "</div></div>";
     $("pSpells").innerHTML =
       '<div class="ph"><h2>Spells</h2><span class="hint">Badge shows burnout before overdrive</span></div>' + h;
   }
 
-  function renderCast() {
-    var sp = getSpell(ui.sel) || getSpell("fireball");
-    var c = compute(sp);
+  /* the cast block shown under each of the three spell pickers; ids carry the column (-k known, -x experimental, -w Wild Arcana) */
+  function castHtml(sp, col) {
+    var c = compute(sp), X = "-" + col;
     var opts = "";
 
     if (sp.art) {
-      opts += '<div class="fields"><label class="field">Secret<select id="modeSel">' +
+      opts += '<div class="fields"><label class="field">Secret<select id="modeSel' + X + '">' +
         '<option value="std"' + (ui.mode === "std" ? " selected" : "") + ">Standard touch, 30 ft</option>" +
         '<option value="sniper"' + (ui.mode === "sniper" ? " selected" : "") + ">Sniper, 120 ft</option>" +
         '<option value="burst"' + (ui.mode === "burst" ? " selected" : "") + ">Burst, 15 ft</option></select></label></div>";
     }
     if (sp.calc === "det") {
-      opts += '<div class="fields"><label class="field">Energy<select id="elSel">' +
+      opts += '<div class="fields"><label class="field">Energy<select id="elSel' + X + '">' +
         ["acid", "cold", "electricity", "fire"].map(function (e) { return '<option value="' + e + '"' + (ui.element === e ? " selected" : "") + ">" + e + (e === "fire" ? " (+2 CL)" : "") + "</option>"; }).join("") +
         "</select></label></div>";
     }
     if (sp.calc === "bm") {
-      opts += '<div class="fields"><label class="field">Component to create<select id="bmSel">' +
+      opts += '<div class="fields"><label class="field">Component to create<select id="bmSel' + X + '">' +
         [["det", "Detonate vials, 50 gp"], ["other", "Another spell, enter its value"], ["cheap", "Cheap component, 1 gp or less"]].map(function (o) { return '<option value="' + o[0] + '"' + (ui.bmChoice === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
         "</select></label>" +
-        (ui.bmChoice === "other" ? '<label class="field">Component value, gp<input type="text" inputmode="numeric" id="bmGp" value="' + esc(ui.bmGp) + '"></label>' : "") +
+        (ui.bmChoice === "other" ? '<label class="field">Component value, gp<input type="text" inputmode="numeric" id="bmGp' + X + '" value="' + esc(ui.bmGp) + '"></label>' : "") +
         "</div>";
     }
     if (sp.unk) {
       opts += '<div class="fields">' + (sp.custom ? "" : "") +
-        '<label class="field">Duration<select id="cDur">' + Object.keys(DURS).map(function (k) { return '<option value="' + k + '"' + (ui.customDur === k ? " selected" : "") + ">" + DURS[k].label + "</option>"; }).join("") + "</select></label></div>" +
-        '<div class="opts"><label class="opt"><input type="checkbox" id="fireChk"' + (ui.unkFire ? " checked" : "") + '><span>Has the fire descriptor<small>Adds +2 caster level from Elemental Bond</small></span></label></div>';
+        '<label class="field">Duration<select id="cDur' + X + '">' + Object.keys(DURS).map(function (k) { return '<option value="' + k + '"' + (ui.customDur === k ? " selected" : "") + ">" + DURS[k].label + "</option>"; }).join("") + "</select></label></div>" +
+        '<div class="opts"><label class="opt"><input type="checkbox" id="fireChk' + X + '"' + (ui.unkFire ? " checked" : "") + '><span>Has the fire descriptor<small>Adds +2 caster level from Elemental Bond</small></span></label></div>';
     }
 
     if (sp.per) {
-      opts += '<div class="fields"><label class="field">Cast on<select id="castOn">' +
+      opts += '<div class="fields"><label class="field">Cast on<select id="castOn' + X + '">' +
         [["her", "Daerlieth"], ["pet", "Gwathfaron (share spells or touch)"], ["ally", "An ally"]].map(function (o) { return '<option value="' + o[0] + '"' + (ui.castOn === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
         "</select></label></div>";
     }
@@ -1178,10 +1178,10 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var mythDis = !c.myth && state.mythic < 1;
     var waHint = sp.custom ? "Always used for a spell outside her known list" : state.mythic < 1 ? "No mythic power left" : "Standard action, CL +2 for this spell";
     opts += '<div class="opts">' +
-      '<label class="opt' + (odDis ? " dis" : "") + '"><input type="checkbox" id="odChk"' + (c.od ? " checked" : "") + (odDis ? " disabled" : "") + '><span>Spend 1 overdrive to ignore burnout<small>' + odHint + "</small></span></label>" +
-      (sp.art ? '<label class="opt' + (d8Dis ? " dis" : "") + '"><input type="checkbox" id="d8Chk"' + (c.d8 ? " checked" : "") + (d8Dis ? " disabled" : "") + '><span>Artillery overdrive, 1 more overdrive<small>' + d8Hint + "</small></span></label>" : "") +
-      (sp.myth ? '<label class="opt' + (mythDis ? " dis" : "") + '"><input type="checkbox" id="mythChk"' + (c.myth ? " checked" : "") + (mythDis ? " disabled" : "") + '><span>Mythic version, 1 mythic power<small>' + (mythDis ? "No mythic power left" : sp.calc === "fb" ? "d10s instead of d6s, and targets that fail catch fire" : "One-way portal her chosen allies can use") + "</small></span></label>" : "") +
-      '<label class="opt' + (waDis ? " dis" : "") + '"><input type="checkbox" id="waChk"' + (c.wa ? " checked" : "") + (waDis ? " disabled" : "") + '><span>Wild Arcana, 1 mythic power<small>' + waHint + "</small></span></label>" +
+      '<label class="opt' + (odDis ? " dis" : "") + '"><input type="checkbox" id="odChk' + X + '"' + (c.od ? " checked" : "") + (odDis ? " disabled" : "") + '><span>Spend 1 overdrive to ignore burnout<small>' + odHint + "</small></span></label>" +
+      (sp.art ? '<label class="opt' + (d8Dis ? " dis" : "") + '"><input type="checkbox" id="d8Chk' + X + '"' + (c.d8 ? " checked" : "") + (d8Dis ? " disabled" : "") + '><span>Artillery overdrive, 1 more overdrive<small>' + d8Hint + "</small></span></label>" : "") +
+      (sp.myth ? '<label class="opt' + (mythDis ? " dis" : "") + '"><input type="checkbox" id="mythChk' + X + '"' + (c.myth ? " checked" : "") + (mythDis ? " disabled" : "") + '><span>Mythic version, 1 mythic power<small>' + (mythDis ? "No mythic power left" : sp.calc === "fb" ? "d10s instead of d6s, and targets that fail catch fire" : "One-way portal her chosen allies can use") + "</small></span></label>" : "") +
+      '<label class="opt' + (waDis ? " dis" : "") + '"><input type="checkbox" id="waChk' + X + '"' + (c.wa ? " checked" : "") + (waDis ? " disabled" : "") + '><span>Wild Arcana, 1 mythic power<small>' + waHint + "</small></span></label>" +
       "</div>";
 
     var gainCls = c.burn > 0 ? "gain" : "zero";
@@ -1193,14 +1193,29 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var lvlTxt = sp.lvl === 0 ? "Orison" : "Level " + sp.lvl + (sp.exp ? " · experimental" : "") + (sp.art ? " · treated as 4th" : "");
     var willDrop = sp.per && state.active.length >= LP().slots && !isActive(sp.id) ? state.active[0].name : null;
 
-    $("pCast").innerHTML =
-      '<div class="ph"><div><h2 class="cast-name">' + esc(sp.name) + '</h2><span class="cast-lvl">' + lvlTxt + "</span></div>" +
+    return '<div class="castbox"><div class="ph"><div><h2 class="cast-name">' + esc(sp.name) + '</h2><span class="cast-lvl">' + lvlTxt + "</span></div>" +
       (sp.art || (sp.custom && !ui.customName.trim()) ? "" : spellBtnInfo(sp.name)) + "</div>" +
       opts + "<dl class=\"rows\">" + rows + "</dl>" +
       (willDrop ? '<p class="warn-text">Both slots are full. Casting this ends ' + esc(willDrop) + ".</p>" : "") +
       (c.problems.length ? '<p class="warn-text">' + esc(c.problems.join(" ")) + "</p>" : "") +
-      '<button class="btn primary" data-act="cast"' + (c.problems.length ? " disabled" : "") + ">Cast " + esc(sp.name) + "</button>";
+      '<button class="btn primary" data-act="cast" data-col="' + col + '"' + (c.problems.length ? " disabled" : "") + ">Cast " + esc(sp.name) + "</button></div>";
   }
+  /* each column keeps its own cast options (overdrive, mythic, Wild Arcana, cast on) */
+  var COLOPT = ["od", "d8", "wa", "myth", "castOn"];
+  function colSpell(col) {
+    if (col === "x") return expSpell();
+    if (col === "w") return bankFind(ui.customName, ui.customLvl) ? customSpell() : null;
+    return getSpell(ui.knownSel) || getSpell("fireball");
+  }
+  function withCol(col, fn) {
+    var o = ui.cols[col] || (ui.cols[col] = { od: false, d8: false, wa: false, myth: false, castOn: "her" });
+    COLOPT.forEach(function (k) { ui[k] = o[k]; });
+    var sp = colSpell(col), out;
+    if (sp) { ui.sel = sp.id; out = fn(sp); }
+    COLOPT.forEach(function (k) { o[k] = ui[k]; });
+    return out;
+  }
+  function renderCast() { renderSpells(); }
 
   function renderSlots() {
     var h = "";
@@ -1350,7 +1365,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     $("dayBtn").textContent = ui.dayArmed ? "Confirm new day" : "New day";
     $("dayBtn").classList.toggle("warn", ui.dayArmed);
     renderTray();
-    renderBurn(); renderOver(); renderMyth(); renderSpells(); renderCast(); renderSlots(); renderBody(); renderLog();
+    renderBurn(); renderOver(); renderMyth(); renderSpells(); renderSlots(); renderBody(); renderLog();
     renderSheet();
   }
 
@@ -1370,7 +1385,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
           }).join("") + "</datalist>";
         }
         $("wizLists").innerHTML = dl;
-        renderSpells(); renderCast(); /* not the sheet: that would wipe a half-typed form */
+        renderSpells(); /* not the sheet: that would wipe a half-typed form */
       });
       codexWait.catch(function () { codexWait = null; });
     }
@@ -1574,10 +1589,14 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       ui.od = false; ui.d8 = false; ui.wa = false; ui.myth = false; ui.castOn = "her"; ui.blood = false;
       render();
       if (window.matchMedia("(max-width: 859px)").matches) {
-        var el = $("pCast");
+        var el = $("pSpells");
         if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
-    } else if (a === "cast") doCast();
+    } else if (a === "cast") {
+      var cc = t.getAttribute("data-col");
+      if (cc) withCol(cc, function () { doCast(); }); else doCast();
+      if (cc) { ui.cols[cc] = { od: false, d8: false, wa: false, myth: false, castOn: "her" }; render(); }
+    }
     else if (a === "tray") { ui.tray = !ui.tray; ui.trayMsg = ""; render(); }
     else if (a === "qblood") { ui.qBlood = !ui.qBlood; render(); }
     else if (a === "qod") { ui.qOd = !ui.qOd; render(); }
@@ -1717,6 +1736,18 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       return;
     }
     var id = e.target.id;
+    var cm = /^(odChk|d8Chk|bmSel|bmGp|fireChk|waChk|mythChk|castOn|modeSel|elSel|cDur)-([kxw])$/.exec(id || "");
+    if (cm) {
+      var tgt = e.target;
+      withCol(cm[2], function () {
+        var v = tgt.type === "checkbox" ? tgt.checked : tgt.value;
+        ({ odChk: function () { ui.od = v; }, d8Chk: function () { ui.d8 = v; }, waChk: function () { ui.wa = v; }, mythChk: function () { ui.myth = v; },
+          castOn: function () { ui.castOn = v; }, bmSel: function () { ui.bmChoice = v; }, bmGp: function () { ui.bmGp = Math.max(0, parseInt(v, 10) || 0); },
+          fireChk: function () { ui.unkFire = v; }, modeSel: function () { ui.mode = v; }, elSel: function () { ui.element = v; }, cDur: function () { ui.customDur = v; } })[cm[1]]();
+      });
+      renderSpells();
+      return;
+    }
     if (id === "odChk") { ui.od = e.target.checked; renderCast(); }
     else if (id === "d8Chk") { ui.d8 = e.target.checked; renderCast(); }
     else if (id === "bmSel") { ui.bmChoice = e.target.value; renderCast(); }
