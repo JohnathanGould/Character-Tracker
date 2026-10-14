@@ -388,8 +388,10 @@
   function tg(act, k, label, on, extra, v) {
     return '<button type="button" class="tg" data-act="' + act + '" data-k="' + k + '"' + (v ? ' data-v="' + v + '"' : "") + ' aria-pressed="' + (!!on) + '">' + '<span class="dot"></span><span class="tl">' + esc(label) + "</span>" + (extra ? '<span class="tx">' + esc(extra) + "</span>" : "") + "</button>";
   }
-  function sec(title, body, open) {
-    return '<details class="sec"' + (open ? " open" : "") + "><summary>" + esc(title) + "</summary><div class=\"sb\">" + body + "</div></details>";
+  /* every section starts collapsed when the page opens (the third argument is kept for callers but ignored);
+     renderSheet in index.html keeps the ones she opens open across re-renders */
+  function sec(title, body) {
+    return '<details class="sec"><summary>' + esc(title) + '</summary><div class="sb">' + body + "</div></details>";
   }
   function tbl(head, rows, cls) {
     return '<table class="t ' + (cls || "") + '"><thead><tr>' + head.map(function (h) { return "<th>" + esc(h) + "</th>"; }).join("") + "</tr></thead><tbody>" +
