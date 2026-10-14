@@ -447,7 +447,7 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
 
 /* log */
 .lower { display: grid; gap: 16px; grid-template-columns: 1fr; align-items: start; }
-.log { list-style: none; margin: 0; padding: 0; max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.log { list-style: none; margin: 0; padding: 0; max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
 .log li { display: flex; gap: 10px; font-size: 0.85rem; padding: 4px 0; border-bottom: 1px solid var(--line); }
 .log li:last-child { border-bottom: 0; }
 .log .r { font-family: var(--font-mono); color: var(--muted); flex: none; min-width: 3.2ch; }
@@ -903,9 +903,20 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   }
 
   /* ---------- state changes ---------- */
+  /* the log is the long record of a fight (rollback only reaches 20 rounds): keep 500 entries */
+  var LOG_MAX = 500;
   function log(text) {
     state.log.unshift({ r: state.round, t: text });
-    state.log = state.log.slice(0, 40);
+    state.log = state.log.slice(0, LOG_MAX);
+  }
+  /* manual adjustments (hit points, burnout, overdrive, mythic, Strength): repeated taps on the same thing in the
+     same round update one entry ("HP 82 → 67") instead of adding one per tap */
+  function logAdj(key, label, from, to) {
+    var top = state.log[0];
+    if (top && top.k === key && top.r === state.round) { top.t = label + " " + top.from + " → " + to; if (top.from === to) state.log.shift(); return; }
+    if (from === to) return;
+    state.log.unshift({ r: state.round, k: key, from: from, t: label + " " + from + " → " + to });
+    state.log = state.log.slice(0, LOG_MAX);
   }
   function mutate(fn) {
     if (readOnly) return;
@@ -1065,6 +1076,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     mutate(function (s) {
       var before = s.burnout, r = s.round;
       s.undo = (s.undo || []).concat([roundSnap(s)]).slice(-UNDO_MAX);
+      var did = function (k) { return (s.turn[k] || []).map(function (e) { return e.name + (e.note ? " (" + e.note + ")" : ""); }).join("; "); };
+      if (did("her") || did("pet")) log("Round " + r + " actions: " + [did("her") ? "Daerlieth: " + did("her") : "", did("pet") ? "Gwathfaron: " + did("pet") : ""].filter(Boolean).join(" | "));
       s.prevOoc = oocText(s);
       passRound(s, s.gained);
       log((idle ? "Round " + r + " passed, no actions" : "End of round " + r) + (before ? ": burnout " + before + " → " + s.burnout : ""));
@@ -1365,7 +1378,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     var h = state.log.length
       ? '<ul class="log">' + state.log.map(function (e) { return '<li><span class="r">R' + e.r + '</span><span class="tx">' + esc(e.t) + "</span></li>"; }).join("") + "</ul>"
       : '<p class="log-empty">Nothing cast yet. Casts, burnout recovery and expiries appear here.</p>';
-    $("pLog").innerHTML = '<div class="ph"><h2>Log</h2><button class="btn sm" data-act="clearlog"' + (state.log.length ? "" : " disabled") + ">Clear log</button></div>" + h;
+    $("pLog").innerHTML = '<div class="ph"><h2>Log <span class="hint">' + state.log.length + " entries, newest first; the record to rebuild a fight from when − (20 rounds) isn't enough</span></h2>" +
+      '<div class="row"><button class="btn sm" data-act="copylog"' + (state.log.length ? "" : " disabled") + '>Copy log</button><button class="btn sm' + (ui.clearArmed ? " warn" : "") + '" data-act="clearlog"' + (state.log.length ? "" : " disabled") + ">" + (ui.clearArmed ? "Tap again to clear" : "Clear log") + "</button></div></div>" + h;
   }
 
   function render() {
@@ -1804,7 +1818,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   /* ---------- events ---------- */
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-act]");
-    if (!t || readOnly) return;
+    if (!t || (readOnly && t.getAttribute("data-act") !== "copylog")) return; /* the GM can copy the log too */
     var a = t.getAttribute("data-act");
     if (a === "pick") {
       ui.sel = t.getAttribute("data-id");
@@ -1825,7 +1839,17 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       if (xs) mutate(function (s) { s.expLocked = true; log("Experimental spell for today: " + xs.name + " (locked in)"); });
     }
     else if (a === "resetround") resetRound();
-    else if (a === "clearlog") mutate(function (s) { s.log = []; });
+    else if (a === "clearlog") {
+      if (!ui.clearArmed) { ui.clearArmed = true; renderLog(); setTimeout(function () { ui.clearArmed = false; renderLog(); }, 4000); return; }
+      ui.clearArmed = false; mutate(function (s) { s.log = []; });
+    }
+    else if (a === "copylog") {
+      /* oldest first, as plain text for RPoL or a message to the GM */
+      var txtLog = state.log.slice().reverse().map(function (e) { return "R" + e.r + "  " + e.t; }).join("\n");
+      var done = function () { t.textContent = "Copied"; setTimeout(function () { renderLog(); }, 1500); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txtLog).then(done, function () { openInfo("Log", "<textarea rows=\"16\" style=\"width:100%\" readonly>" + esc(txtLog) + "</textarea>"); });
+      else openInfo("Log", "<textarea rows=\"16\" style=\"width:100%\" readonly>" + esc(txtLog) + "</textarea>");
+    }
     else if (a === "nocast") noCast();
     else if (a === "roundplus") noCast(true);
     else if (a === "roundminus") mutate(function (s) {
@@ -1860,17 +1884,17 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     }
     else if (a === "burn") {
       var d = t.getAttribute("data-d");
-      mutate(function (s) { s.burnout = d === "clear" ? 0 : Math.max(0, s.burnout + parseInt(d, 10)); if (d === "1") s.gained = true; });
+      mutate(function (s) { var b0 = s.burnout; s.burnout = d === "clear" ? 0 : Math.max(0, s.burnout + parseInt(d, 10)); if (d === "1") s.gained = true; logAdj("burn", "Burnout set by hand", b0, s.burnout); });
     } else if (a === "setburn") {
       var n = parseInt(t.getAttribute("data-n"), 10);
-      mutate(function (s) { s.burnout = s.burnout === n ? n - 1 : n; });
+      mutate(function (s) { var b0 = s.burnout; s.burnout = s.burnout === n ? n - 1 : n; logAdj("burn", "Burnout set by hand", b0, s.burnout); });
     } else if (a === "res") {
       var k = t.getAttribute("data-k"), dd = parseInt(t.getAttribute("data-d"), 10), mx = k === "overdrive" ? odMax() : 7;
-      mutate(function (s) { s[k] = Math.min(mx, Math.max(0, s[k] + dd)); });
+      mutate(function (s) { var r0 = s[k]; s[k] = Math.min(mx, Math.max(0, s[k] + dd)); logAdj(k, k === "overdrive" ? "Overdrive" : "Mythic power", r0, s[k]); });
     } else if (a === "hp") {
       var hk = t.getAttribute("data-k"), hd = parseInt(t.getAttribute("data-d"), 10);
       var hmax = hk === "hp" ? hpMax() : petMax(), hdead = hk === "hp" ? HP_DEAD : petDead();
-      mutate(function (s) { s[hk] = Math.min(hmax, Math.max(-hdead, s[hk] + hd)); });
+      mutate(function (s) { var h0 = s[hk]; s[hk] = Math.min(hmax, Math.max(-hdead, s[hk] + hd)); logAdj(hk, hk === "hp" ? "Daerlieth HP" : "Gwathfaron HP", h0, s[hk]); });
     } else if (a === "mspend") {
       var what = t.getAttribute("data-what");
       mutate(function (s) {
@@ -1881,7 +1905,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       });
     } else if (a === "setres") {
       var k2 = t.getAttribute("data-k"), n2 = parseInt(t.getAttribute("data-n"), 10);
-      mutate(function (s) { s[k2] = s[k2] === n2 ? n2 - 1 : n2; });
+      mutate(function (s) { var v0 = s[k2]; s[k2] = s[k2] === n2 ? n2 - 1 : n2; logAdj(k2, k2 === "overdrive" ? "Overdrive" : k2 === "mythic" ? "Mythic power" : k2, v0, s[k2]); });
     } else if (a === "endspell") {
       var i = parseInt(t.getAttribute("data-i"), 10);
       mutate(function (s) { var g = s.active.splice(i, 1)[0]; if (g) log(g.name + " ended"); });
@@ -1894,12 +1918,18 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     } else if (a === "light") mutate(function (s) { s.lightUsed = !s.lightUsed; });
     else if (a === "eq") {
       var ek = t.getAttribute("data-k");
-      mutate(function (s) { if (s.eq[ek] === false) delete s.eq[ek]; else s.eq[ek] = false; });
+      var eName = (SheetEngine.ITEMS.filter(function (i) { return i.k === ek; })[0] || {}).name || ek;
+      mutate(function (s) { if (s.eq[ek] === false) { delete s.eq[ek]; log(eName + " put on"); } else { s.eq[ek] = false; log(eName + " set aside"); } });
     } else if (a === "eqall") {
       var off = t.getAttribute("data-v") === "off";
-      mutate(function (s) { s.eq = {}; if (off) SheetEngine.ITEMS.forEach(function (i) { s.eq[i.k] = false; }); });
+      mutate(function (s) { s.eq = {}; if (off) SheetEngine.ITEMS.forEach(function (i) { s.eq[i.k] = false; }); log(off ? "All gear set aside" : "All gear put on"); });
     } else if (a === "cond") {
       var ck = t.getAttribute("data-k"), cv = t.getAttribute("data-v");
+      var cLabel = ((t.querySelector(".tl") || t).textContent || ck).trim(), cWasOn = t.getAttribute("aria-pressed") === "true";
+      var cSeg = ["target", "defend", "flank", "petFlank"].indexOf(ck) >= 0;
+      /* attack pickers are views, not events; everything else is worth a line in the log */
+      if (["atk", "hands", "art", "artD8", "petAtk"].indexOf(ck) < 0)
+        log((ck === "petFlank" ? "Gwathfaron " : "") + (cSeg ? ({ target: "Favored enemy: ", defend: "Defense: ", flank: "Flanking: ", petFlank: "flanking: " })[ck] + (cWasOn && cv ? "none" : cLabel) : cLabel + (cWasOn ? " off" : " on")));
       mutate(function (s) {
         if (ck === "target" || ck === "defend" || ck === "atk" || ck === "hands" || ck === "art" || ck === "artD8" || ck === "petAtk" || ck === "flank" || ck === "petFlank") {
           var was = s.cond[ck];
@@ -1966,7 +1996,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       mutate(function (s) { s.fx[dw] = s.fx[dw].filter(function (e) { if (e.id === did) { log(e.name + " on " + (dw === "pet" ? "Gwathfaron" : "Daerlieth") + " ended"); return false; } return true; }); });
     } else if (a === "str") {
       var sd = parseInt(t.getAttribute("data-d"), 10);
-      mutate(function (s) { s.strDmg = Math.max(0, Math.min(16, s.strDmg + sd)); });
+      mutate(function (s) { var s0 = s.strDmg; s.strDmg = Math.max(0, Math.min(16, s.strDmg + sd)); logAdj("str", "Strength damage", s0, s.strDmg); });
     }
   });
 
