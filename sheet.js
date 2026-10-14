@@ -997,7 +997,7 @@
       fes.map(function (f) { return tg("cond", "target", f.name, c.target === f.k, "+" + f.b + " attack and damage", f.k); }).join("") + "</div></div>";
     var status = hp > 0 ? "Up" : hp === 0 ? "Disabled" : hp > -p.dead ? "Dying" : "Dead";
 
-    h += '<div class="panel"><div class="ph"><div><h2>Gwathfaron</h2><span class="hint">Panther (Core Rulebook small cat, leopard), Medium animal companion · effective druid level ' + cp.druid + " · " + p.hd + ' HD · N</span></div></div>' +
+    h += '<div class="panel"><div class="ph"><div class="idhead"><button type="button" class="portrait" data-portrait="gwathfaron" aria-label="Show Gwathfaron\'s portrait"><img src="images/gwathfaron-thumb.webp" alt="" width="64" height="64"></button><div><h2>Gwathfaron</h2><span class="hint">Panther (Core Rulebook small cat, leopard), Medium animal companion · effective druid level ' + cp.druid + " · " + p.hd + ' HD · N</span></div></div></div>' +
       '<div class="sgrid">' +
       box("HP", hp + "<small>/" + p.hpMax + "</small>", status + " · dies at −" + p.dead, p.t.hp) +
       box("AC", p.ac, tip("touch " + p.touch, p.t.touch) + " · " + tip("flat-footed " + p.ff, p.t.ff), p.t.ac) +
