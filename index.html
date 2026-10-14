@@ -582,7 +582,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
   var DEFAULT = {
     v: 1, round: 1, burnout: 0, gained: false,
-    overdrive: 10, mythic: 7, eq: {}, cond: {}, fx: { her: [], pet: [] }, lightUsed: false, hp: 82, petHp: 50, stun: 2, level: 8, picks: {}, hpRolls: {},
+    overdrive: 10, mythic: 7, eq: {}, cond: {}, fx: { her: [], pet: [] }, lightUsed: false, hp: 82, petHp: 50, level: 8, picks: {}, hpRolls: {},
     vials: 2, strDmg: 0, blood: null, exp: "", expLocked: false, turn: { her: [], pet: [] }, prevOoc: "", active: [], pending: [], log: []
   };
 
@@ -606,7 +606,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     { id: "prestidigitation", name: "Prestidigitation", lvl: 0, per: 600, note: "Minor tricks, 1 hour per level." },
     { id: "shield", name: "Shield", lvl: 1, per: 10, note: "+4 shield bonus to AC (AC 27). Blocks magic missile." },
     { id: "expeditious-retreat", name: "Expeditious retreat", lvl: 1, per: 10, note: "+30 ft base speed (35 ft becomes 65 ft)." },
-    { id: "feather-fall", name: "Feather fall", lvl: 1, per: 1, note: "Immediate action. Ends when she lands or after 1 round per level." },
+    { id: "long-arm", name: "Long arm", lvl: 1, per: 10, note: "+5 ft reach with her arms: unarmed strikes reach 10 ft, and she threatens 10 ft for attacks of opportunity." },
     { id: "blood-money", name: "Blood Money", lvl: 1, calc: "bm" },
     { id: "magic-missile", name: "Magic missile", lvl: 1, calc: "mm" },
     { id: "darkvision", name: "Darkvision", lvl: 2, per: 600, note: "Darkvision 60 ft." },
@@ -699,10 +699,10 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     s.level = Levels.clamp(s.level);
     s.picks = s.picks && typeof s.picks === "object" && !Array.isArray(s.picks) ? s.picks : {};
     s.hpRolls = s.hpRolls && typeof s.hpRolls === "object" && !Array.isArray(s.hpRolls) ? s.hpRolls : {};
-    var nd = SheetEngine.derive(s), nMax = nd.hpMax, pMax = nd.pet.hpMax, sMax = Levels.prog(s.level).stunUses;
+    var nd = SheetEngine.derive(s), nMax = nd.hpMax, pMax = nd.pet.hpMax;
     s.hp = isFinite(+s.hp) && s.hp !== null ? Math.min(nMax, Math.max(-HP_DEAD, Math.round(+s.hp))) : nMax;
     s.petHp = isFinite(+s.petHp) && s.petHp !== null ? Math.min(pMax, Math.max(-nd.pet.dead, Math.round(+s.petHp))) : pMax;
-    s.stun = isFinite(+s.stun) && s.stun !== null ? Math.min(sMax, Math.max(0, Math.floor(+s.stun))) : sMax;
+    delete s.stun; /* Stunning Fist was swapped for Combat Reflexes */
     s.vials = Math.max(0, Math.floor(+s.vials || 0));
     s.strDmg = Math.min(16, Math.max(0, Math.floor(+s.strDmg || 0)));
     s.round = Math.max(1, Math.floor(+s.round || 1));
@@ -999,7 +999,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     mutate(function (s) {
       s.round = 1; s.gained = false; s.blood = null; s.turn = { her: [], pet: [] }; s.prevOoc = "";
       s.burnout = 0; s.overdrive = odMax(); s.mythic = 7;
-      s.lightUsed = false; s.active = []; s.pending = []; s.stun = LP().stunUses;
+      s.lightUsed = false; s.active = []; s.pending = [];
       s.expLocked = false; /* a new day: she may pick a different experimental spell */
       clearScene(s);
       var healed = s.strDmg > 0;
@@ -1007,7 +1007,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       /* natural healing after 8 hours of rest: 1 hp per level, the panther 1 per Hit Die */
       var lv = s.level, hdP = Levels.prog(lv).pet.hd;
       s.hp = Math.min(hpMax(), s.hp + lv); s.petHp = Math.min(petMax(), s.petHp + hdP);
-      log("New day: overdrive " + s.overdrive + ", mythic power 7, burnout 0, Stunning Fist " + s.stun + ", hp +" + lv + " (panther +" + hdP + ")" + (healed ? ", Strength damage −1" : "") + ", favored enemy and terrain off");
+      log("New day: overdrive " + s.overdrive + ", mythic power 7, burnout 0, hp +" + lv + " (panther +" + hdP + ")" + (healed ? ", Strength damage −1" : "") + ", favored enemy and terrain off");
     });
     render();
   }
@@ -1320,15 +1320,11 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       '<p class="hint">' + note + "</p></div>";
   }
   function renderBody() {
-    var stun = "";
-    for (var i = 1; i <= LP().stunUses; i++) stun += '<button class="pip my' + (i <= state.stun ? " on" : "") + '" data-act="setres" data-k="stun" data-n="' + i + '" aria-label="Set Stunning Fist uses to ' + i + '"></button>';
     $("pBody").innerHTML =
       '<div class="ph"><h2>Hit points</h2><span class="hint">New day heals ' + state.level + ' (her) and ' + LP().pet.hd + ' (Gwathfaron)</span></div>' +
       '<div class="hpgrid">' +
       hpBlock("hp", "Daerlieth", state.hp, hpMax(), HP_DEAD, "Hard to Kill: stabilizes on her own below 0, dies at −" + HP_DEAD + ". Blood Money costs 1d6 here.") +
       hpBlock("petHp", "Gwathfaron, panther", state.petHp, petMax(), petDead(), "Dies at −" + petDead() + ".") +
-      '<div class="hpb"><div class="lbl">Stunning Fist</div><div class="big"><div class="bignum num">' + state.stun + '<small>/' + LP().stunUses + '</small></div></div>' +
-      '<div class="pips">' + stun + '</div><p class="hint">Declare before the roll, 1 per round. Fort DC ' + dv().atk.stunDc + ' or stunned until just before her next turn.</p></div>' +
       "</div>" + bodyConds();
   }
 
@@ -1532,14 +1528,14 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   function spellAct(sp) {
     if (sp.calc === "bm") return "swift";
     var c = codexFind(sp.name);
-    return Actions.castAct(c ? c.ct : /feather fall/i.test(sp.name) ? "immediate action" : "standard action");
+    return Actions.castAct(c ? c.ct : "standard action");
   }
   function turnAdd(s, who, e) {
     e.id = "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
     s.turn[who].push(e);
   }
   function turnCatalog(who) {
-    return Actions.catalog(who, { d: dv(), spells: castable(), ct: function (n) { var c = codexFind(n); return c ? c.ct : /feather fall/i.test(n) ? "immediate action" : /blood money/i.test(n) ? "swift action" : "standard action"; } });
+    return Actions.catalog(who, { d: dv(), spells: castable(), ct: function (n) { var c = codexFind(n); return c ? c.ct : /blood money/i.test(n) ? "swift action" : "standard action"; } });
   }
   var ui_turn = { her: "", pet: "", all: { her: false, pet: false } };
   function oocText(s) {
@@ -1723,7 +1719,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       s.hp += after.hpMax - before.hpMax;
       s.petHp += after.pet.hpMax - before.pet.hpMax;
       s.overdrive = Math.min(after.sp.od, s.overdrive + (after.sp.od - before.sp.od));
-      s.stun = Math.min(Levels.prog(L).stunUses, s.stun + (Levels.prog(L).stunUses - Levels.prog(L - 1).stunUses));
       log("Level " + L + "! Hit points +" + (after.hpMax - before.hpMax) + " (rolled " + roll + "), Gwathfaron +" + (after.pet.hpMax - before.pet.hpMax) + ". Make her picks under Level-up picks.");
     });
     setView("sheet");
@@ -1844,7 +1839,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       });
     } else if (a === "setres") {
       var k2 = t.getAttribute("data-k"), n2 = parseInt(t.getAttribute("data-n"), 10);
-      mutate(function (s) { s[k2] = s[k2] === n2 ? n2 - 1 : n2; if (k2 === "stun" && s[k2] < n2) log("Stunning Fist used"); });
+      mutate(function (s) { s[k2] = s[k2] === n2 ? n2 - 1 : n2; });
     } else if (a === "endspell") {
       var i = parseInt(t.getAttribute("data-i"), 10);
       mutate(function (s) { var g = s.active.splice(i, 1)[0]; if (g) log(g.name + " ended"); });
@@ -1894,7 +1889,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         var after = SheetEngine.derive(s);
         s.hp = Math.min(after.hpMax, s.hp - (before.hpMax - after.hpMax));
         s.petHp = Math.min(after.pet.hpMax, s.petHp - (before.pet.hpMax - after.pet.hpMax));
-        s.overdrive = Math.min(after.sp.od, s.overdrive); s.stun = Math.min(Levels.prog(s.level).stunUses, s.stun);
+        s.overdrive = Math.min(after.sp.od, s.overdrive);
         log("Undid level " + L + ": back to level " + s.level + ". Picks made at level " + L + " are kept for when she levels again.");
       });
     } else if (a === "rank" || a === "prank") {

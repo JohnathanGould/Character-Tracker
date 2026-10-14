@@ -53,14 +53,11 @@ Full, 2 weapons  |Melee | +13/+13/+8/+8     | 1d8+3 | 20/x2 |   -   |   B   | Ma
 Full, hasted     |Melee | +14/+14/+14/+9/+9 | 1d8+3 | 20/x2 |   -   |   B   | Haste: +1 on every attack and one extra main-hand strike.
 Full, 1 weapon   |Melee | +15/+10           | 1d8+3 | 20/x2 |   -   |   B   | Hasted: +16/+16/+11.
 Charge           |Melee | +17               | 1d8+3 | 20/x2 |   -   |   B   | -2 AC until next turn. Bodywrap use: +18 for 1d8+4.
-Attack of opp.   |Melee | +15               | 1d8+3 | 20/x2 |   -   |   B   | One a round (no Combat Reflexes).
-Stunning Fist    |Melee | +15               | 1d8+3 | 20/x2 |   -   |   B   | Declared on a strike; see below.
+Attack of opp.   |Melee | +15               | 1d8+3 | 20/x2 |   -   |   B   | 7 a round (Combat Reflexes), even while flat-footed. Reach 10 ft with long arm.
 
 Attack: BAB 8 + Dex 6 (Weapon Finesse) + 1 Weapon Focus = +15. Two-Weapon Fighting: -2 on every strike (unarmed strikes count as light).
 Damage: 1d8 unarmed (Monastic Legacy, effective monk level 4) + Str 3 main hand, +1 off hand (half Str).
 Flanking with Gwathfaron: +4 on every melee attack (Outflank) and +1d6 precision damage on every melee hit (Precise Strike), for both of them.
-
-Stunning Fist: 2 uses a day, 1 per round. Declare before the roll. Fort DC 18 (10 + 4 + Wis 4) or stunned until just before her next turn.
 
 Bodywrap of mighty strikes (body slot): once per round, add a +1 enhancement bonus to the attack and damage of one unarmed strike.
          She gets 2 uses a round at BAB +6 (a third at +11). Not an action, and she can use it on attacks of opportunity too.
@@ -110,7 +107,7 @@ L4 – Bonded Mind: silent messages, as the message spell, with an ally who has 
 Combat style (Unarmed, prerequisites waived)
 
 L2 – Monastic Legacy
-L6 – Stunning Fist
+L6 – Combat Reflexes (replaced Stunning Fist)
 
 Ranger talents
 
@@ -162,13 +159,14 @@ None. She casts without a spellbook or prepared slots.
 SPELLS KNOWN/PREPARED (20 known: 8 orisons + 12 spells, wizard list, from her focus schools):
 0 (8 known, no burnout): acid splash, ray of frost, spark, mage hand (D), message (D), mending, open/close, prestidigitation (D)
 Racial light or dancing lights 1/day, no burnout.
-1: shield (D), expeditious retreat (D), feather fall (D), magic missile, blood money
+1: shield (D), expeditious retreat (D), long arm (D), magic missile, blood money
 2: darkvision (D), resist energy (D), scorching ray
 3: dispel magic, fireball (mythic)
 4: dimension door (mythic), detonate (from Expanded Arcana)
 Detonate (Evocation, 4th, 30 ft radius spread centered on her, V S M 50 gp of acid and alkali vials per cast, Reflex half DC 20, SR yes): she chooses acid, cold, electricity or fire. The blast goes off 1 round after casting: 8d8 within 15 ft, half from 15 to 30 ft (10d8 as fire with Elemental Bond). She takes half the damage with no save, and her energy resistance (resist energy gives 20 at CL 8) can cancel it. Burnout 2. It hits allies within 30 ft too.
 Blood Money (Transmutation 1, swift action): she takes 1d6 damage and her blood becomes one material component of a spell she casts that round. Components over 1 gp also cost 1 Strength damage plus 1 per full 500 gp, so detonate's vials cost 1d6 and 1 Strength damage. Burnout 0.
-(D) = duration spell, so it counts against her limit of 2 active at once. Durations at CL 8: shield and expeditious retreat 8 min, darkvision 8 hours, resist energy 80 min, feather fall 8 rounds or until she lands.
+(D) = duration spell, so it counts against her limit of 2 active at once. Durations at CL 8: shield and expeditious retreat 8 min, darkvision 8 hours, resist energy 80 min, long arm 8 min.
+Long arm: her arms reach 5 ft further, so her unarmed strikes reach 10 ft and she threatens 10 ft (7 attacks of opportunity a round with Combat Reflexes).
 Magic missile: 4 missiles at CL 8, 1d4+1 force each, no attack roll.
 Fireball: 10d6 fire with Elemental Bond (CL 10), 20 ft radius spread, Reflex DC 19 for half. Mythic: 10d10 and burning.
 Dimension door: teleports her and up to 2 willing Medium or smaller creatures (1 per 3 caster levels), 400 ft + 40 ft/level (720 ft), 2 burnout. Mythic: the portal version above.
@@ -326,7 +324,6 @@ MAGIC ITEMS
 DAILY RESOURCES
  - Arcane overdrive: 10 points (refills after 8 hours of sleep)
  - Mythic power: 7 uses a day
- - Stunning Fist: 2 uses a day (1 per round)
  - Racial light or dancing lights: 1 a day
  - Detonate vials: 2 casts
 

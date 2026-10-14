@@ -65,7 +65,6 @@
       stealthDice: Math.floor((L + 2) / 4) + 1,  /* +1 Improved Stealth Attack (7th) */
       forest: 2 + 2 * [8, 13, 18].filter(function (x) { return x <= L; }).length,
       fastMove: L >= 12 ? 20 : 10,
-      stunUses: Math.floor(L / 4),
       unarmed: unarmedDie(Math.floor(L / 2)),
       track: Math.floor(L / 2),
       evasion: L >= 16 ? "improved" : L >= 9 ? "evasion" : "",
@@ -125,7 +124,6 @@
     num("Stealth attack", a.stealthDice, b.stealthDice, function (n) { return n + "d6"; });
     num("Forest bonus", a.forest, b.forest, plus);
     num("Fast movement in forest", a.fastMove, b.fastMove, function (n) { return "+" + n + " ft"; });
-    num("Stunning Fist uses a day", a.stunUses, b.stunUses);
     num("Unarmed damage", a.unarmed, b.unarmed);
     num("Experimental spell up to", a.expMax, b.expMax, function (n) { return ord(n) + " level"; });
     var ap = a.pet, bp = b.pet;

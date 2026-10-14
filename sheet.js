@@ -40,9 +40,11 @@
   /* she has taken Greater Two-Weapon Fighting if any feat pick names it */
   /* feats taken before the tracker's level-up picks (her 5th-level slots), plus any level-up pick */
   var BASE_FEATS = ["Outflank", "Precise Strike"];
+  /* her Unarmed combat style feats so far (Combat Reflexes replaced Stunning Fist at 6th) */
+  var STYLE_FEATS = ["Monastic Legacy", "Combat Reflexes"];
   function hasFeat(st, name) {
     var pk = picksOf(st), re = new RegExp(name, "i");
-    return BASE_FEATS.some(function (f) { return re.test(f); }) || Object.keys(pk).some(function (id) { return /^(feat|cs)-/.test(id) && re.test(String(pk[id])); });
+    return BASE_FEATS.concat(STYLE_FEATS).some(function (f) { return re.test(f); }) || Object.keys(pk).some(function (id) { return /^(feat|cs)-/.test(id) && re.test(String(pk[id])); });
   }
   /* teamwork with Gwathfaron (Coordinated Companion gives him her teamwork feats): Outflank makes flanking +4, Precise Strike adds 1d6 */
   function flankBonus(st) { return hasFeat(st, "Outflank") ? 4 : 2; }
@@ -250,6 +252,7 @@
     var act = function (id) { return (st.active || []).some(function (a) { return a.id === id && (!a.on || a.on === "her"); }); };
     var burn = Math.max(0, st.burnout || 0), dcP = Math.floor(burn / 2);
     var haste = hastedOn(st, "her"), er = act("expeditious-retreat"), cg = act("exp-cats-grace");
+    var longArm = (st.active || []).some(function (a) { return /^long arm\b/i.test(a.name) && (!a.on || a.on === "her"); });
     var shieldSp = act("shield"), pfe = act("exp-protection-from-evil"), fly = act("exp-fly");
     var pen = c.exhausted ? 6 : c.fatigued ? 2 : 0;
     var L = levelOf(st), P = progOf(st), BAB = P.bab, LEVEL = L;
@@ -327,12 +330,13 @@
     for (var ot = 0; ot < offN; ot++) offs.push(common - 2 - 5 * ot);
     d.atk = {
       canAttack: c.defend !== "total", fin: fin, tgt: tgt, wrap: wrap, die: P.unarmed, bab: BAB,
-      single: common, charge: common + 2, stun: common,
+      single: common, charge: common + 2,
       mains: mains, twMains: mains.map(function (x) { return x - 2; }), offs: offs, gtwf: offN > 2,
       mainA: common - 2, mainB: common - 7, offA: common - 2, offB: common - 7,
-      stunUses: P.stunUses, stealthDice: P.stealthDice,
+      stealthDice: P.stealthDice,
+      reach: longArm ? 10 : 5, longArm: longArm,
+      aoo: hasFeat(st, "Combat Reflexes") ? 1 + Math.max(0, ab.dex.mod) : 1,
       dmgM: dmgM, dmgO: dmgO, haste: haste,
-      stunDc: 10 + Math.floor(LEVEL / 2) + W,
       flank: flank, flankMode: fm, flankPrec: flankPrec(st, fm),
       sneak: !!((c.sneak || fm) && (c.forest || tgt))
     };
@@ -552,7 +556,7 @@
       atkRows.push(["Charge", d.noCharge ? "can't charge" : sg(a.charge), dm(a.dmgM), "Move up to twice her speed in a straight line and make one strike at +2. −2 AC until her next turn. " + wr(a.charge)]);
       if (two) atkRows.push(["", "", "", "A charge is one strike, so the second weapon adds nothing."]);
     } else if (mode === "aoo") {
-      atkRows.push(["Attack of opportunity", sg(one), dm(a.dmgM), "One a round (no Combat Reflexes). Improved Unarmed Strike means her fists threaten, so foes leaving her reach or acting carelessly next to her provoke. " + wr(one)]);
+      atkRows.push(["Attack of opportunity", sg(one), dm(a.dmgM), (a.aoo > 1 ? a.aoo + " a round (Combat Reflexes: 1 + Dex), even while flat-footed. " : "One a round. ") + "She threatens " + a.reach + " ft" + (a.longArm ? " (long arm)" : "") + ": Improved Unarmed Strike means her fists threaten, so foes moving out of a threatened square, casting or shooting there provoke. " + wr(one)]);
       if (two) atkRows.push(["", "", "", "No Two-Weapon Fighting penalty: it's a single strike."]);
     } else if (!two) {
       /* one weapon: her iterative strikes from BAB (+6, +11, +16) */
@@ -574,7 +578,6 @@
       if (a.haste) atkRows.push([" " + (order.length + 1) + ". Main hand (haste)", sg(tm[0]), dm(a.dmgM), "Haste: one extra strike at her highest bonus"]);
       else atkRows.push(["<b>If hasted: " + (order.length + 1) + " strikes</b>", strikes([tm[0] + 1, of[0] + 1, tm[0] + 1].concat(order.slice(2).map(function (x) { return x[1] + 1; }))), "", "Haste gives +1 on every attack and one extra main-hand strike at her highest bonus"]);
     }
-    if (a.canAttack) atkRows.push(["Stunning Fist", "on a hit", "", "Declare before the roll on any strike, 1 a round: Fort DC " + a.stunDc + " or stunned. " + a.stunUses + " a day (" + (st.stun == null ? a.stunUses : st.stun) + " left)"]);
     var sneakOn = (c.sneak || a.flankMode), sneakTxt = sneakOn ? ((c.forest || a.tgt) ? "Stealth attack +" + SD + " on every hit now (" + (a.flankMode ? "flanking" : "target flat-footed") + "); it isn't multiplied on a critical." : "Stealth attack needs forest or a favored enemy as well.") : "Stealth attack +" + SD + " when the target is flat-footed or flanked, in forest or against a favored enemy. Skirmishing Attack: move 10+ ft first and the first attack counts as against a flat-footed target.";
     var art = sp.artDice + "d6" + sg(sp.artFlat), art8 = sp.artDice + "d8" + sg(sp.artFlat);
     /* artillery picker: delivery (secret) and die size, saved in cond */
@@ -687,7 +690,7 @@
     "improved two-weapon fighting": ["Combat feat", "A second off-hand attack at −5.", "In a full attack she gets a second attack with her off hand, at a −5 penalty (on top of the usual two-weapon penalties)."],
     "greater two-weapon fighting": ["Combat feat", "A third off-hand attack at −10.", "In a full attack she gets a third attack with her off hand, at a −10 penalty. The tracker adds this strike to her Attacks table when the feat is picked."],
     "expanded arcana": ["General feat", "One extra spell known (hers: detonate).", "Adds one spell from her class list to her spells known, of any level she can cast. (Or two spells, both at least one level below her highest.) Hers is detonate, 4th level."],
-    "combat reflexes": ["Combat feat", "Extra attacks of opportunity (Dex bonus), and while flat-footed.", "She can make a number of extra attacks of opportunity each round equal to her Dex bonus, and can make them while flat-footed."],
+    "combat reflexes": ["Combat style feat (unarmed, 6th)", "Extra attacks of opportunity (Dex bonus), and while flat-footed.", "She can make a number of extra attacks of opportunity each round equal to her Dex bonus, and can make them while flat-footed."],
     "dodge": ["Combat feat", "+1 dodge bonus to AC.", "+1 dodge bonus to AC. Lost whenever she loses her Dex bonus to AC."],
     "mobility": ["Combat feat", "+4 AC against attacks of opportunity from moving.", "+4 dodge bonus to AC against attacks of opportunity provoked by moving out of or within a threatened area."],
     "combat expertise": ["Combat feat", "Trade attack for AC: −1 attack, +1 dodge AC per 4 BAB.", "Before attacking she can take −1 on melee attacks and combat maneuver checks for +1 dodge bonus to AC, plus another −1/+1 per 4 points of base attack bonus. A prerequisite for many maneuver and teamwork feats (Pack Flanking among them)."],
@@ -710,7 +713,7 @@
     "punishing kick": ["Combat feat (unarmed style, 6th)", "On an unarmed hit, also push the foe 5 ft or knock it prone (Fort negates).", "Once a day per five character levels (1 at 8th, 2 at 10th), and no more than once a round: when she hits with an unarmed strike, besides the damage she can push the target 5 ft away or knock it prone. The target attempts a Fortitude save (DC 10 + half her level + Wis modifier, DC 18 now) to negate. The style waives its prerequisites."],
     "spring attack": ["Combat feat (unarmed style, 10th)", "Move, attack once, and keep moving without provoking from the target.", "As a full-round action she can move up to her speed and make a single melee attack anywhere along the way, without provoking an attack of opportunity from the creature she attacks. She can't use it in heavy armor."],
     "monastic legacy": ["Combat style (unarmed, 2nd)", "Unarmed damage as a monk of half her other levels (1d8 now).", "Her unarmed strikes deal damage as a monk whose level is half her levels in other classes, plus any monk levels. At 8th level that is an effective monk level of 4: 1d8."],
-    "stunning fist": ["Combat style (unarmed, 6th)", "Declare before an unarmed hit: Fort save or stunned 1 round.", "Declared before the attack roll, once per round. If the unarmed strike hits, the target makes a Fortitude save (DC 10 + half her level + Wis) or is stunned until just before her next turn. Uses per day are tracked under Hit points; a missed attack still spends the use."],
+    "stunning fist": ["Unarmed style option (not taken: Combat Reflexes replaced it)", "Declare before an unarmed hit: Fort save or stunned 1 round.", "Declared before the attack roll, once per round. If the unarmed strike hits, the target makes a Fortitude save (DC 10 + half her level + Wis) or is stunned until just before her next turn. Uses per day are tracked under Hit points; a missed attack still spends the use."],
     /* ranger talents */
     "skirmishing attack": ["Ranger talent", "Move 10 ft and attack: the first attack counts as against a flat-footed foe.", "Whenever she moves at least 10 ft and attacks in the same round, she can apply stealth attack damage (if she otherwise qualifies by terrain or favored enemy) to her first attack, as though the target were flat-footed."],
     "improved stealth attack": ["Ranger talent", "+1d6 stealth attack damage.", "Adds 1d6 to her stealth attack damage."],
@@ -776,7 +779,7 @@
     var HN = "teamwork; Gwathfaron has it too (within 30 ft of her)";
     var regular = [R("L1", "Weapon Finesse"), R("L1", "Improved Unarmed Strike"), R("L3", "Two-Weapon Fighting"), R("L3", "Weapon Focus (unarmed strike)"),
       R("L5", "Outflank", HN), R("L5", "Precise Strike", "GM's extra feat; " + HN), R("L7", "Improved Two-Weapon Fighting"), R("L7", "Expanded Arcana", "detonate")];
-    var style = [R("L2", "Monastic Legacy"), R("L6", "Stunning Fist")], tal = [R("L4", "Skirmishing Attack"), R("L7", "Improved Stealth Attack")], ec = [R("L7", "Improved Animal Companion")];
+    var style = [R("L2", "Monastic Legacy"), R("L6", "Combat Reflexes", "replaced Stunning Fist")], tal = [R("L4", "Skirmishing Attack"), R("L7", "Improved Stealth Attack")], ec = [R("L7", "Improved Animal Companion")];
     for (var l = 9; l <= L; l++) {
       if (l % 2) { regular.push(open("L" + l, "feat-" + l + "a", "Feat")); regular.push(open("L" + l, "feat-" + l + "b", "GM's extra feat")); }
       if ([10, 14, 18].indexOf(l) >= 0) style.push(open("L" + l, "cs-" + l, "Combat style feat"));
@@ -820,7 +823,7 @@
       A("Wild Empathy", "Spell-less Ranger (1st)", "Improve an animal's attitude: " + (d.empathy >= 0 ? "+" : "") + d.empathy + ".",
         "Like Diplomacy, but for animals (and magical beasts with Int 1 or 2 at −4): 1d20 + her level + Cha (" + (d.empathy >= 0 ? "+" : "") + d.empathy + "), +4 with Gwathfaron. She and the animal must be within 30 ft and able to study each other; it usually takes 1 minute."),
       A("Combat Style (unarmed)", "Spell-less Ranger (2nd, 6th, 10th...)", "Bonus unarmed style feats, prerequisites waived.",
-        "She chose the Unarmed combat style (Ascension Games, Ranger Archetypes; GM-approved, since the Expanded Spell-less Ranger lists archery and two-weapon combat plus the APG styles). Bonus feats at 2nd, 6th, 10th, 14th and 18th level from the style's list, without needing the prerequisites (a feat needing Weapon Specialization needs Weapon Focus instead). The list: Combat Reflexes, Improved Unarmed Strike, Monastic Legacy, Two-Weapon Fighting; from 6th also Improved Two-Weapon Fighting, Punishing Kick, Stunning Fist; from 10th also Greater Two-Weapon Fighting and Spring Attack. Hers: Monastic Legacy (2nd) and Stunning Fist (6th). Still open to her: Combat Reflexes, Punishing Kick, and from 10th Greater Two-Weapon Fighting or Spring Attack. Style feats only work in light, medium or no armor."),
+        "She chose the Unarmed combat style (Ascension Games, Ranger Archetypes; GM-approved, since the Expanded Spell-less Ranger lists archery and two-weapon combat plus the APG styles). Bonus feats at 2nd, 6th, 10th, 14th and 18th level from the style's list, without needing the prerequisites (a feat needing Weapon Specialization needs Weapon Focus instead). The list: Combat Reflexes, Improved Unarmed Strike, Monastic Legacy, Two-Weapon Fighting; from 6th also Improved Two-Weapon Fighting, Punishing Kick, Stunning Fist; from 10th also Greater Two-Weapon Fighting and Spring Attack. Hers: Monastic Legacy (2nd) and Combat Reflexes (6th, in place of Stunning Fist). Still open to her: Stunning Fist, Punishing Kick, and from 10th Greater Two-Weapon Fighting or Spring Attack. Style feats only work in light, medium or no armor."),
       A("Stealth Attack", "Spell-less Ranger (2nd, +1d6 every 4 levels)", "+" + sd + "d6 when the target is denied Dex or flanked.",
         "Extra " + sd + "d6 damage (with Improved Stealth Attack) when the target is denied its Dex bonus to AC or she flanks it, but only in a favored terrain or against a favored enemy, and only in light, medium or no armor. Not multiplied on a critical hit. Ranged attacks (arcane artillery included) count only within 30 ft, and flanking never counts at range."),
       A("Nature's Healing", "Spell-less Ranger (3rd)", "+2 Heal in a favored terrain, better care in forest.",

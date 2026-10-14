@@ -116,14 +116,11 @@
     push(row("Full, hasted", hasted.map(sg).join("/"), "Haste: +1 on every attack and one extra main-hand strike."));
     push(row("Full, 1 weapon", a.mains.map(sg).join("/"), "Hasted: " + [a.mains[0] + 1, a.mains[0] + 1].concat(a.mains.slice(1).map(function (x) { return x + 1; })).map(sg).join("/") + "."));
     push(row("Charge", sg(a.charge), "-2 AC until next turn. Bodywrap use: " + sg(a.charge + a.wrap) + "."));
-    push(row("Attack of opp.", sg(a.single), "One a round (no Combat Reflexes)."));
-    push(row("Stunning Fist", sg(a.single), "Declared on a strike; see below."));
+    push(row("Attack of opp.", sg(a.single), a.aoo + " a round (Combat Reflexes), even while flat-footed. Reach 10 ft with long arm."));
     push("");
     push("Attack: BAB " + bab + " + Dex " + ab.dex.mod + " (Weapon Finesse) + 1 Weapon Focus = " + sg(a.single) + ". Two-Weapon Fighting: -2 on every strike (unarmed strikes count as light).");
     push("Damage: " + die + " unarmed (Monastic Legacy, effective monk level " + Math.floor(L / 2) + ") + Str " + strM + " main hand, " + sg(a.dmgO) + " off hand (half Str).");
     push("Flanking with Gwathfaron: +" + fb + " on every melee attack" + (fb > 2 ? " (Outflank)" : "") + (ps ? " and +1d6 precision damage on every melee hit (Precise Strike)" : "") + ", for both of them.");
-    push("");
-    push("Stunning Fist: " + PR.stunUses + " uses a day, 1 per round. Declare before the roll. Fort DC " + a.stunDc + " (10 + " + Math.floor(L / 2) + " + Wis " + ab.wis.mod + ") or stunned until just before her next turn.");
     push("");
     slice(tpl, "Bodywrap of mighty strikes", "Stealth attack").forEach(function (l) { push(l); });
     push("");
@@ -244,7 +241,6 @@
     push("DAILY RESOURCES");
     push(" - Arcane overdrive: " + sp.od + " points (refills after 8 hours of sleep)");
     push(" - Mythic power: 7 uses a day");
-    push(" - Stunning Fist: " + PR.stunUses + " uses a day (1 per round)");
     push(" - Racial light or dancing lights: 1 a day");
     push(" - Detonate vials: " + (st.vials == null ? 2 : st.vials) + " casts");
     push("", RULE);
