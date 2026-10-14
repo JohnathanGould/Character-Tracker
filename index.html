@@ -210,6 +210,14 @@ main { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
   .gsec + .gsec { border-top: 0; border-left: 1px solid var(--line); }
 }
 .helpform { max-width: 560px !important; }
+.duo { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); align-items: start; }
+.pickbox { min-width: 0; margin-bottom: 0; display: flex; flex-direction: column; gap: 8px; }
+.pickbox .field select { width: 100%; }
+.spells.one { grid-template-columns: 1fr; }
+.brief { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--surface-2); }
+.brief .rows { margin: 0 0 8px; font-size: 0.8rem; gap: 2px 10px; }
+.brief .rows dt { font-size: 0.74rem; }
+.brieftext { margin: 0 0 8px; font-size: 0.84rem; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .passrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 .passrow .hint { flex-basis: 100%; }
 .sinfo { flex: none; }
@@ -1100,18 +1108,20 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         return '<option value="' + b.id + '"' + (b.id === state.exp ? " selected" : "") + ">" + esc(b.name) + (SCHOOLS[b.sch] ? " (" + SCHOOLS[b.sch] + ")" : "") + "</option>";
       }).join("") + "</optgroup>";
     }
-    h += '<div class="group"><h3>Experimental spell · +1 burnout</h3>' +
-      '<div class="fields"><label class="field">Today\'s pick<select id="expSel">' + expOpts + "</select></label></div>" +
-      '<div class="spells">' + spellBtn(expSpell()) + "</div></div>";
+    var ex = expSpell();
+    h += '<div class="duo"><div class="group pickbox"><h3>Experimental spell · +1 burnout</h3>' +
+      '<label class="field">Today\'s pick<select id="expSel">' + expOpts + "</select></label>" +
+      '<div class="spells one">' + spellBtn(ex) + "</div>" + spellBrief(ex.name) + "</div>";
     var waCur = bankFind(ui.customName, ui.customLvl), waOpts = '<option value="">Choose a spell…</option>';
     for (var wl = 1; wl <= LP().maxSpell; wl++) {
       waOpts += '<optgroup label="' + ordinal(wl) + ' level">' + BANK.filter(function (b) { return b.lvl === wl; }).map(function (b) {
         return '<option value="' + b.id + '"' + (waCur && waCur.id === b.id ? " selected" : "") + ">" + esc(b.name) + (SCHOOLS[b.sch] ? " (" + SCHOOLS[b.sch] + ")" : "") + "</option>";
       }).join("") + "</optgroup>";
     }
-    h += '<div class="group"><h3>Wild Arcana · any spell on her list, 1 mythic power</h3>' +
-      '<div class="fields"><label class="field">Spell to cast<select id="waSel">' + waOpts + "</select></label></div>" +
-      '<div class="spells">' + spellBtn(customSpell()) + "</div></div>";
+    h += '<div class="group pickbox"><h3>Wild Arcana · 1 mythic power</h3>' +
+      '<label class="field">Spell to cast<select id="waSel">' + waOpts + "</select></label>" +
+      (waCur ? '<div class="spells one">' + spellBtn(customSpell()) + "</div>" + spellBrief(waCur.name) : '<p class="hint">Any spell on her list, known or not. Choose one to see it here.</p>') +
+      "</div></div>";
     $("pSpells").innerHTML =
       '<div class="ph"><h2>Spells</h2><span class="hint">Badge shows burnout before overdrive</span></div>' + h;
   }
@@ -1359,6 +1369,17 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   function codexFind(name) { return CODEX ? CODEX_IX[String(name || "").trim().toLowerCase()] || null : null; }
   function spellBtnInfo(name, small) {
     return '<button type="button" class="btn sm sinfo' + (small ? " mini" : "") + '" data-spell="' + esc(name) + '" aria-label="Spell text for ' + esc(name) + '">' + (small ? "i" : "Spell text") + "</button>";
+  }
+  /* short spell text under the experimental and Wild Arcana pickers; "Full text" opens the whole card */
+  function spellBrief(name) {
+    var c = codexFind(name);
+    if (!c) return '<div class="brief"><p class="hint">' + (CODEX ? "No spell text found." : "Loading spell text…") + "</p></div>";
+    var bits = [["School", c.s + (c.ds ? " [" + c.ds.join(", ").toLowerCase() + "]" : "")], ["Casting", c.ct], ["Range", c.rg],
+      [c.ar ? "Area" : c.ef ? "Effect" : "Target", c.ar || c.ef || c.tg], ["Duration", (c.du || "") + (c.dm ? " (D)" : "")],
+      ["Save", (c.sv || "none") + (c.sr ? " · SR " + c.sr : "")]].filter(function (r) { return r[1]; });
+    return '<div class="brief"><dl class="rows">' + bits.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" +
+      '<p class="brieftext">' + esc(String(c.d || "").replace(/\s+/g, " ")) + "</p>" +
+      '<button type="button" class="btn sm" data-spell="' + esc(c.n) + '">Full text</button></div>';
   }
   function spellCard(c) {
     var lv = Object.keys(c.lv || {}).map(function (k) { return k + " " + c.lv[k]; }).join(", ");
