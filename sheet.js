@@ -1114,7 +1114,8 @@
 
     h += sec("Tricks", "<p>" + cp.tricks + " tricks (6 from Int, " + (cp.tricks - 6) + " bonus):</p><ul>" +
       "<li>" + featBtn("trick:Attack", "Attack") + ' <span class="hint">any creature (counts as 2 tricks)</span></li>' +
-      ["Come", "Down", "Guard", "Heel", "Seek", "Stay", "Track"].map(function (t) { return "<li>" + featBtn("trick:" + t, t) + "</li>"; }).join("") + "</ul>" +
+      ["Come", "Down", "Guard", "Heel", "Seek", "Stay", "Track"].map(function (t) { return "<li>" + featBtn("trick:" + t, t) + "</li>"; }).join("") +
+      Object.keys(st.picks || {}).filter(function (k) { return /^ptrick-/.test(k) && st.picks[k]; }).map(function (k) { return "<li>" + esc(st.picks[k]) + ' <span class="hint">picked at level-up</span></li>'; }).join("") + "</ul>" +
       '<p class="hint">Handle Animal +21 with him (+4 bond). Bonded Mind lets her give these silently.</p>', false);
 
     h += sec("Special abilities", "<ul>" +

@@ -39,6 +39,54 @@
     return lines;
   }
 
+  /* what is going on right now (live state, not the base sheet): HP, resources, spells holding concentration,
+     status effects and conditions, so the RPoL sheet carries the same picture as the tracker */
+  function nowLines(st, who) {
+    var D = S().derive(st), c = st.cond || {}, out = [], fl = S().fxLeft;
+    var fx = function (k) {
+      var xs = ((st.fx || {})[k] || []).map(function (e) { return e.name + (e.from ? " from " + e.from : "") + " (" + (e.kind === "bad" ? "harmful, " : "") + fl(e.left) + (e.note ? "; " + e.note : "") + ")"; });
+      if (who === "pet") (st.active || []).forEach(function (a) { if ((a.on || "her") === k) xs.push(a.name + " (her spell, " + (a.end == null ? "until ended" : fl(Math.max(0, a.end - (st.round || 1))) + " left") + ")"); });
+      return xs;
+    };
+    var cd = [];
+    if (who === "her") {
+      if (c.forest) cd.push("in forest (favored terrain)");
+      if (D.atk.flankMode) cd.push(S().flankLabel(D.atk.flankMode) + " (+" + D.atk.flank + (D.atk.flankPrec ? ", +1d6 precision" : "") + ")");
+      if (c.target) { var fe = D.fe.filter(function (f) { return f.k === c.target; })[0]; if (fe) cd.push("favored enemy " + fe.name.toLowerCase() + " +" + fe.b); }
+      if (c.defend === "fight") cd.push("fighting defensively"); if (c.defend === "total") cd.push("total defense");
+      ["charge", "ffoot", "sneak", "shaken", "sickened", "fatigued", "exhausted", "evil"].forEach(function (k) { if (c[k]) cd.push(String(S().CONDS[k] || k).toLowerCase()); });
+      if (st.blood) cd.push("Blood Money ready this round");
+    } else {
+      if (c.forest) cd.push("in forest (shared favored terrain)");
+      if (D.pet.flankMode) cd.push(S().flankLabel(D.pet.flankMode, "pet") + " (+" + D.pet.flank + (D.pet.flankPrec ? ", +1d6 precision" : "") + ")");
+      if (c.target) { var fp = D.fe.filter(function (f) { return f.k === c.target; })[0]; if (fp) cd.push("favored enemy " + fp.name.toLowerCase() + " +" + fp.b); }
+    }
+    if (who === "her") {
+      out.push(" - Hit points " + (st.hp == null ? D.hpMax : st.hp) + " of " + D.hpMax + ". Gwathfaron " + (st.petHp == null ? D.pet.hpMax : st.petHp) + " of " + D.pet.hpMax + ".");
+      out.push(" - Burnout " + (st.burnout || 0) + " (caster level " + D.sp.cl + " now, spell DCs " + D.sp.dc.join("/") + ", artillery " + D.sp.artDice + "d6" + sg(D.sp.artFlat) + ").");
+      out.push(" - Arcane overdrive " + (st.overdrive == null ? D.sp.od : st.overdrive) + " of " + D.sp.od + " left. Mythic power " + (st.mythic == null ? 7 : st.mythic) + " of 7 left. Racial light " + (st.lightUsed ? "used today" : "ready") + ". Detonate vials: " + (st.vials == null ? 2 : st.vials) + " casts.");
+      if (st.strDmg) out.push(" - Strength damage " + st.strDmg + " (Str " + D.ab.str.score + " now).");
+      var act = (st.active || []).map(function (a) { return a.name + " on " + ({ pet: "Gwathfaron", ally: "an ally" }[a.on] || "her") + " (" + (a.end == null ? "until ended" : fl(Math.max(0, a.end - (st.round || 1))) + " left") + ")"; });
+      (st.pending || []).forEach(function (q) { act.push(q.name + " (waiting to go off)"); });
+      out.push(" - Concentration (" + act.length + " of " + D.prog.slots + "): " + (act.length ? act.join(", ") : "nothing held") + ".");
+      var off = S().ITEMS.filter(function (i) { return (st.eq || {})[i.k] === false; }).map(function (i) { return i.name; });
+      if (off.length) out.push(" - Set aside (giving nothing): " + off.join(", ") + ".");
+    } else {
+      out.push(" - Hit points " + (st.petHp == null ? D.pet.hpMax : st.petHp) + " of " + D.pet.hpMax + ".");
+    }
+    var ef = fx(who);
+    out.push(" - Effects on " + (who === "her" ? "her" : "him") + ": " + (ef.length ? ef.join(", ") : "none") + ".");
+    if (who === "her") { var ep = fx("pet"); out.push(" - Effects on Gwathfaron: " + (ep.length ? ep.join(", ") : "none") + "."); }
+    out.push(" - Conditions: " + (cd.length ? cd.join(", ") : "none") + ".");
+    return out;
+  }
+  /* flanking partners other than the two of them (a teamwork feat counts only when the partner has it too) */
+  function otherFlank(st, pet) {
+    if (pet) return "With anyone else: +2 (Coordinated Companion lends him her teamwork feats only with her).";
+    var o = S().hasFeat(st, "Outflank"), p = S().hasFeat(st, "Precise Strike");
+    return "With another ally: +2" + (o ? "; +4 if that ally has Outflank" : "") + (p ? "; +1d6 precision if that ally has Precise Strike" : "") + ".";
+  }
+
   function her(ctx, tpl) {
     var st = ctx.st, b = baseState(st), d = S().derive(b), dNow = S().derive(Object.assign({}, b, { strDmg: st.strDmg || 0 }));
     var PR = d.prog, L = d.level, sp = d.sp, a = d.atk, ab = d.ab, out = [];
@@ -121,6 +169,7 @@
     push("Attack: BAB " + bab + " + Dex " + ab.dex.mod + " (Weapon Finesse) + 1 Weapon Focus = " + sg(a.single) + ". Two-Weapon Fighting: -2 on every strike (unarmed strikes count as light).");
     push("Damage: " + die + " unarmed (Monastic Legacy, effective monk level " + Math.floor(L / 2) + ") + Str " + strM + " main hand, " + sg(a.dmgO) + " off hand (half Str).");
     push("Flanking with Gwathfaron: +" + fb + " on every melee attack" + (fb > 2 ? " (Outflank)" : "") + (ps ? " and +1d6 precision damage on every melee hit (Precise Strike)" : "") + ", for both of them.");
+    push(otherFlank(st) + " Any flank turns on her stealth attack.");
     push("");
     slice(tpl, "Bodywrap of mighty strikes", "Stealth attack").forEach(function (l) { push(l); });
     push("");
@@ -179,6 +228,11 @@
     push("Scorching ray: " + sp.rays + " rays at CL " + sp.clRay + " (Elemental Bond +2, Gifted Adept +1), 4d6 fire each, ranged touch " + sg(d.rtouch) + ".");
     push("Fireball: " + sp.fbDice + "d6 fire (CL " + sp.clFire + " with Elemental Bond), 20 ft radius spread, Reflex DC " + sp.dc[2] + " for half. Mythic: " + sp.fbDice + "d10 and burning.");
     push("Dimension door: her and up to " + sp.ddCarry + " willing Medium or smaller creatures, " + sp.ddRange + " ft. Mythic: a one-way portal " + sp.ddDoor + " creatures she picks can use.");
+    var has = function (n) { return spells.some(function (x) { return x.name.toLowerCase() === n; }); };
+    if (has("long arm")) push("Long arm: her arms stretch, reach 10 ft for " + sp.cl + " minutes (1 a level); unlike enlarge person, no change to size, Dex, AC or attacks.");
+    if (has("blood money")) push("Blood money: swift action, she takes 1d6 damage and her blood replaces one material component this round; over 1 gp it costs 1 Strength damage plus 1 per full 500 gp.");
+    if (has("detonate")) push("Detonate: " + Math.min(10, sp.cl) + "d8 (max 10d8), uses 50 gp of vials, holds a concentration slot for 1 round until it goes off.");
+    push("Mythic spells (fireball, dimension door) cost 1 mythic power on top of the cast.");
     push("Experimental spell (any wizard/sorcerer spell up to " + ord(PR.expMax) + " level, chosen each day, +1 burnout): " +
       (ctx.exp ? ctx.exp.name.toLowerCase() + (ctx.expLocked ? " (locked in today)" : " (not yet locked in)") : "none chosen today") + ".");
     push("Wild Arcana (1 mythic power, standard action): any wizard spell she doesn't know, CL +2.");
@@ -216,7 +270,11 @@
     push(" +" + PR.forest + " (Forest) on Perception, Stealth, Survival and Knowledge (geography), and initiative.");
     push(" " + d.fe.map(function (f) { return "+" + f.b + " (" + f.name + ")"; }).join(" ") + " on Bluff, Knowledge, Perception, Sense Motive and Survival against them.");
     push(" +" + PR.track + " Track (Survival) to follow tracks.", " +2 (Forest) to Heal using Nature's Healing.");
+    push(" Untrained Knowledge (" + ["local", "planes", "engineering", "geography", "nobility"].join(", ") + "): " + sg(ab.int.mod) + " (Int), local " + sg(ab.int.mod + 1) + " (Friend in Every Town); DC 10 or lower only.");
+    push("Take 10 / take 20: allowed on every skill but Use Magic Device; no take 20 on Knowledge, Appraise, Sense Motive or Spellcraft (no retry).");
     slice(tpl, "Languages (", null).slice(0, 1).forEach(function (l) { push(l); });
+    var lingR = (d.skills.filter(function (s) { return s.name === "Linguistics"; })[0] || {}).ranks || 0;
+    if (lingR > 4) push(" + " + (lingR - 4) + " more from new Linguistics ranks, not yet named.");
     push("", RULE);
 
     /* companion summary */
@@ -226,11 +284,16 @@
     push("HP " + p.hpMax + " (dies at -" + p.dead + "). AC " + p.ac + ", touch " + p.touch + ", flat-footed " + p.ff + ". Init " + sg(p.init) + ". Speed 50 ft (sprint 500 ft charge, once an hour).");
     push("Fort " + sg(p.fort) + ", Ref " + sg(p.ref) + " (evasion), Will " + sg(p.will) + " (+4 vs enchantment). Bite " + sg(p.bite) + " (1d6" + sg(p.biteD) + " plus trip), 2 claws " + sg(p.claw) + " (1d3" + sg(p.clawD) + "). CMB " + sg(p.cmb) + ", CMD " + p.cmd + " (" + (p.cmd + 4) + " vs trip).");
     push("Stealth " + sg(p.stealth) + ", Perception " + sg(p.perc) + " (+" + PR.forest + " each in forest). Feats: " + p.feats.join(", ") + "; teamwork (from her): Bonded Mind, " + S().BASE_FEATS.join(", ") + ".");
-    push("Tricks: Attack (any creature), Come, Down, Guard, Heel, Seek, Stay, Track. Equipment: none.");
+    push("Tricks: Attack (any creature), Come, Down, Guard, Heel, Seek, Stay, Track" + petTricks(st).map(function (t) { return ", " + t; }).join("") + ". Equipment: none.");
     push("", RULE);
 
     /* gear and money, from the printed sheet */
     slice(tpl, "MONEY:", "LOAD:").forEach(function (l) { push(l); });
+    var SLOTS = ["Head", "Headband", "Eyes", "Shoulders", "Neck", "Chest", "Body", "Belt", "Wrists", "Hands", "Ring", "Ring", "Feet"];
+    var worn = S().ITEMS.filter(function (i) { return (st.eq || {})[i.k] !== false; }), usedS = worn.map(function (i) { return i.slot; });
+    var openS = SLOTS.filter(function (sl) { var k = usedS.indexOf(sl); if (k >= 0) { usedS[k] = null; return false; } return true; });
+    push("SLOTS: " + worn.map(function (i) { return i.slot.toLowerCase() + " - " + i.name.replace(/^(Cloak|Belt|Headband|Amulet)/, function (m) { return m.toLowerCase(); }); }).join("; ") + ".");
+    push("       Open: " + openS.join(", ").replace("Ring, Ring", "2 rings").toLowerCase() + ". Slotless: handy haversack.");
     push(RULE);
     var ld = d.load;
     push("LOAD:  Light " + ld.light + " lb   Medium (-3) " + ld.med + " lb   Heavy/Max (-6) " + ld.max + " lb   Lift (x 2) " + ld.lift + " lb   Push/Drag (x 5) " + ld.push + " lb");
@@ -239,15 +302,25 @@
     slice(tpl, "MAGIC ITEMS", "DAILY RESOURCES").forEach(function (l) { push(l); });
     push(RULE);
     push("DAILY RESOURCES");
-    push(" - Arcane overdrive: " + sp.od + " points (refills after 8 hours of sleep)");
-    push(" - Mythic power: 7 uses a day");
+    push(" - Arcane overdrive: " + sp.od + " points (refills after 8 hours of sleep). 1 point: ignore up to " + sp.odIgnore + " burnout from one cast; 1 point: artillery dice become d8s.");
+    push(" - Mythic power: 7 uses a day. 1 each: Wild Arcana, Surge (+1d6 on a d20), Amazing Initiative (extra standard action, no spells or artillery), a mythic spell.");
     push(" - Racial light or dancing lights: 1 a day");
     push(" - Detonate vials: " + (st.vials == null ? 2 : st.vials) + " casts");
+    push(" - Natural healing on a new day: 8 hp for her, 7 for Gwathfaron.");
+    push("", RULE);
+    push("CURRENT STATUS (" + ctx.today + ", round " + (st.round || 1) + ")");
+    nowLines(st, "her").forEach(function (l) { push(l); });
     push("", RULE);
     push("LETTERS OF TRAVEL: " + (S().LETTERS || []).map(function (l) { return l.name; }).join("; ") + ".");
     push(RULE);
     slice(tpl, "DESCRIPTION", null).forEach(function (l) { push(l); });
     return out.join("\n").replace(/\n{3,}/g, "\n\n") + "\n";
+  }
+
+  /* tricks picked at level-up (Levels.choices "ptrick-<level>") */
+  function petTricks(st) {
+    var pk = st.picks || {};
+    return Object.keys(pk).filter(function (k) { return /^ptrick-/.test(k) && pk[k]; }).sort(function (x, y) { return parseInt(x.slice(7), 10) - parseInt(y.slice(7), 10); }).map(function (k) { return String(pk[k]); });
   }
 
   function pet(ctx, tpl) {
@@ -290,11 +363,14 @@
     push(row("Bite", sg(p.bite), bd, "B/P/S", "Primary. On a hit: free trip, CMB " + sg(p.cmb) + ", no AoO."));
     push(row("Claw", sg(p.claw), cd, "B/S", sec), row("Claw", sg(p.claw), cd, "B/S", sec));
     push(pad("Full attack", 17) + "|Melee | " + pad([p.bite, p.claw, p.claw].map(sg).join("/"), 13) + "| as above              | Bite and 2 claws, 5-ft step only.");
+    push(pad("Full, hasted", 17) + "|Melee | " + pad([p.bite + 1, p.bite + 1, p.claw + 1, p.claw + 1].map(sg).join("/"), 13) + "| as above              | Haste: +1 on every attack and one extra bite.");
     push(row("Charge", sg(p.bite + 2), bd, "B/P/S", "Bite only. -2 AC until his next turn."), row("Attack of opp.", sg(p.bite), bd, "B/P/S", "Bite."));
     push("");
     var fb = S().hasFeat(st, "Outflank") ? 4 : 2, ps = S().hasFeat(st, "Precise Strike");
     push("Flanking with Daerlieth: +" + fb + " on every melee attack" + (fb > 2 ? " (Outflank)" : "") + (ps ? " and +1d6 precision damage on every hit (Precise Strike)" : "") + ",");
     push("both hers through Coordinated Companion (his while within 30 ft of her); it also turns on her stealth attack.");
+    push(otherFlank(st, true));
+    push("Haste (hers or anyone's): +1 attack, +1 dodge AC, +1 Reflex, +30 ft speed, one extra bite on a full attack.");
     push("Favored enemy (shared from Daerlieth): " + d.fe.map(function (f) { return "+" + f.b + " vs " + f.name.toLowerCase(); }).join(", ") + " (attack and damage).");
     push("Sprint (Ex): once an hour, a charge at ten times his speed (500 ft).");
     push(RULE);
@@ -309,7 +385,7 @@
     if (cp.multiattack) push("- " + pad("Multiattack", 25) + ": bonus; claws at -2 instead of -5.");
     ["Bonded Mind"].concat(S().BASE_FEATS).forEach(function (f) { var i = S().featInfo(f); push("- " + f + " (teamwork, from Daerlieth's Coordinated Companion, while within 30 ft of her): " + (i ? i[1] : "")); });
     push(RULE);
-    push("Tricks (" + cp.tricks + ": 6 from Int, " + (cp.tricks - 6) + " bonus)", "Attack (any creature, counts as 2), Come, Down, Guard, Heel, Seek, Stay, Track");
+    push("Tricks (" + cp.tricks + ": 6 from Int, " + (cp.tricks - 6) + " bonus)", "Attack (any creature, counts as 2), Come, Down, Guard, Heel, Seek, Stay, Track" + petTricks(st).map(function (t) { return ", " + t; }).join(""));
     push("- Handle Animal +21 for Daerlieth (+4 bond). Bonded Mind lets her give these silently.");
     push(RULE);
     push("Special Abilities");
@@ -320,6 +396,9 @@
     push(pad("Shared", 13) + ": her favored enemies (" + d.fe.map(function (f) { return f.name.toLowerCase() + " +" + f.b; }).join(", ") + ") and forest bonus (+" + PR.forest + ").");
     push(RULE);
     slice(tpl, "Equipment", "Next level").forEach(function (l) { push(l); });
+    push(RULE);
+    push("CURRENT STATUS (" + ctx.today + ", round " + (st.round || 1) + ")");
+    nowLines(st, "pet").forEach(function (l) { push(l); });
     push(RULE);
     return out.join("\n").replace(/\n{3,}/g, "\n\n") + "\n";
   }
