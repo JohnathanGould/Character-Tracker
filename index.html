@@ -2102,10 +2102,24 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     clearTimeout(saveTimer);
     saveTimer = setTimeout(flush, 350);
   }
+  /* firestore.rules refuses a document over 200,000 bytes: keep well under it by dropping the oldest round snapshots
+     first, then the oldest log lines (the newest history always survives) */
+  var SAVE_LIMIT = 180000;
+  function bytes(str) { try { return unescape(encodeURIComponent(str)).length; } catch (e) { return str.length * 3; } }
+  function fitPayload() {
+    var payload = JSON.stringify(state);
+    while (bytes(payload) > SAVE_LIMIT && ((state.undo && state.undo.length) || state.log.length > 50)) {
+      if (state.undo && state.undo.length > 5) state.undo.shift();
+      else if (state.log.length > 50) state.log = state.log.slice(0, Math.max(50, Math.floor(state.log.length * 0.8)));
+      else if (state.undo && state.undo.length) state.undo.shift();
+      payload = JSON.stringify(state);
+    }
+    return payload;
+  }
   function flush() {
     if (!dirty) return;
     dirty = false;
-    var payload = JSON.stringify(state);
+    var payload = fitPayload();
     lsSet(KEY, payload);
     if (!ref) { setStatus("Saved on this device"); return; }
     var mine = ++saveSeq;
