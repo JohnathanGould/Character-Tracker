@@ -1116,6 +1116,33 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       '<button class="btn icon" data-act="burn" data-d="1" aria-label="Burnout plus one">+</button>' +
       '<button class="btn" data-act="burn" data-d="clear">Clear</button></div>';
   }
+  /* "How it works" for arcane overdrive: what fills the pool and everything she can spend it on */
+  function odHelpHtml() {
+    var P = LP(), L = state.level, cha = dv().ab.cha.mod;
+    return '<div class="explain">' +
+      "<p><b>The pool.</b> " + odMax() + " points (Cha " + (cha >= 0 ? "+" : "") + cha + " + half her level, " + Math.floor(L / 2) + "). It refills after 8 hours of sleep: press New day. She has " + state.overdrive + " now.</p>" +
+      "<p><b>What she can spend it on</b></p><ul>" +
+      "<li><b>Ignore burnout (1 point, free action).</b> When she casts a spell, 1 point ignores up to " + P.odIgnore + " of the burnout it would give (half her Eternal Mage level). If that brings the cast to 0 burnout, the round still counts as clean and she recovers 1 at the end of it. Tick <i>Spend 1 overdrive</i> in the spell's cast block.</li>" +
+      "<li><b>Artillery overdrive (1 point).</b> Her arcane artillery rolls d8s instead of d6s for that shot (" + dv().sp.artDice + "d8" + (dv().sp.artFlat >= 0 ? "+" : "") + dv().sp.artFlat + "). This is a separate spend from ignoring the shot's burnout, so a d8 shot with its burnout ignored costs 2.</li>" +
+      "<li><b>Eternal secrets.</b> Overdrive pays for secrets as if it were an arcanist's reservoir. Hers cost nothing: arcane artillery is free for an Artillery Expert, and Artillery Burst and Artillery Sniper add no cost.</li>" +
+      (L >= 13 ? "<li><b>Empowered artillery overdrive (2 points).</b> Her arcane artillery is empowered (+50% damage).</li>" : "<li><i>Later:</i> at 13th level, 2 points empower her artillery (+50% damage); at 19th, 4 points make it a swift action.</li>") +
+      (L >= 19 ? "<li><b>Quickened artillery overdrive (4 points).</b> Arcane artillery as a swift action.</li>" : "") +
+      "</ul><p class=\"hint\">Spent overdrive shows in the log. The − and + buttons are for fixing a mistake.</p></div>";
+  }
+  /* "How it works" for mythic power: everything that uses it */
+  function mythHelpHtml() {
+    return '<div class="explain">' +
+      "<p><b>The pool.</b> 7 uses a day (3 + twice her tier, 2). It refills after 8 hours of rest: press New day. She has " + state.mythic + " now.</p>" +
+      "<p><b>What she can spend it on (1 each)</b></p><ul>" +
+      "<li><b>Surge (immediate action).</b> After seeing a d20 roll she just made (attack, save, check), add 1d6. It can change the outcome. 1d8 at tier 4. Button: <i>Surge +1d6</i>.</li>" +
+      "<li><b>Amazing Initiative (free action on her turn).</b> An extra standard action that turn, once a round. It can't be used to cast a spell, so no artillery either. Button: <i>Extra action</i>.</li>" +
+      "<li><b>Wild Arcana (standard action).</b> Cast any arcane spell on her list that she doesn't know, up to her highest spell level, with a casting time of a standard action or less, at caster level +2. Burnout still applies. Use the Wild Arcana column in the Spells panel.</li>" +
+      "<li><b>Mythic spells (Mythic Spell Lore).</b> Cast fireball or dimension door as its mythic version: fireball does d10s and sets those who fail the save on fire (2d6 a round); dimension door opens a one-way portal her chosen allies can use. Tick <i>Mythic version</i> in the spell's cast block.</li>" +
+      "</ul><p><b>Free, always on (no mythic power):</b> Hard to Kill (stabilizes on her own, dies at −32), Amazing Initiative's +2 initiative, Eldritch Breach (rolls caster level checks twice) and Elemental Bond (fire spells +2 caster level, fire resistance 10).</p>" +
+      "<p class=\"hint\"><i>Later tiers:</i> tier 3 Recuperation (full hit points after 8 hours of rest, or 1 mythic power and an hour's rest for half her hit points and her daily abilities back) and a second mythic feat; tier 4 Surge becomes 1d8; tier 6 augmented mythic fireball (2 mythic power); tier 7 Force of Will (1 mythic power: reroll a d20, hers or a non-mythic creature's); tier 8 Unstoppable (1 mythic power: end a condition such as stunned, paralyzed or frightened).</p>" +
+      "<p class=\"hint\">Spent mythic power shows in the log. The − and + buttons are for fixing a mistake.</p></div>";
+  }
+
   function burnHelpHtml() {
     return '<div class="explain">' +
       "<p><b>What it is.</b> Daerlieth has no spell slots. Burnout is the only limit on how much she casts, and it builds up as she does.</p>" +
@@ -1134,7 +1161,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
   function renderOver() {
     $("pOver").innerHTML =
-      '<div class="gh"><h2>Arcane overdrive</h2><span class="hint">Refills on New day</span></div>' +
+      '<div class="gh"><h2>Arcane overdrive</h2><button type="button" class="btn sm helpbtn" data-help="od" aria-haspopup="dialog">How it works</button></div>' +
       '<div class="big"><div class="bignum num">' + state.overdrive + '<small>/' + odMax() + '</small></div></div>' +
       pips("overdrive", state.overdrive, odMax()) +
       '<div class="ctl"><button class="btn icon" data-act="res" data-k="overdrive" data-d="-1" aria-label="Overdrive minus one">−</button>' +
@@ -1143,7 +1170,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
   function renderMyth() {
     $("pMyth").innerHTML =
-      '<div class="gh"><h2>Mythic power</h2><span class="hint">Wild Arcana costs 1</span></div>' +
+      '<div class="gh"><h2>Mythic power</h2><button type="button" class="btn sm helpbtn" data-help="myth" aria-haspopup="dialog">How it works</button></div>' +
       '<div class="big"><div class="bignum num">' + state.mythic + '<small>/7</small></div></div>' +
       pips("mythic", state.mythic, 7) +
       '<div class="ctl"><button class="btn icon" data-act="res" data-k="mythic" data-d="-1" aria-label="Mythic power minus one">−</button>' +
@@ -1721,7 +1748,11 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   });
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-help]");
-    if (t) { openInfo("How burnout works", burnHelpHtml()); return; }
+    if (t) { var hk = t.getAttribute("data-help");
+      if (hk === "od") openInfo("How arcane overdrive works", odHelpHtml());
+      else if (hk === "myth") openInfo("How mythic power works", mythHelpHtml());
+      else openInfo("How burnout works", burnHelpHtml());
+      return; }
     t = e.target.closest("[data-rpol]");
     if (t) { rpolOpen(t.getAttribute("data-rpol")); return; }
     t = e.target.closest("[data-ooccopy]");
