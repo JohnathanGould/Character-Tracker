@@ -118,7 +118,7 @@
     ]);
     G("Skills", d.skills.map(function (s) {
       var sa = SKILL_ACT[s.name] || ["std", ""];
-      return s.usable ? I("k-" + s.name, s.name + " " + sg(s.total), sa[0], sa[1]) : null;
+      return s.usable ? I("k-" + s.name, (s.label || s.name) + " " + sg(s.total), sa[0], sa[1]) : null;
     }));
     G("Gwathfaron and items", [
       I("h-handle", "Handle Gwathfaron (Link)", "free"), I("h-push", "Push Gwathfaron (a trick he doesn't know)", "move"),

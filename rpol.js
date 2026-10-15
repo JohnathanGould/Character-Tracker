@@ -256,7 +256,7 @@
       if (s.name === "Linguistics") return pad("Linguistics^", 19) + "(Int) " + s.ranks + " ranks: " + s.ranks + " extra languages (one per rank)";
       var key = (S().SKILLS.filter(function (x) { return x[0] === s.name; })[0] || [0, "int"])[1], am = ab[key].mod;
       var cs = /class skill/.test(s.tip) ? 3 : 0, misc = s.total - am - s.ranks - cs;
-      var nm = short(s.name) + (s.trained ? "^" : ""), tot = s.usable ? (s.total < 0 ? "-" : "+") + lpad(Math.abs(s.total), 3) : "   -";
+      var nm = short(s.label || s.name) + (s.trained ? "^" : ""), tot = s.usable ? (s.total < 0 ? "-" : "+") + lpad(Math.abs(s.total), 3) : "   -";
       return pad(nm, 19) + "(" + key.charAt(0).toUpperCase() + key.slice(1) + ") " + tot + "  =  " + am + "  +  " + s.ranks + "  +  " + cs + "  +  " + misc + (s.usable ? "" : "   (trained only: can't be used)");
     };
     var R_ = d.ranks;
