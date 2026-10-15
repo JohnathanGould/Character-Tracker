@@ -140,7 +140,7 @@
     return r;
   }
   /* the subject of a skill that needs one, shown with its name (the name stays the key for ranks and rules text) */
-  var SKILL_LABEL = { "Lore": "Lore (Cormanthor)" };
+  var SKILL_LABEL = { "Lore": "Lore (Cormanthyr)" };
   var UNUSABLE = ["Knowledge (local)", "Knowledge (planes)", "Knowledge (engineering)", "Knowledge (geography)", "Knowledge (nobility)"];
 
 
