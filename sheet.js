@@ -123,14 +123,14 @@
 
   /* skills: key ability, ranks, class skill, trained only, background. Ranks are the table in the printed sheet. */
   var SKILLS = [
-    ["Acrobatics", "dex", 5, 1, 0, 0, 1], ["Bluff", "cha", 0, 0, 0, 0], ["Climb", "str", 1, 1, 0, 0, 1], ["Diplomacy", "cha", 8, 1, 0, 0],
-    ["Disable Device", "dex", 8, 0, 1, 0], ["Disguise", "cha", 0, 0, 0, 0], ["Escape Artist", "dex", 0, 0, 0, 0, 1], ["Fly", "dex", 0, 1, 0, 0, 1],
-    ["Heal", "wis", 1, 1, 0, 0], ["Intimidate", "cha", 0, 1, 0, 0], ["Knowledge (arcana)", "int", 4, 1, 1, 0], ["Knowledge (dungeoneering)", "int", 4, 1, 1, 0],
-    ["Knowledge (nature)", "int", 4, 1, 1, 0], ["Knowledge (religion)", "int", 4, 1, 1, 0], ["Perception", "wis", 8, 1, 0, 0], ["Ride", "dex", 0, 1, 0, 0, 1],
+    ["Acrobatics", "dex", 5, 1, 0, 0, 1], ["Bluff", "cha", 1, 0, 0, 0], ["Climb", "str", 1, 1, 0, 0, 1], ["Diplomacy", "cha", 8, 1, 0, 0],
+    ["Disable Device", "dex", 8, 0, 1, 0], ["Disguise", "cha", 0, 0, 0, 0], ["Escape Artist", "dex", 0, 0, 0, 0, 1], ["Fly", "dex", 1, 1, 0, 0, 1],
+    ["Heal", "wis", 1, 1, 0, 0], ["Intimidate", "cha", 1, 1, 0, 0], ["Knowledge (arcana)", "int", 3, 1, 1, 0], ["Knowledge (dungeoneering)", "int", 3, 1, 1, 0],
+    ["Knowledge (nature)", "int", 3, 1, 1, 0], ["Knowledge (religion)", "int", 3, 1, 1, 0], ["Perception", "wis", 8, 1, 0, 0], ["Ride", "dex", 1, 1, 0, 0, 1],
     ["Sense Motive", "wis", 8, 1, 0, 0], ["Spellcraft", "int", 8, 1, 1, 0], ["Stealth", "dex", 8, 1, 0, 0, 1], ["Survival", "wis", 8, 1, 0, 0],
     ["Swim", "str", 1, 1, 0, 0, 1], ["Use Magic Device", "cha", 8, 1, 1, 0],
-    ["Appraise", "int", 0, 1, 0, 1], ["Artistry", "int", 0, 0, 0, 1], ["Craft", "int", 0, 1, 0, 1], ["Handle Animal", "cha", 8, 1, 1, 1],
-    ["Knowledge (history)", "int", 3, 1, 1, 1], ["Linguistics", "int", 4, 1, 1, 1], ["Lore", "int", 0, 0, 0, 1], ["Perform", "cha", 0, 0, 0, 1],
+    ["Appraise", "int", 1, 1, 0, 1], ["Artistry", "int", 0, 0, 0, 1], ["Craft", "int", 0, 1, 0, 1], ["Handle Animal", "cha", 6, 1, 1, 1],
+    ["Knowledge (history)", "int", 3, 1, 1, 1], ["Linguistics", "int", 4, 1, 1, 1], ["Lore", "int", 1, 0, 0, 1], ["Perform", "cha", 0, 0, 0, 1],
     ["Profession", "wis", 0, 1, 1, 1], ["Sleight of Hand", "dex", 1, 0, 1, 1, 1]
   ];
   /* her ranks: state.ranks {skill: n} once she places new ranks at level-up, else the printed sheet's */
@@ -1022,6 +1022,8 @@
   }
 
   /* ---------- Gwathfaron tab ---------- */
+  /* her Handle Animal with Gwathfaron: her skill total plus the +4 Companion-Bound bond */
+  function handleWith(st) { var h = derive(st).skills.filter(function (s) { return s.name === "Handle Animal"; })[0]; return (h ? h.total : 0) + 4; }
   function renderPet(st, o) {
     o = o || {};
     var c = st.cond || {}, tgt = c.target ? feBonus(st, c.target) : 0;
@@ -1116,7 +1118,7 @@
       "<li>" + featBtn("trick:Attack", "Attack") + ' <span class="hint">any creature (counts as 2 tricks)</span></li>' +
       ["Come", "Down", "Guard", "Heel", "Seek", "Stay", "Track"].map(function (t) { return "<li>" + featBtn("trick:" + t, t) + "</li>"; }).join("") +
       Object.keys(st.picks || {}).filter(function (k) { return /^ptrick-/.test(k) && st.picks[k]; }).map(function (k) { return "<li>" + esc(st.picks[k]) + ' <span class="hint">picked at level-up</span></li>'; }).join("") + "</ul>" +
-      '<p class="hint">Handle Animal +21 with him (+4 bond). Bonded Mind lets her give these silently.</p>', false);
+      '<p class="hint">Handle Animal ' + sg(handleWith(st)) + ' with him (+4 bond). Bonded Mind lets her give these silently.</p>', false);
 
     h += sec("Special abilities", "<ul>" +
       "<li>" + featBtn("pet:Link", "Link") + "</li>" +
@@ -1139,7 +1141,7 @@
   }
 
   function d0level(st) { return levelOf(st); }
-  var api = { takes: takes, flankMode: flankMode, flankLabel: flankLabel, hastedOn: hastedOn, derive: derive, render: render, renderPet: renderPet, PET: PET, petRanks: petRanks, ranksOf: ranksOf, SKILLS: SKILLS, hpMaxOf: hpMaxOf, levelOf: levelOf, FX_UNITS: FX_UNITS, LETTERS: LETTERS, letterHtml: letterHtml, featHtml: featHtml, featGroups: featGroups, classData: classData, featInfo: featInfo, hasFeat: hasFeat, BASE_FEATS: BASE_FEATS, fxLeft: fxLeft, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
+  var api = { takes: takes, flankMode: flankMode, flankLabel: flankLabel, hastedOn: hastedOn, derive: derive, render: render, renderPet: renderPet, PET: PET, petRanks: petRanks, ranksOf: ranksOf, SKILLS: SKILLS, hpMaxOf: hpMaxOf, levelOf: levelOf, FX_UNITS: FX_UNITS, LETTERS: LETTERS, letterHtml: letterHtml, featHtml: featHtml, featGroups: featGroups, classData: classData, featInfo: featInfo, hasFeat: hasFeat, BASE_FEATS: BASE_FEATS, fxLeft: fxLeft, handleWith: handleWith, ITEMS: ITEMS, CONDS: CONDS, BASE: BASE, PROSE: {} };
   root.SheetEngine = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

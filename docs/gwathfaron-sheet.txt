@@ -88,7 +88,7 @@ Feats (4 at 7 HD)
 ----------------------------------------------------------------------------
 Tricks (9: 6 from Int, 3 bonus)
 Attack (any creature, counts as 2), Come, Down, Guard, Heel, Seek, Stay, Track
-- Handle Animal +21 for Daerlieth (+4 bond). Bonded Mind lets her give these silently.
+- Handle Animal +19 for Daerlieth (+4 bond). Bonded Mind lets her give these silently.
 ----------------------------------------------------------------------------
 Special Abilities
 Link         : she handles him as a free action, or pushes him as a move action.

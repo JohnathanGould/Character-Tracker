@@ -386,7 +386,7 @@
     ["Bonded Mind"].concat(S().BASE_FEATS).forEach(function (f) { var i = S().featInfo(f); push("- " + f + " (teamwork, from Daerlieth's Coordinated Companion, while within 30 ft of her): " + (i ? i[1] : "")); });
     push(RULE);
     push("Tricks (" + cp.tricks + ": 6 from Int, " + (cp.tricks - 6) + " bonus)", "Attack (any creature, counts as 2), Come, Down, Guard, Heel, Seek, Stay, Track" + petTricks(st).map(function (t) { return ", " + t; }).join(""));
-    push("- Handle Animal +21 for Daerlieth (+4 bond). Bonded Mind lets her give these silently.");
+    push("- Handle Animal " + sg(S().handleWith(b)) + " for Daerlieth (+4 bond). Bonded Mind lets her give these silently.");
     push(RULE);
     push("Special Abilities");
     ["Link", "Share spells", cp.impEvasion ? "Improved evasion" : "Evasion", "Devotion", "Sprint", "Trip"].forEach(function (n) {
