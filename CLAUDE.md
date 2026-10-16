@@ -2,6 +2,9 @@
 
 This folder is a working single-file tracker (`index.html`) for a Pathfinder 1e gestalt character: Eternal Mage 8 (Artillery Expert) / Spell-less Ranger 8, mythic Archmage tier 2. The player is the only editor. Her GM only needs to view.
 
+## Site layout
+The site root is a character list for the player Balthazar (`index.html`: the `CHARACTERS` array, one card each with a live line read from the public Firestore document; `sw.js` caches only the list page and leaves each character's pages to its own worker; `manifest.webmanifest`). Old root links with `?view` or `?edit` redirect to `daerlieth/`. Each character's tracker lives in its own folder: Daerlieth's is `daerlieth/`, and every path below is inside it (`daerlieth/index.html`, `daerlieth/sheet.js`, ...). Its header has a "‹ Characters" link back to the list. Service workers share one cache store per site, so each worker deletes only caches with its own prefix (`characters-v…`, `daerlieth-v…`). A new character gets a new folder, its own Firestore document id (`characterId` in its `config.js`), its own `localStorage` key (Daerlieth's is fixed as `ilmadria-burnout-ledger-v1`) and cache prefix, and a line in `CHARACTERS`. `firestore.rules` already covers every `trackers/{id}`.
+
 ## Status
 The hosted version is built: Firebase (Firestore document `trackers/{characterId}`, security rules in `firestore.rules`), email/password sign-in for the player, public live view for the GM, PWA with offline edits that sync on reconnect. Setup steps are in `README.md`.
 

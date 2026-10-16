@@ -5,6 +5,8 @@ Burnout, overdrive, mythic power and concentration tracker for a Pathfinder 1e g
 - **GM:** open the site link. No account; the page updates live as the player plays.
 - **Player:** open the link with `?edit` once, tap **Sign in**, and add the page to the home screen. It works offline; changes made offline sync when the phone reconnects. While signed in, the plain link opens the editor on that device (with Sign out); add `?view` to see the page exactly as the GM does.
 
+The site root lists Balthazar's characters (`index.html`, with a live line for each); each character's tracker is its own folder, starting with `daerlieth/`. Links to the old address with `?view` or `?edit` still open Daerlieth's tracker. The file table below is for `daerlieth/`.
+
 It is plain static files with no build step. Opening `index.html` straight from disk still works and saves in that browser only.
 
 ## Files
