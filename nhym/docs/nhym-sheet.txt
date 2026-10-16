@@ -1,0 +1,59 @@
+Dungeons and Dragons 3.5 Character Sheet
+Name	Nhym Ashcloak	Player	Balthazar	Update	07/08/26	 	Total Class Levels
+Race	Gnome	Height	3'5"	Rogue 5
+Type(Subtype)	Whisper	Weight	42lbs
+Gender	Male	Age	56	Eyes	Grey
+Align	Lawful Neutral	Size	Small	Hair	Black
+Deity	Tymora	Hand	Right
+Land	30ft	Exp	10,000	Level	5	Next	15,000	ECL	5
+
+COIN	PP	--	GP	231	SP	8	CP	8
+
+Weapon:	Rapier	Weight	1 lb
+Attack	Melee	+ 9	1d4-1	18-20/x2	-	P
+Charge	Melee	+11	1d4-1	18-20/x2	-	P
+Details - +1 to attack (Master Works)
+
+Weapon:	Shortbow	Weight	3 lbs
+Attack	Ranged	+ 9	1d4	x3	60ft	P
+Details - 20 Arrows / +1 to attack (Master Works)
+
+Armor:	Leather	Weight	7.5 lbs
+AC	MaxDex	Pen.	SplFail	Speed	Special
++3	+5	-0	NA	30ft	None
+
+Magic Items	QTY	Weight	Cost	Location
++1 Mithril Chain shirt	1	5.00	825gp	Armor
++1 Cloak of Resistance	1	1.00	750gp	Shoulders
++2 Gloves of Dexterity	1	-----	3000gp	Hands
+Boots of Elven Kind	1	1.00	1875gp	Feet
+Hewards Handy Haversack	1	5.00	1500gp	Back
+Potion of Cure Light Wounds	4	-----	200gp	-Haversack
+
+Mundane Items	QTY	Weight	Cost	Location
+Shortbow, MW	1	1.00	330gp
+Rapier, MW	1	1.00	320gp
+Arrows	20	1.50	1gp
+Blanket	1	0.75	5sp	Haversack
+flint and Steal	1	0.00	1gp	Haversack
+Trail Rations	8	2.00	4gp	Haversack
+Waterskin	1	1.00	1gp	Haversack
+Thieves Tools, MW	1	2.00	100gp	Haversack
+Cartography Set, MW (Artisan)	1	5.00	55gp	Haversack
+Scroll Organizer	1	0.50	5gp	Haversack
+- Unfinished map of Battledale	1	------	25sp	Scroll Organizer
+Hammock	1	2.00	1sp	Haversack
+Rope, Silk (50ft)	1	5.00	10gp	Haversack
+Grappling Hook	1	4.00	1gp	Haversack
+Crowbar	1	5.00	2gp	Haversack
+Spade	1	8.00	2gp	Haversack
+Whetstone	1	1.00	2cp	Haversack
+Climbers Kit	1	1.25	80gp	Haversack
+Scale, merchant’s	1	1.00	2gp	Haversack
+
+Total weight                  = 15.50 lbs
+9065gp 31sp 2cp/9300
+
+Current LOAD:	19.5lb - Light
+Light	Medium (-3)	Heavy/Max (-6)	Lift (x2)	Push/Drag (x5)
+19.5 lb	39.75 lb	60 lb	120 lb	300 lb

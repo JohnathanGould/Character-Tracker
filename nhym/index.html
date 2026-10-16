@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05060a">
+<meta name="description" content="Nhym Ashcloak: live D&amp;D 3.5 rogue tracker">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nhym">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<style>html{color-scheme:dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Nhym Ashcloak Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Marcellus&display=swap">
+<style>
+/* Same look as Daerlieth's tracker: black ground, moon-silver accent, gold for hit points. */
+:root {
+  --bg: #05060a;
+  --surface: #0c0f17;
+  --surface-2: #141925;
+  --line: #1d2333;
+  --line-strong: #394460;
+  --fg: #e9edf7;
+  --muted: #8f99b5;
+  --moon: #a9c1ff;
+  --moon-ink: #060914;
+  --gold: #ebc676;
+  --gold-fill: #d9a93f;
+  --heat: #ff8f61;
+  --good: #6fd6a4;
+  --font-display: "Marcellus", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-body: "Albert Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 900px 520px at 50% -120px, rgba(120, 150, 255, 0.10), transparent 70%);
+  color: var(--fg);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  padding-inline: 16px;
+  padding-block: 0 40px;
+}
+button, select, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--moon); outline-offset: 2px; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1120px; margin-inline: auto; }
+a { color: var(--moon); text-underline-offset: 2px; }
+
+/* top bar */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: rgba(5, 6, 10, 0.88); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); margin-inline: -16px; padding: 10px 16px; }
+.top-in { max-width: 1120px; margin-inline: auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 20px; }
+.ident { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.portrait { flex: none; width: 52px; height: 52px; padding: 0; border-radius: 50%; overflow: hidden; border: 1px solid var(--moon); background: var(--surface-2); cursor: zoom-in; box-shadow: 0 0 0 3px rgba(169, 193, 255, 0.08); }
+.portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: 1.5rem; line-height: 1.1; letter-spacing: 0.02em; margin: 0; }
+.home { display: inline-block; color: var(--muted); font-family: var(--font-mono); font-size: 0.7rem; text-decoration: none; margin-bottom: 2px; }
+.home:hover { color: var(--moon); }
+.sub { margin: 2px 0 0; color: var(--muted); font-size: 0.8rem; }
+.sub .game { color: var(--moon); text-decoration: none; }
+.sub .game:hover { text-decoration: underline; }
+.status { font-family: var(--font-mono); font-size: 0.72rem; }
+.acct { background: none; border: 0; padding: 0; margin-left: 6px; color: var(--moon); font-family: var(--font-mono); font-size: 0.72rem; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.clock { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rchip { display: flex; align-items: baseline; gap: 6px; padding: 4px 10px; border: 1px solid var(--moon); border-radius: 9px; background: rgba(169, 193, 255, 0.08); cursor: pointer; }
+.rchip b { font-family: var(--font-display); font-weight: 400; font-size: 1.35rem; line-height: 1; color: var(--fg); }
+.lbl { font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.rchip .lbl { color: var(--moon); }
+.ipchip { display: flex; align-items: baseline; gap: 6px; padding: 4px 10px; border: 1px solid var(--gold-fill); border-radius: 9px; background: rgba(235, 198, 118, 0.08); }
+.ipchip b { font-family: var(--font-display); font-weight: 400; font-size: 1.35rem; line-height: 1; color: var(--gold); }
+.ipchip .lbl { color: var(--gold); }
+.pchip { border-color: var(--moon); background: rgba(169, 193, 255, 0.08); }
+.pchip b, .pchip .lbl { color: var(--moon); }
+.pip.day { border-color: var(--moon); }
+.pip.day.on { background: radial-gradient(circle at 35% 30%, #e4ecff, var(--moon)); box-shadow: 0 0 10px rgba(169, 193, 255, 0.35); }
+.btn.moon { background: linear-gradient(180deg, #c3d4ff, var(--moon)); border-color: var(--moon); color: var(--moon-ink); }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--fg); font-weight: 600; font-size: 0.9rem; cursor: pointer; white-space: nowrap; }
+.btn:hover:not(:disabled) { background: var(--surface-2); border-color: var(--moon); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn.primary { background: linear-gradient(180deg, #c3d4ff, var(--moon)); border-color: var(--moon); color: var(--moon-ink); box-shadow: 0 0 18px rgba(169, 193, 255, 0.22); }
+.btn.gold { background: linear-gradient(180deg, #f3d995, var(--gold-fill)); border-color: var(--gold); color: #1b1404; }
+.btn.warn { border-color: var(--heat); color: var(--heat); }
+.btn.sm { min-height: 34px; padding: 0 10px; font-size: 0.82rem; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* panels */
+main { display: grid; gap: 14px; padding-top: 14px; grid-template-columns: 1fr; }
+@media (min-width: 900px) { main { grid-template-columns: 1fr 1fr; } .full { grid-column: 1 / -1; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+.ph { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.panel h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.2rem; margin: 0; }
+.panel h3 { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 14px 0 6px; }
+.hint { color: var(--muted); font-size: 0.8rem; margin: 0; }
+.warn-text { color: var(--heat); font-size: 0.82rem; margin: 6px 0 0; }
+
+/* inspiration */
+.pips { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 10px; }
+.pip { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--gold-fill); background: transparent; }
+.pip.on { background: radial-gradient(circle at 35% 30%, #fbe7b0, var(--gold-fill)); box-shadow: 0 0 10px rgba(235, 198, 118, 0.35); }
+.spend { display: grid; gap: 8px; grid-template-columns: 1fr; }
+@media (min-width: 560px) { .spend { grid-template-columns: 1fr 1fr; } }
+.opt { border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--surface-2); display: flex; flex-direction: column; gap: 6px; }
+.opt b { font-weight: 600; }
+.opt .hint { font-size: 0.76rem; }
+.opt select, .opt input, .field input, .field select { width: 100%; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 7px 9px; color: var(--fg); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font-family: var(--font-mono); font-size: 0.72rem; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line-strong); color: var(--muted); }
+.chip.used { text-decoration: line-through; opacity: 0.6; }
+.chip.ok { border-color: var(--good); color: var(--good); }
+
+/* round */
+.tclock { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.rframe { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 64px; padding: 4px 12px 5px; border: 1px solid var(--moon); border-radius: 10px; background: rgba(169, 193, 255, 0.08); }
+.rframe b { font-family: var(--font-display); font-weight: 400; font-size: 2.2rem; line-height: 1; }
+.rframe .lbl { color: var(--moon); font-size: 0.62rem; margin-top: 2px; }
+.rstep { display: flex; flex-direction: column; gap: 3px; }
+.rplus { min-width: 40px; min-height: 26px; height: 26px; padding: 0 10px; font-size: 1.2rem; line-height: 1; border-radius: 7px; }
+.tclock [data-act="endround"] { margin-left: auto; }
+.tlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.tlist li { display: flex; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; background: var(--surface-2); font-size: 0.86rem; }
+.tlist .tname { flex: 1; min-width: 0; }
+.tlist .tx { min-width: 30px; min-height: 30px; padding: 0; }
+textarea.ooc { width: 100%; min-height: 96px; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px; font-family: var(--font-mono); font-size: 0.76rem; color: var(--fg); resize: vertical; }
+
+/* hit points */
+.hpbig { display: flex; align-items: baseline; gap: 8px; }
+.hpbig b { font-family: var(--font-display); font-weight: 400; font-size: 2.6rem; line-height: 1; }
+.hpbar { height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin: 8px 0; }
+.hpbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--good), #9ff0c8); }
+.hpbar.low i { background: linear-gradient(90deg, var(--heat), #ffb08f); }
+.hpstate { font-size: 0.82rem; color: var(--muted); }
+.hpstate.bad { color: var(--heat); }
+
+/* sheet */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+@media (min-width: 560px) { .stats { grid-template-columns: repeat(6, 1fr); } }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 8px; text-align: center; background: var(--surface-2); }
+.stat .lbl { display: block; }
+.stat b { font-family: var(--font-display); font-weight: 400; font-size: 1.4rem; display: block; line-height: 1.2; }
+.stat small { color: var(--muted); font-family: var(--font-mono); font-size: 0.72rem; }
+details.sec { border-top: 1px solid var(--line); padding: 8px 0; }
+details.sec > summary { cursor: pointer; font-family: var(--font-display); font-size: 1.08rem; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+details.sec > summary::-webkit-details-marker { display: none; }
+details.sec > summary::after { content: "+"; color: var(--muted); font-family: var(--font-mono); }
+details.sec[open] > summary::after { content: "−"; }
+table.t { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin-top: 6px; }
+table.t th, table.t td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.t th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+table.t td.n, table.t th.n { text-align: right; font-family: var(--font-mono); }
+.tscroll { overflow-x: auto; }
+ul.plain { margin: 6px 0; padding-left: 18px; font-size: 0.86rem; }
+ul.plain li { margin: 3px 0; }
+pre.txt { white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.74rem; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin: 6px 0; max-height: 420px; overflow: auto; }
+.stock { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; font-size: 0.86rem; }
+.stock .q { display: flex; align-items: center; gap: 6px; }
+.stock .q b { min-width: 2ch; text-align: right; font-family: var(--font-mono); }
+.stock .btn { min-height: 30px; min-width: 34px; padding: 0 8px; }
+
+/* log */
+.log { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow: auto; font-size: 0.82rem; }
+.log li { padding: 4px 0; border-bottom: 1px solid var(--line); }
+.log .r { font-family: var(--font-mono); color: var(--muted); margin-right: 8px; }
+
+/* dialogs */
+.sheet { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.7); }
+.sheet form { width: 100%; max-width: 360px; max-height: calc(100vh - 32px); overflow: auto; display: flex; flex-direction: column; gap: 12px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px; padding: 20px; }
+.sheet form.wide { max-width: 760px; }
+.sheet h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.25rem; margin: 0; }
+.sheet label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--muted); }
+.sheet input { background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; padding: 9px 10px; color: var(--fg); }
+.sheet .row { justify-content: flex-end; }
+.sheet .err { color: var(--heat); font-size: 0.85rem; margin: 0; min-height: 1.2em; }
+.portrait-full { width: 100%; border-radius: 10px; display: block; }
+textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--fg); white-space: pre; }
+
+/* GM view: every editing control hidden */
+.ro .edit, .ro [data-act]:not([data-act="copylog"]):not([data-act="rpol"]):not([data-act="ooccopy"]) { display: none !important; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="top-in">
+    <div class="ident">
+      <button type="button" class="portrait" data-portrait="1" aria-label="Show Nhym's portrait"><img src="images/nhym-thumb.webp" alt="" width="52" height="52"></button>
+      <div>
+        <a class="home" href="../" title="All of Balthazar's characters">‹ Characters</a>
+        <h1>Nhym Ashcloak</h1>
+        <p class="sub"><a class="game" href="https://rpol.net/game.php?gi=80363" target="_blank" rel="noopener" title="Nhym's game on RPoL">Forgotten Realms 3.5 ↗</a> · D&amp;D 3.5 · Whisper gnome Rogue 5 · <span id="status" class="status" aria-live="polite">Loading</span><button type="button" id="acctBtn" class="acct" hidden></button><button type="button" id="pwBtn" class="acct" hidden>Change password</button></p>
+      </div>
+    </div>
+    <div class="clock">
+      <span class="ipchip" title="Hit points"><span class="lbl">HP</span><b id="hpTop" class="num">38</b></span>
+      <span class="ipchip pchip" title="Spell-like abilities left today"><span class="lbl">SLA</span><b id="slaTop" class="num">4</b></span>
+      <button type="button" class="rchip" data-goturn="1" aria-label="Round, go to This round"><span class="lbl">Round</span><b id="roundTop" class="num">1</b></button>
+      <button class="btn" id="dayBtn" data-act="newday" title="After 8 hours of rest: spell-like abilities come back and he heals 5 hit points.">New day</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+<main>
+  <section class="panel" id="pCombat"></section>
+  <section class="panel" id="pHp"></section>
+  <section class="panel full" id="pTurn"></section>
+  <section class="panel" id="pSla"></section>
+  <section class="panel" id="pStock"></section>
+  <section class="panel full" id="pSheet"></section>
+  <section class="panel full" id="pLog"></section>
+</main>
+</div>
+
+<div class="sheet" id="signin" hidden>
+  <form id="signinForm" autocomplete="on">
+    <h2>Sign in to edit</h2>
+    <label id="siEmailRow">Email<input id="siEmail" type="email" autocomplete="username" required></label>
+    <p class="sub" id="siAs" hidden>Signing in as <span id="siAsEmail"></span> · <button type="button" class="acct" id="siOther">use another email</button></p>
+    <label>Password<input id="siPass" type="password" autocomplete="current-password" required></label>
+    <p class="err" id="siErr" aria-live="polite"></p>
+    <div class="row"><button type="button" class="acct" id="siForgot" style="margin-right:auto">Forgot password?</button><button type="button" class="btn" id="siCancel">Cancel</button><button type="submit" class="btn primary" id="siGo">Sign in</button></div>
+  </form>
+</div>
+<div class="sheet" id="rsSheet" hidden>
+  <form id="rsForm" autocomplete="on">
+    <h2>Set a new password</h2>
+    <input type="text" id="rsUser" autocomplete="username" hidden>
+    <p class="sub" id="rsFor"></p>
+    <label>New password<input id="rsNew" type="password" autocomplete="new-password" minlength="6" required></label>
+    <label>New password again<input id="rsNew2" type="password" autocomplete="new-password" minlength="6" required></label>
+    <p class="err" id="rsErr" aria-live="polite"></p>
+    <div class="row"><button type="button" class="btn" id="rsCancel">Cancel</button><button type="submit" class="btn primary" id="rsGo">Save password</button></div>
+  </form>
+</div>
+<div class="sheet" id="pwSheet" hidden>
+  <form id="pwForm" autocomplete="on">
+    <h2>Change password</h2>
+    <input type="text" id="pwUser" autocomplete="username" hidden>
+    <label>Current password<input id="pwOld" type="password" autocomplete="current-password" required></label>
+    <label>New password<input id="pwNew" type="password" autocomplete="new-password" minlength="6" required></label>
+    <label>New password again<input id="pwNew2" type="password" autocomplete="new-password" minlength="6" required></label>
+    <p class="err" id="pwErr" aria-live="polite"></p>
+    <div class="row"><button type="button" class="btn" id="pwCancel">Cancel</button><button type="submit" class="btn primary" id="pwGo">Change</button></div>
+  </form>
+</div>
+<div class="sheet" id="helpSheet" hidden>
+  <form id="helpForm">
+    <h2 id="helpTitle"></h2>
+    <div id="helpBody"></div>
+    <div class="row"><button type="submit" class="btn primary">Close</button></div>
+  </form>
+</div>
+
+<script src="config.js"></script>
+<script src="vendor/firebase-app-compat.js"></script>
+<script src="vendor/firebase-auth-compat.js"></script>
+<script src="vendor/firebase-firestore-compat.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var sg = function (n) { return (n >= 0 ? "+" : "") + n; };
+
+  /* ---------- Nhym at Rogue 5 (D&D 3.5, whisper gnome), from his sheet ---------- */
+  var LEVEL = 5, HP_MAX = 38, DEAD = -10;
+  var AB = { str: 8, dex: 18, con: 14, int: 16, wis: 12, cha: 10 };
+  var mod = function (k) { return Math.floor((AB[k] - 10) / 2); };
+  var BAB = 3, SIZE = 1, ARMOR = 5, CLOAK = 1, SNEAK = 3, TRAP_SENSE = 1;
+  var SAVE_BASE = { fort: 1, ref: 4, will: 1 };
+  var FINESSE = false; /* no Weapon Finesse on his feat list: the rapier uses Str */
+  /* spell-like abilities, 1 a day each; DC 10 + spell level + Cha (SRD levels: silence is bard/cleric 2, the rest 0) */
+  var SLAS = [["Silence", 2, "centered on himself"], ["Ghost Sound", 0, ""], ["Mage Hand", 0, ""], ["Message", 0, ""]];
+
+  /* skills: [name, ability, ranks, misc, where the misc comes from, trained only] */
+  var SKILLS = [
+    ["Appraise", "int", 7, 0, ""], ["Balance", "dex", 0, 2, "Tumble synergy"], ["Bluff", "cha", 5, 0, ""], ["Climb", "str", 0, 0, ""],
+    ["Concentration", "con", 0, 0, ""], ["Craft (cartography)", "int", 7, 0, ""], ["Decipher Script", "int", 0, 0, ""],
+    ["Diplomacy", "cha", 0, 2, "Bluff synergy"], ["Disable Device", "int", 8, 0, "", 1], ["Disguise", "cha", 4, 0, ""],
+    ["Escape Artist", "dex", 0, 0, ""], ["Forgery", "int", 0, 0, ""], ["Gather Information", "cha", 0, 0, ""], ["Heal", "wis", 0, 0, ""],
+    ["Hide", "dex", 8, 8, "size +4, racial +4"], ["Intimidate", "cha", 0, 2, "Bluff synergy"], ["Jump", "str", 0, 2, "Tumble synergy"],
+    ["Knowledge (local)", "int", 1, 0, ""], ["Listen", "wis", 8, 2, "racial +2"], ["Move Silently", "dex", 7, 9, "boots of elvenkind +5, racial +4"],
+    ["Open Lock", "dex", 8, 0, "", 1], ["Ride", "dex", 0, 0, ""], ["Search", "int", 7, 0, ""], ["Sense Motive", "wis", 0, 0, ""],
+    ["Sleight of Hand", "dex", 1, 2, "Bluff synergy", 1], ["Spot", "wis", 8, 4, "racial +2, Blooded +2"], ["Survival", "wis", 0, 0, ""],
+    ["Swim", "str", 0, 0, ""], ["Tumble", "dex", 8, 0, "", 1], ["Use Magic Device", "cha", 1, 0, "", 1], ["Use Rope", "dex", 0, 0, ""]
+  ];
+  var skillTotal = function (s) { return mod(s[1]) + s[2] + s[3]; };
+  var SKILL_NOTES = ["+2 Survival when following tracks (Search synergy).", "+2 Disguise when acting in character while observed (Bluff synergy).",
+    "+2 Spellcraft to decipher scrolls (Use Magic Device synergy).", "+2 Appraise on maps (Craft synergy); +2 Appraise on goods valued by weight (merchant's scale).",
+    "+2 Craft (cartography) with the masterwork cartography set.", "+2 Use Rope with silk rope; +2 Climb with the climber's kit; +2 Strength checks with the crowbar.",
+    "Intimidate: −4 for every size category smaller than the target.", "Sleight of Hand works as Perform (juggling)."];
+  var FEATS = [
+    ["Blooded", "Regional feat", "+2 on initiative and Spot checks (both counted)."],
+    ["Mercantile Background", "Regional feat", "Trade-family training: bonuses on Appraise and one Craft or Profession, and better prices when selling."],
+    ["Weapon Focus (rapier)", "1st or 3rd", "+1 on attack rolls with the rapier."],
+    ["Murky-Eyed", "Flaw", "Against a target with concealment, roll the miss chance twice; if either roll misses, the attack misses."]
+  ];
+  var RACIAL = [
+    ["Small", "+1 size bonus to AC and attack rolls, +4 size bonus on Hide; three-quarter carrying capacity."],
+    ["Speed", "30 ft."], ["Low-light vision", "Twice as far as a human in poor light."], ["Darkvision", "60 ft."],
+    ["Weapon familiarity", "Gnome hooked hammer counts as a martial weapon."],
+    ["Racial enemies", "+1 on attack rolls against kobolds and goblinoids (goblins, hobgoblins, bugbears)."],
+    ["Giants", "+4 dodge bonus to AC against giants (lost whenever he loses his Dex bonus to AC)."],
+    ["Stealthy", "+4 racial bonus on Hide and Move Silently, +2 on Listen and Spot."],
+    ["Spell-like abilities", "1/day each: silence (centered on himself), ghost sound, mage hand, message."],
+    ["Languages", "Common and Gnomish automatic. Favored class: rogue."]
+  ];
+  var CLASS = [
+    ["Sneak attack", "+" + SNEAK + "d6 when the target is flanked or denied its Dex bonus to AC (ranged only within 30 ft.). Not on creatures immune to critical hits or with concealment."],
+    ["Trapfinding", "Search can find traps above DC 20; Disable Device works on magic traps."],
+    ["Evasion (Ex)", "On a successful Reflex save for half damage, he takes none (in light or no armor)."],
+    ["Trap sense (Ex)", "+" + TRAP_SENSE + " on Reflex saves and AC against traps."],
+    ["Uncanny dodge (Ex)", "Keeps his Dex bonus to AC when flat-footed or struck by an invisible attacker."]
+  ];
+  var LANGS = ["Common", "Chondathan", "Gnome", "Dwarf", "Elf", "Orc"];
+  var STOCK = [["clw", "Potion of cure light wounds", 4, "1d8+1 hit points"], ["arrows", "Arrows", 20, ""], ["rations", "Trail rations (days)", 8, ""]];
+
+  /* ---------- state ---------- */
+  var KEY = "nhym-tracker-v1", UNDO_MAX = 20, LOG_MAX = 500;
+  function fresh() {
+    var st = {}; STOCK.forEach(function (x) { st[x[0]] = x[2]; });
+    return { v: 1, round: 1, hp: HP_MAX, sla: {}, stock: st, cond: {}, turn: [], prevOoc: "", undo: [], log: [] };
+  }
+  function normalize(s) {
+    var f = fresh();
+    s = s && typeof s === "object" ? s : {};
+    Object.keys(f).forEach(function (k) { if (s[k] == null || typeof s[k] !== typeof f[k] || Array.isArray(f[k]) !== Array.isArray(s[k])) s[k] = f[k]; });
+    STOCK.forEach(function (x) { if (typeof s.stock[x[0]] !== "number") s.stock[x[0]] = x[2]; });
+    return s;
+  }
+  var state = fresh(), readOnly = false, roLabel = "", dirty = false, saveTimer = null;
+  var ui = { dayArmed: false, clearArmed: false, custom: "" };
+
+  function log(t) { state.log.unshift({ r: state.round, t: t }); state.log = state.log.slice(0, LOG_MAX); }
+  /* every change that adds an action remembers what it changed, so × on the action takes back just that */
+  function mutate(fn) {
+    if (readOnly) return;
+    var pre = { hp: state.hp, sla: JSON.stringify(state.sla), stock: JSON.stringify(state.stock), turn: state.turn, n: state.turn.length };
+    fn(state);
+    if (state.turn === pre.turn && state.turn.length > pre.n) {
+      var e = state.turn[state.turn.length - 1], f = {};
+      if (state.hp !== pre.hp) f.hp = state.hp - pre.hp;
+      if (JSON.stringify(state.sla) !== pre.sla) f.sla = JSON.parse(pre.sla);
+      if (JSON.stringify(state.stock) !== pre.stock) { var a = JSON.parse(pre.stock); f.stock = {}; Object.keys(state.stock).forEach(function (k) { if (a[k] !== state.stock[k]) f.stock[k] = state.stock[k] - a[k]; }); }
+      if (Object.keys(f).length) e.eff = f;
+    }
+    render();
+    scheduleSave();
+  }
+  function undoAction(s, e) {
+    var f = e.eff || {};
+    if (f.hp) s.hp = Math.max(DEAD, Math.min(HP_MAX, s.hp - f.hp));
+    if (f.sla) s.sla = f.sla;
+    Object.keys(f.stock || {}).forEach(function (k) { s.stock[k] -= f.stock[k]; });
+    log("Took back: " + e.name);
+  }
+  function act(name, note) { state.turn.push({ id: "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: name, note: note || "" }); }
+  function snap(s) { var c = JSON.parse(JSON.stringify(s)); delete c.undo; delete c.log; return c; }
+  function slaLeft() { return SLAS.filter(function (x) { return !state.sla[x[0]]; }).length; }
+
+  /* ---------- derived numbers (the combat toggles change them) ---------- */
+  function d() {
+    var c = state.cond, dex = mod("dex"), str = mod("str");
+    var dodge = (c.def === "fight" ? 3 : c.def === "total" ? 6 : 0) + (c.giant ? 4 : 0);
+    var acMisc = (c.charge ? -2 : 0);
+    var ac = 10 + ARMOR + dex + SIZE + dodge + acMisc;
+    var atkMod = (c.def === "fight" ? -4 : 0) + (c.charge ? 2 : 0) + (c.gob ? 1 : 0);
+    var rapier = BAB + (FINESSE ? dex : str) + SIZE + 1 + 1 + atkMod + (c.flank ? 2 : 0);
+    var bow = BAB + dex + SIZE + 1 + (c.def === "fight" ? -4 : 0) + (c.gob ? 1 : 0);
+    return {
+      ac: ac, touch: 10 + dex + SIZE + dodge + acMisc, ff: 10 + ARMOR + dex + SIZE + acMisc, /* uncanny dodge keeps Dex; dodge bonuses still go */
+      init: dex + 2, fort: SAVE_BASE.fort + mod("con") + CLOAK, ref: SAVE_BASE.ref + dex + CLOAK, will: SAVE_BASE.will + mod("wis") + CLOAK,
+      rapier: rapier, bow: bow, sneak: !!(c.flank || c.sneak), noAtk: c.def === "total"
+    };
+  }
+  function hpState(hp) {
+    if (hp <= DEAD) return ["Dead", true];
+    if (hp < 0) return ["Dying: loses 1 hp a round until stable (10% chance each round)", true];
+    if (hp === 0) return ["Disabled: one move or standard action a round; a strenuous action costs 1 hp", true];
+    return [hp <= HP_MAX / 4 ? "Badly hurt" : "", hp <= HP_MAX / 4];
+  }
+
+  /* ---------- render ---------- */
+  function render() {
+    $("hpTop").textContent = state.hp;
+    $("slaTop").textContent = slaLeft();
+    $("roundTop").textContent = state.round;
+    $("dayBtn").textContent = ui.dayArmed ? "Confirm new day" : "New day";
+    $("dayBtn").classList.toggle("warn", ui.dayArmed);
+    renderCombat(); renderHp(); renderTurn(); renderSla(); renderStock(); renderSheet(); renderLog();
+  }
+  function tog(key, label, on, hint) {
+    return '<button type="button" class="btn sm' + (on ? " primary" : "") + '" data-act="cond" data-k="' + key + '" aria-pressed="' + !!on + '" title="' + esc(hint || "") + '">' + label + "</button>";
+  }
+  function renderCombat() {
+    var D = d(), c = state.cond, sn = D.sneak ? " + " + SNEAK + "d6 sneak attack" : "";
+    $("pCombat").innerHTML = '<div class="ph"><h2>Combat</h2><span class="hint">Toggles change the numbers below</span></div>' +
+      '<div class="stats">' +
+        '<div class="stat"><span class="lbl">AC</span><b class="num">' + D.ac + "</b><small>touch " + D.touch + " · ff " + D.ff + "</small></div>" +
+        '<div class="stat"><span class="lbl">Rapier</span><b class="num">' + (D.noAtk ? "—" : sg(D.rapier)) + "</b><small>1d4−1 · 18–20</small></div>" +
+        '<div class="stat"><span class="lbl">Shortbow</span><b class="num">' + (D.noAtk ? "—" : sg(D.bow)) + "</b><small>1d4−1 · ×3</small></div>" +
+        '<div class="stat"><span class="lbl">Init</span><b class="num">' + sg(D.init) + "</b><small>Dex 4, Blooded 2</small></div>" +
+        '<div class="stat"><span class="lbl">Ref</span><b class="num">' + sg(D.ref) + "</b><small>evasion</small></div>" +
+        '<div class="stat"><span class="lbl">Sneak</span><b class="num">' + (D.sneak ? SNEAK + "d6" : "off") + "</b><small>" + (D.sneak ? "applies" : "needs flank or no Dex") + "</small></div></div>" +
+      (sn && !D.noAtk ? '<p class="hint" style="margin-top:8px">Damage: rapier 1d4−1' + sn + ", shortbow 1d4−1" + sn + " (within 30 ft.).</p>" : "") +
+      '<div class="row edit" style="margin-top:10px">' +
+        tog("flank", "Flanking", c.flank, "+2 melee attack, and sneak attack applies") +
+        tog("sneak", "Target denied Dex", c.sneak, "Flat-footed, blinded, feinted…: sneak attack applies") +
+        tog("charge", "Charging", c.charge, "+2 attack, −2 AC until his next turn") +
+        tog("gob", "vs kobold / goblinoid", c.gob, "+1 racial bonus on attack rolls") +
+        tog("giant", "vs giant", c.giant, "+4 dodge bonus to AC") + "</div>" +
+      '<div class="row edit" style="margin-top:6px">' +
+        '<span class="hint">Defense:</span>' + tog("def:", "Normal", !c.def, "") + tog("def:fight", "Fighting defensively", c.def === "fight", "−4 attack, +3 dodge AC (5 ranks of Tumble)") +
+        tog("def:total", "Total defense", c.def === "total", "+6 dodge AC (5 ranks of Tumble), no attacks; a standard action") + "</div>" +
+      '<p class="hint" style="margin-top:8px">Murky-Eyed: against concealment, roll the miss chance twice; either miss means a miss. Trap sense +' + TRAP_SENSE + " on Reflex and AC against traps.</p>";
+  }
+  function renderHp() {
+    var hp = state.hp, st = hpState(hp), pct = Math.max(0, Math.min(100, Math.round(hp / HP_MAX * 100)));
+    var b = function (n) { return '<button class="btn sm" data-act="hp" data-d="' + n + '">' + (n > 0 ? "+" : "−") + Math.abs(n) + "</button>"; };
+    $("pHp").innerHTML = '<div class="ph"><h2>Hit points</h2><span class="hint">Disabled at 0, dying below, dead at ' + DEAD + "</span></div>" +
+      '<div class="hpbig"><b class="num">' + hp + '</b><span class="hint">of ' + HP_MAX + "</span></div>" +
+      '<div class="hpbar' + (st[1] ? " low" : "") + '"><i style="width:' + pct + '%"></i></div>' +
+      (st[0] ? '<p class="hpstate' + (st[1] ? " bad" : "") + '">' + st[0] + "</p>" : "") +
+      '<div class="row edit">' + b(-10) + b(-5) + b(-1) + b(1) + b(5) + b(10) + "</div>" +
+      '<div class="row edit" style="margin-top:8px"><input type="text" inputmode="numeric" id="hpAmt" maxlength="3" placeholder="Amount" style="width:90px;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px">' +
+      '<button class="btn sm" data-act="hpamt" data-s="-1">Damage</button><button class="btn sm" data-act="hpamt" data-s="1">Heal</button></div>' +
+      '<p class="hint" style="margin-top:8px">Fort ' + sg(d().fort) + " · Ref " + sg(d().ref) + " · Will " + sg(d().will) + " (cloak of resistance +1 counted).</p>";
+  }
+  function renderTurn() {
+    var ooc = oocText();
+    $("pTurn").innerHTML = '<div class="ph"><h2>This round</h2><span class="hint">Uses add themselves here; × takes one back. End round makes the round final (− rolls it back).</span></div>' +
+      '<div class="tclock"><div class="rframe"><b class="num">' + state.round + '</b><span class="lbl">Round</span></div>' +
+      '<div class="rstep"><button class="btn rplus" data-act="roundplus" title="Next round, nothing done" aria-label="Next round (no actions)">+</button>' +
+      '<button class="btn rplus" data-act="roundminus"' + (state.undo.length ? "" : " disabled") + ' title="Undo the last round (up to 20 back)" aria-label="Undo the last round">−</button></div>' +
+      '<button class="btn sm" data-act="reset" title="Back to round 1">Reset</button>' +
+      '<button class="btn primary" data-act="endround">End round</button></div>' +
+      (state.turn.length ? '<ul class="tlist">' + state.turn.map(function (e) {
+        return '<li><span class="tname">' + esc(e.name) + (e.note ? ' <span class="hint">' + esc(e.note) + "</span>" : "") + '</span><button class="btn sm tx" data-act="turnrm" data-id="' + e.id + '" aria-label="Take back">×</button></li>';
+      }).join("") + "</ul>" : '<p class="hint">Nothing this round yet.</p>') +
+      '<div class="row edit" style="margin-top:10px">' +
+        '<button class="btn sm" data-act="quick" data-n="Attack with the rapier">Rapier attack</button><button class="btn sm" data-act="quick" data-n="Shoot the shortbow">Shortbow</button>' +
+        '<button class="btn sm" data-act="quick" data-n="Move">Move</button><button class="btn sm" data-act="quick" data-n="Tumble past">Tumble</button><button class="btn sm" data-act="quick" data-n="Hide">Hide</button></div>' +
+      '<div class="row edit" style="margin-top:8px"><input type="text" data-ui="custom" maxlength="80" placeholder="Another action" value="' + esc(ui.custom) + '" style="flex:1;min-width:200px;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px">' +
+      '<button class="btn sm" data-act="custom">Add</button></div>' +
+      '<h3>OOC for RPoL</h3><textarea class="ooc" readonly>' + esc(ooc) + '</textarea><div class="row"><button class="btn sm" data-act="ooccopy">Copy</button></div>' +
+      (state.prevOoc ? '<details class="sec"><summary>Last round</summary><pre class="txt">' + esc(state.prevOoc) + "</pre></details>" : "");
+  }
+  function condText() {
+    var c = state.cond, o = [];
+    if (c.flank) o.push("flanking"); if (c.sneak) o.push("target denied Dex"); if (c.charge) o.push("charging");
+    if (c.gob) o.push("vs kobold/goblinoid"); if (c.giant) o.push("vs giant");
+    if (c.def === "fight") o.push("fighting defensively"); if (c.def === "total") o.push("total defense");
+    return o;
+  }
+  function oocText() {
+    var D = d(), cd = condText();
+    return "OOC: Round " + state.round + "\n" +
+      "Nhym: " + (state.turn.length ? state.turn.map(function (e) { return e.name + (e.note ? " (" + e.note + ")" : ""); }).join("; ") : "nothing yet") + ".\n" +
+      "HP " + state.hp + "/" + HP_MAX + ". AC " + D.ac + ", touch " + D.touch + ", flat-footed " + D.ff + ". Rapier " + sg(D.rapier) + ", shortbow " + sg(D.bow) + (D.sneak ? ", sneak attack +" + SNEAK + "d6" : "") + "." +
+      (cd.length ? " Conditions: " + cd.join(", ") + "." : "") + " Spell-like abilities left: " + (SLAS.filter(function (x) { return !state.sla[x[0]]; }).map(function (x) { return x[0].toLowerCase(); }).join(", ") || "none") + ".";
+  }
+  function renderSla() {
+    $("pSla").innerHTML = '<div class="ph"><h2>Spell-like abilities</h2><span class="hint">' + slaLeft() + " of " + SLAS.length + " left today · back with New day</span></div>" +
+      '<div class="tscroll"><table class="t"><tr><th>Ability</th><th class="n">DC</th><th></th></tr>' +
+      SLAS.map(function (x) {
+        var used = !!state.sla[x[0]], sp = slaFind(x[0]);
+        return '<tr><td><a href="#" data-spell="' + esc(x[0]) + '">' + esc(x[0]) + "</a>" + (x[2] ? ' <span class="hint">' + esc(x[2]) + "</span>" : "") + (used ? ' <span class="chip used">used</span>' : "") +
+          (sp ? '<br><span class="hint">' + esc([sp.ct, "range " + sp.r, "duration " + sp.d].join(" · ")) + "</span>" : "") +
+          '</td><td class="n">' + (10 + x[1] + mod("cha")) + '</td><td><button class="btn sm moon" data-act="sla" data-n="' + esc(x[0]) + '"' + (used ? " disabled" : "") + ">Use</button></td></tr>";
+      }).join("") + "</table></div>" +
+      '<p class="hint" style="margin-top:6px">1/day each, a standard action like the spell. DC 10 + spell level + Cha. Tap a name for the SRD text.</p>';
+  }
+  function renderStock() {
+    $("pStock").innerHTML = '<div class="ph"><h2>Consumables</h2><span class="hint">Use counts one down and logs it</span></div>' +
+      '<div class="stock">' + STOCK.map(function (x) { var n = state.stock[x[0]];
+        return "<span>" + esc(x[1]) + (x[3] ? ' <span class="hint">' + esc(x[3]) + "</span>" : "") + '</span><span class="q"><b>' + n + "</b>" +
+          '<button class="btn sm edit" data-act="use" data-k="' + x[0] + '"' + (n < 1 ? " disabled" : "") + '>Use</button><button class="btn sm edit" data-act="add" data-k="' + x[0] + '">+</button></span>'; }).join("") + "</div>" +
+      '<p class="hint" style="margin-top:8px">Money: 231 gp, 8 sp, 8 cp.</p>';
+  }
+  function renderSheet() {
+    var D = d(), open = {};
+    document.querySelectorAll("#pSheet details[data-sec]").forEach(function (x) { open[x.getAttribute("data-sec")] = x.open; });
+    var sec = function (id, title, body) { return '<details class="sec" data-sec="' + id + '"' + (open[id] ? " open" : "") + "><summary>" + title + "</summary>" + body + "</details>"; };
+    var stat = function (l, v, s) { return '<div class="stat"><span class="lbl">' + l + '</span><b class="num">' + v + "</b>" + (s ? "<small>" + s + "</small>" : "") + "</div>"; };
+    var li = function (r) { return "<li><b>" + esc(r[0]) + ".</b> " + esc(r[1]) + "</li>"; };
+    var h = '<div class="ph"><h2>Sheet</h2><span class="hint">Male whisper gnome Rogue 5 · Lawful Neutral · Tymora · XP 10,000 (next 15,000)</span></div>' +
+      '<div class="stats">' + ["str", "dex", "con", "int", "wis", "cha"].map(function (k) { return stat(k.toUpperCase(), AB[k], sg(mod(k))); }).join("") + "</div>" +
+      '<p class="hint" style="margin:8px 0">Str 10 −2 race · Dex 14 +2 race +2 gloves · Con 12 +2 race · Int 15 +1 (4th level) · Wis 12 · Cha 12 −2 race. Small, 3\'5", 42 lb, 56 years, grey eyes, black hair.</p>';
+    h += sec("combat", "Combat", '<div class="tscroll"><table class="t">' +
+      "<tr><th>AC</th><td>20 = 10 + 5 armor (+1 mithral chain shirt) + 4 Dex + 1 size; touch 15; flat-footed 20 (uncanny dodge keeps Dex)</td></tr>" +
+      "<tr><th>Initiative</th><td>" + sg(D.init) + " = Dex 4 + Blooded 2</td></tr>" +
+      "<tr><th>Saves</th><td>Fort +4 = 1 + 2 Con + 1 cloak; Ref +9 = 4 + 4 Dex + 1 (evasion; trap sense +1 vs traps); Will +3 = 1 + 1 Wis + 1</td></tr>" +
+      "<tr><th>Melee</th><td>+3 = BAB 3 − 1 Str + 1 size. Rapier (masterwork, Weapon Focus): " + sg(BAB + mod("str") + SIZE + 2) + ", 1d4−1, 18–20/×2</td></tr>" +
+      "<tr><th>Ranged</th><td>+8 = BAB 3 + 4 Dex + 1 size. Shortbow (masterwork): +9, 1d4−1, ×3, 60 ft.</td></tr>" +
+      "<tr><th>Grapple</th><td>" + sg(BAB + mod("str") - 4) + " (Small −4)</td></tr>" +
+      "<tr><th>Armor</th><td>+1 mithral chain shirt: light, +5, max Dex +6, no check penalty, 10% arcane failure, 5 lb (Small)</td></tr></table></div>");
+    h += sec("abil", "Racial traits and rogue abilities", "<h3>Whisper gnome</h3><ul class=\"plain\">" + RACIAL.map(li).join("") + "</ul><h3>Rogue 5</h3><ul class=\"plain\">" + CLASS.map(li).join("") + "</ul>");
+    h += sec("feats", "Feats and flaw", '<ul class="plain">' + FEATS.map(function (f) { return "<li><b>" + esc(f[0]) + "</b> <span class=\"hint\">" + esc(f[1]) + "</span>: " + esc(f[2]) + "</li>"; }).join("") + "</ul>");
+    h += sec("skills", "Skills", '<p class="hint">88 ranks (Rogue 5, Int 16). t = trained only. No armor check penalty.</p><div class="tscroll"><table class="t"><tr><th>Skill</th><th class="n">Ranks</th><th class="n">Total</th><th>From</th></tr>' +
+      SKILLS.map(function (s) { return "<tr><td>" + esc(s[0]) + (s[5] ? ' <span class="hint">t</span>' : "") + '</td><td class="n">' + (s[2] || "") + '</td><td class="n"><b>' + sg(skillTotal(s)) + "</b></td><td class=\"hint\">" + s[1].toUpperCase() + " " + sg(mod(s[1])) + (s[3] ? ", " + esc(s[4]) : "") + "</td></tr>"; }).join("") +
+      '</table></div><ul class="plain">' + SKILL_NOTES.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") + "</ul>");
+    h += sec("lang", "Languages", "<p>" + LANGS.join(", ") + "</p>");
+    h += sec("gear", "Gear and money", '<pre class="txt" id="gearTxt">Loading…</pre>');
+    h += sec("bg", "Background", '<div id="bgTxt" style="font-size:0.88rem">Loading…</div>');
+    h += '<div class="row" style="margin-top:12px"><button class="btn sm" data-act="rpol">Generate RPoL sheet</button></div>';
+    $("pSheet").innerHTML = h;
+    loadDocs(function () {
+      var g = $("gearTxt"); if (g) g.textContent = DOCS.gear || "Gear list not loaded.";
+      var b = $("bgTxt"); if (b) b.innerHTML = DOCS.bg ? DOCS.bg.replace(/^# .*\n+/, "").split(/\n\n+/).map(function (p) { return /^## /.test(p) ? "<h3>" + esc(p.slice(3)) + "</h3>" : "<p>" + esc(p) + "</p>"; }).join("") : "Background not loaded.";
+    });
+  }
+  function renderLog() {
+    $("pLog").innerHTML = '<div class="ph"><h2>Log</h2><div class="row"><button class="btn sm" data-act="copylog">Copy log</button>' +
+      '<button class="btn sm' + (ui.clearArmed ? " warn" : "") + '" data-act="clearlog">' + (ui.clearArmed ? "Tap again to clear" : "Clear log") + "</button></div></div>" +
+      (state.log.length ? '<ul class="log">' + state.log.map(function (e) { return '<li><span class="r">R' + e.r + "</span>" + esc(e.t) + "</li>"; }).join("") + "</ul>" : '<p class="hint">Nothing logged yet.</p>');
+  }
+
+  /* ---------- texts: his sheet's gear section, background, and the SRD text of his spell-like abilities ---------- */
+  var DOCS = null, SLA = null;
+  function loadDocs(cb) {
+    if (DOCS) return cb();
+    Promise.all(["docs/nhym-sheet.txt", "docs/nhym-background.md"].map(function (u) { return fetch(u).then(function (r) { return r.ok ? r.text() : ""; }).catch(function () { return ""; }); }))
+      .then(function (t) { var a = t[0].indexOf("Magic Items"); DOCS = { gear: a >= 0 ? t[0].slice(a).trim() : "", bg: t[1] }; cb(); });
+  }
+  function slaFind(n) { return SLA && SLA.filter(function (x) { return x.n === n; })[0]; }
+  fetch("data/sla35.json").then(function (r) { return r.json(); }).then(function (j) { SLA = j.spells; renderSla(); }).catch(function () {});
+  function spellCard(x) {
+    var row = function (k, v) { return v ? "<tr><th>" + k + "</th><td>" + esc(v) + "</td></tr>" : ""; };
+    return '<p class="hint">' + esc(x.s) + '</p><div class="tscroll"><table class="t">' + row("Level", x.lv) + row("Components", x.c + " (none needed as a spell-like ability)") + row("Casting time", x.ct) + row("Range", x.r) +
+      row("Target / area / effect", x.a) + row("Duration", x.d) + row("Saving throw", x.sv) + row("Spell resistance", x.sr) + "</table></div>" +
+      '<div style="font-size:0.88rem;margin-top:8px">' + x.t.split(/\n\n+/).map(function (p) { return '<p style="margin:0 0 8px;white-space:pre-line">' + esc(p) + "</p>"; }).join("") + "</div>" +
+      '<p class="hint">System Reference Document 3.5 (Open Game License). <a href="' + esc(x.u) + '" target="_blank" rel="noopener">Open on d20srd.org ↗</a></p>';
+  }
+  function rpolText() {
+    var D = d(), now = new Date(), M = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], R = "----------------------------------------------------------------------------";
+    var pad = function (s, n) { s = String(s); while (s.length < n) s += " "; return s; };
+    var o = ["Name  : Nhym Ashcloak       | Race  : Gnome (whisper)  | Height: 3'5\"", "Player: Balthazar           | Gender: Male             | Weight: 42 lbs",
+      "Class : Rogue 5             | Age   : 56               | Eyes  : Grey", "Align : Lawful Neutral      | Size  : Small            | Hair  : Black",
+      "Deity : Tymora              | Speed : 30ft             | XP    : 10,000 (next 15,000)", R];
+    ["str", "dex", "con", "int", "wis", "cha"].forEach(function (k) { o.push(k.toUpperCase() + "  " + (AB[k] < 10 ? " " : "") + AB[k] + "  " + sg(mod(k))); });
+    o.push(R, "HP    : " + HP_MAX + "   Current: " + state.hp + "   | Init: " + sg(D.init) + " (Dex 4, Blooded 2)",
+      "AC    : 20 = 10 + 5 armor + 4 Dex + 1 size. Touch 15, flat-footed 20 (uncanny dodge).", "        +4 dodge vs giants. Fighting defensively +3, total defense +6 (Tumble 5 ranks).",
+      "Saves : Fort +4  Ref +9 (evasion, trap sense +1 vs traps)  Will +3", "Melee +3, Ranged +8, Grapple " + sg(BAB + mod("str") - 4), R,
+      "Rapier, masterwork     " + sg(BAB + mod("str") + SIZE + 2) + "  1d4-1  18-20/x2  (Weapon Focus)", "Shortbow, masterwork   +9  1d4-1  x3  60ft  (" + state.stock.arrows + " arrows)",
+      "Sneak attack +3d6. +1 attack vs kobolds and goblinoids. Murky-Eyed: concealment miss chance rolled twice.", R, "SKILLS");
+    SKILLS.forEach(function (s) { o.push(" " + pad(s[0] + (s[5] ? "^" : ""), 22) + pad(sg(skillTotal(s)), 4) + " (" + s[2] + " ranks" + (s[3] ? ", " + s[4] : "") + ")"); });
+    o.push(" ^ trained only"); SKILL_NOTES.forEach(function (n) { o.push(" " + n); });
+    o.push(R, "FEATS: Blooded, Mercantile Background, Weapon Focus (rapier). Flaw: Murky-Eyed.", "RACIAL: " + RACIAL.map(function (r) { return r[0]; }).join(", ") + ".",
+      "ROGUE: sneak attack +3d6, trapfinding, evasion, trap sense +1, uncanny dodge.", "LANGUAGES: " + LANGS.join(", ") + ".",
+      "SPELL-LIKE (1/day each): " + SLAS.map(function (x) { return x[0].toLowerCase() + (x[2] ? " (" + x[2] + ")" : "") + (state.sla[x[0]] ? " [used today]" : ""); }).join(", ") + ".", R);
+    if (DOCS && DOCS.gear) o.push(DOCS.gear, R);
+    o.push("CURRENT STATUS (" + M[now.getMonth()] + " " + now.getDate() + " " + now.getFullYear() + ", round " + state.round + ")",
+      " - Hit points " + state.hp + " of " + HP_MAX + ". Spell-like abilities left: " + slaLeft() + " of " + SLAS.length + ".",
+      " - Potions of cure light wounds " + state.stock.clw + ", arrows " + state.stock.arrows + ", trail rations " + state.stock.rations + ".",
+      " - Conditions: " + (condText().join(", ") || "none") + ".", R);
+    if (DOCS && DOCS.bg) o.push("BACKGROUND", DOCS.bg.replace(/^# .*\n+/, "").replace(/^## /gm, ""));
+    return o.join("\n");
+  }
+
+  /* ---------- events ---------- */
+  function openInfo(title, html, wide) { $("helpTitle").textContent = title; $("helpBody").innerHTML = html; $("helpForm").classList.toggle("wide", !!wide); $("helpSheet").hidden = false; }
+  function closeHelp() { $("helpSheet").hidden = true; }
+  $("helpForm").addEventListener("submit", function (e) { e.preventDefault(); closeHelp(); });
+  $("helpSheet").addEventListener("click", function (e) { if (e.target === $("helpSheet")) closeHelp(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("helpSheet").hidden) closeHelp(); });
+  var copy = function (txt, btn) {
+    var done = function () { var o = btn.textContent; btn.textContent = "Copied"; setTimeout(function () { btn.textContent = o; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, function () {}); else done();
+  };
+  document.addEventListener("click", function (e) {
+    if (e.target.closest && e.target.closest("[data-portrait]")) { openInfo("Nhym Ashcloak", '<img class="portrait-full" src="images/nhym.webp" alt="Nhym, a grey-skinned gnome with black braids, a rapier and a ragged green cloak outside the Old Skull Inn" width="1122" height="1402">'); return; }
+    if (e.target.closest && e.target.closest("[data-goturn]")) { var pt = $("pTurn"), tp = document.querySelector(".top"); window.scrollTo({ top: pt.getBoundingClientRect().top + window.scrollY - (tp ? tp.offsetHeight : 0) - 8, behavior: "smooth" }); return; }
+    var sl = e.target.closest && e.target.closest("[data-spell]");
+    if (sl) { e.preventDefault(); var x = slaFind(sl.getAttribute("data-spell")); openInfo(sl.getAttribute("data-spell"), x ? spellCard(x) : '<p class="hint">Spell text could not be loaded. It needs a connection the first time.</p>', true); return; }
+    var t = e.target.closest && e.target.closest("[data-act]");
+    if (!t) return;
+    var a = t.getAttribute("data-act");
+    if (a === "copylog") { copy(state.log.slice().reverse().map(function (x) { return "R" + x.r + "  " + x.t; }).join("\n"), t); return; }
+    if (a === "ooccopy") { copy(oocText(), t); return; }
+    if (a === "rpol") {
+      loadDocs(function () {
+        var txt = rpolText();
+        openInfo("Nhym: RPoL sheet", '<p class="hint">His sheet with today\'s numbers written in.</p><textarea class="rpol" readonly>' + esc(txt) + '</textarea><div class="row"><button type="button" class="btn primary" id="rpolCopy">Copy</button></div>', true);
+        $("rpolCopy").addEventListener("click", function () { copy(txt, $("rpolCopy")); });
+      });
+      return;
+    }
+    if (readOnly) return;
+    if (a === "cond") {
+      var k = t.getAttribute("data-k");
+      mutate(function (s) {
+        if (/^def:/.test(k)) { var v = k.slice(4); if (v) s.cond.def = v; else delete s.cond.def; }
+        else if (s.cond[k]) delete s.cond[k]; else s.cond[k] = true;
+      });
+    }
+    else if (a === "sla") { var n = t.getAttribute("data-n"); if (state.sla[n]) return; mutate(function (s) { s.sla[n] = true; log("Used " + n.toLowerCase() + " (spell-like, 1/day)"); act(n, "spell-like ability"); }); }
+    else if (a === "quick") { var q = t.getAttribute("data-n"), D = d(); mutate(function (s) { act(q, /rapier/i.test(q) ? sg(D.rapier) + (D.sneak ? ", +3d6 sneak" : "") : /shortbow/i.test(q) ? sg(D.bow) + (D.sneak ? ", +3d6 sneak within 30 ft." : "") : ""); }); }
+    else if (a === "custom") { var c = ui.custom.trim(); if (!c) return; ui.custom = ""; mutate(function (s) { act(c); }); }
+    else if (a === "turnrm") { var id = t.getAttribute("data-id"); mutate(function (s) { var g = s.turn.filter(function (x) { return x.id === id; })[0]; s.turn = s.turn.filter(function (x) { return x.id !== id; }); if (g) undoAction(s, g); }); }
+    else if (a === "hp" || a === "hpamt") {
+      var dn = a === "hp" ? +t.getAttribute("data-d") : (parseInt(($("hpAmt") || {}).value, 10) || 0) * +t.getAttribute("data-s");
+      if (!dn) return;
+      mutate(function (s) { var o = s.hp; s.hp = Math.max(DEAD, Math.min(HP_MAX, s.hp + dn)); var top = s.log[0];
+        if (top && top.k === "hp" && top.r === s.round) top.t = "HP " + top.from + " → " + s.hp; else s.log.unshift({ r: s.round, k: "hp", from: o, t: "HP " + o + " → " + s.hp }); });
+    }
+    else if (a === "use" || a === "add") {
+      var key = t.getAttribute("data-k"), dl = a === "use" ? -1 : 1, label = (STOCK.filter(function (x) { return x[0] === key; })[0] || [0, key])[1];
+      mutate(function (s) { if (dl < 0 && s.stock[key] < 1) return; s.stock[key] += dl; log((dl < 0 ? "Used " : "Added ") + label + " (" + (s.stock[key] - dl) + " → " + s.stock[key] + ")"); if (dl < 0 && key !== "rations") act("Used " + label); });
+    }
+    else if (a === "endround" || a === "roundplus") mutate(function (s) {
+      s.undo = s.undo.concat([snap(s)]).slice(-UNDO_MAX);
+      log(s.turn.length ? "Round " + s.round + " actions: " + s.turn.map(function (x) { return x.name + (x.note ? " (" + x.note + ")" : ""); }).join("; ") : "Round " + s.round + " passed, no actions");
+      s.prevOoc = oocText(); s.turn = []; s.round += 1; delete s.cond.charge;
+    });
+    else if (a === "roundminus") mutate(function (s) { var u = s.undo.pop(); if (!u) return; Object.keys(u).forEach(function (k) { s[k] = u[k]; }); log("Back to round " + s.round + " (undid the end of round " + s.round + ")"); });
+    else if (a === "reset") mutate(function (s) { s.round = 1; s.turn = []; s.undo = []; s.cond = {}; log("Reset to round 1"); });
+    else if (a === "newday") {
+      if (!ui.dayArmed) { ui.dayArmed = true; render(); setTimeout(function () { ui.dayArmed = false; render(); }, 4000); return; }
+      ui.dayArmed = false;
+      mutate(function (s) { var o = s.hp; s.hp = Math.min(HP_MAX, s.hp + LEVEL); s.sla = {}; s.round = 1; s.turn = []; s.undo = []; s.cond = {}; log("New day: spell-like abilities back, HP " + o + " → " + s.hp); });
+    }
+    else if (a === "clearlog") {
+      if (!ui.clearArmed) { ui.clearArmed = true; renderLog(); setTimeout(function () { ui.clearArmed = false; renderLog(); }, 4000); return; }
+      ui.clearArmed = false; mutate(function (s) { s.log = []; });
+    }
+  });
+  document.addEventListener("input", function (e) { if (e.target.getAttribute && e.target.getAttribute("data-ui") === "custom") ui.custom = e.target.value; });
+
+
+  /* ---------- storage (as in Daerlieth's tracker: Firestore document trackers/nhym, public read, owner writes) ---------- */
+  var CFG = window.TRACKER_CONFIG || {};
+  var WANTS_EDIT = KEY + ":edit";
+  var VIEW_ONLY = /[?&#]view\b/.test(location.search + location.hash);
+  var auth = null, ref = null, user = null, saveSeq = 0;
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* storage unavailable */ } }
+  function setStatus(t) { var el = $("status"); if (el) el.textContent = readOnly ? roLabel : t; }
+  function setReadOnly(label) { readOnly = true; roLabel = label; document.body.classList.add("ro"); setStatus(""); }
+  function setEditable(label) { readOnly = false; roLabel = ""; document.body.classList.remove("ro"); setStatus(label); }
+  function scheduleSave() { dirty = true; setStatus("Saving"); clearTimeout(saveTimer); saveTimer = setTimeout(flush, 350); }
+  var SAVE_LIMIT = 180000;
+  function bytes(str) { try { return unescape(encodeURIComponent(str)).length; } catch (e) { return str.length * 3; } }
+  function fitPayload() {
+    var payload = JSON.stringify(state);
+    while (bytes(payload) > SAVE_LIMIT && (state.undo.length || state.log.length > 50)) {
+      if (state.undo.length > 5) state.undo.shift();
+      else if (state.log.length > 50) state.log = state.log.slice(0, Math.max(50, Math.floor(state.log.length * 0.8)));
+      else state.undo.shift();
+      payload = JSON.stringify(state);
+    }
+    return payload;
+  }
+  function flush() {
+    if (!dirty) return;
+    dirty = false;
+    var payload = fitPayload();
+    lsSet(KEY, payload);
+    if (!ref) { setStatus("Saved on this device"); return; }
+    var mine = ++saveSeq;
+    if (!navigator.onLine) setStatus("Offline, saved on this device");
+    ref.set({ json: payload, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+      .then(function () { if (mine === saveSeq && !dirty) setStatus("Saved"); })
+      .catch(function (err) {
+        if (err && err.code === "permission-denied") setReadOnly("Save refused by the Firestore rules for " + ((user && user.email) || "this account"));
+        else setStatus("Not saved");
+      });
+  }
+  function applyRemote(sn) {
+    if (sn.metadata.hasPendingWrites || dirty) return;
+    if (sn.exists) {
+      try {
+        var incoming = normalize(JSON.parse(sn.data().json || "{}"));
+        lsSet(KEY, JSON.stringify(incoming));
+        if (JSON.stringify(incoming) !== JSON.stringify(state)) { state = incoming; render(); }
+      } catch (e) { /* keep what is shown */ }
+    }
+    var label = sn.metadata.fromCache ? "Offline, last saved copy" : "Live";
+    if (readOnly) setReadOnly(sn.exists || sn.metadata.fromCache ? label : "Waiting for the first save");
+    else setStatus(sn.metadata.fromCache ? "Offline, saved on this device" : "Saved");
+  }
+  function setUser(u) {
+    user = u || null;
+    if (VIEW_ONLY) setReadOnly(navigator.onLine ? "Live (viewer preview)" : "Offline, last saved copy");
+    else if (user && [].concat(CFG.ownerUids || CFG.ownerUid || []).indexOf(user.uid) >= 0) setEditable(navigator.onLine ? "Saved" : "Offline, saved on this device");
+    else setReadOnly(user ? "Signed in as " + (user.email || "?") + ", view only" : navigator.onLine ? "Live" : "Offline, last saved copy");
+    render();
+    renderAcct();
+  }
+  function renderAcct() {
+    var b = $("acctBtn");
+    if (!auth || VIEW_ONLY) { b.hidden = true; $("pwBtn").hidden = true; return; }
+    b.hidden = !user && !lsGet(WANTS_EDIT);
+    b.textContent = user ? "Sign out" : "Sign in";
+    $("pwBtn").hidden = !user || readOnly;
+  }
+  function hookAccount() {
+    if (/[?&#]edit\b/.test(location.search + location.hash)) lsSet(WANTS_EDIT, "1");
+    var sheet = $("signin"), err = $("siErr");
+    if (CFG.editorEmail) {
+      $("siEmail").value = CFG.editorEmail; $("siEmailRow").hidden = true; $("siAs").hidden = false; $("siAsEmail").textContent = CFG.editorEmail;
+      $("siOther").addEventListener("click", function () { $("siAs").hidden = true; $("siEmailRow").hidden = false; $("siEmail").value = ""; $("siEmail").focus(); });
+    }
+    function close() { sheet.hidden = true; err.textContent = ""; }
+    $("acctBtn").addEventListener("click", function () { if (user) { auth.signOut(); return; } sheet.hidden = false; (CFG.editorEmail ? $("siPass") : $("siEmail")).focus(); });
+    $("siCancel").addEventListener("click", close);
+    sheet.addEventListener("click", function (e) { if (e.target === sheet) close(); });
+    var pw = $("pwSheet"), pwErr = $("pwErr");
+    function closePw() { pw.hidden = true; pwErr.textContent = ""; $("pwForm").reset(); }
+    $("pwBtn").addEventListener("click", function () { if (!user) return; $("pwUser").value = user.email || ""; pw.hidden = false; $("pwOld").focus(); });
+    $("pwCancel").addEventListener("click", closePw);
+    $("pwForm").addEventListener("submit", function (e) {
+      e.preventDefault(); pwErr.textContent = "";
+      var nw = $("pwNew").value;
+      if (nw !== $("pwNew2").value) { pwErr.textContent = "The new passwords don't match."; return; }
+      if (nw.length < 6) { pwErr.textContent = "Use at least 6 characters."; return; }
+      $("pwGo").disabled = true;
+      user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(user.email, $("pwOld").value))
+        .then(function () { return user.updatePassword(nw); })
+        .then(function () { closePw(); setStatus("Password changed"); })
+        .catch(function (x) { pwErr.textContent = /invalid-credential|wrong-password/.test((x && x.code) || "") ? "The current password is wrong." : (x && x.message) || "Could not change the password."; })
+        .then(function () { $("pwGo").disabled = false; });
+    });
+    $("siForgot").addEventListener("click", function () {
+      var email = CFG.editorEmail || $("siEmail").value.trim();
+      if (!email) { err.textContent = "Enter the email first."; return; }
+      err.textContent = "Sending…";
+      auth.sendPasswordResetEmail(email, { url: location.origin + location.pathname + "?edit" })
+        .then(function () { err.textContent = "Reset email requested for " + email + "."; })
+        .catch(function (x) { err.textContent = (x && x.message) || "Could not send the email."; });
+    });
+    var rs = $("rsSheet"), rsErr = $("rsErr"), q = new URLSearchParams(location.search), rsCode = q.get("mode") === "resetPassword" ? q.get("oobCode") : null;
+    function closeRs() { rs.hidden = true; rsErr.textContent = ""; $("rsForm").reset(); history.replaceState(null, "", location.pathname + "?edit"); }
+    if (rsCode) {
+      lsSet(WANTS_EDIT, "1"); rs.hidden = false;
+      auth.verifyPasswordResetCode(rsCode).then(function (email) { $("rsUser").value = email; $("rsFor").textContent = "For " + email; })
+        .catch(function () { rsErr.textContent = "This reset link has expired or was already used."; $("rsGo").disabled = true; });
+    }
+    $("rsCancel").addEventListener("click", closeRs);
+    $("rsForm").addEventListener("submit", function (e) {
+      e.preventDefault(); rsErr.textContent = "";
+      var nw = $("rsNew").value;
+      if (nw !== $("rsNew2").value) { rsErr.textContent = "The passwords don't match."; return; }
+      $("rsGo").disabled = true;
+      auth.confirmPasswordReset(rsCode, nw).then(function () { return auth.signInWithEmailAndPassword($("rsUser").value, nw); })
+        .then(function () { closeRs(); setStatus("Password changed"); })
+        .catch(function (x) { rsErr.textContent = (x && x.message) || "Could not set the password."; $("rsGo").disabled = false; });
+    });
+    $("signinForm").addEventListener("submit", function (e) {
+      e.preventDefault(); err.textContent = ""; $("siGo").disabled = true;
+      auth.signInWithEmailAndPassword($("siEmail").value.trim(), $("siPass").value)
+        .then(function () { $("siPass").value = ""; close(); })
+        .catch(function (x) {
+          var c = (x && x.code) || "";
+          err.textContent = /invalid-credential|wrong-password|user-not-found|invalid-email/.test(c) ? "Wrong email or password." : /too-many-requests/.test(c) ? "Too many tries. Wait a few minutes." : (x && x.message) || "Could not sign in.";
+        })
+        .then(function () { $("siGo").disabled = false; });
+    });
+  }
+  function initStore() {
+    var cached = lsGet(KEY);
+    if (cached) { try { state = normalize(JSON.parse(cached)); render(); } catch (e) { /* ignore a bad copy */ } }
+    var fb = CFG.firebase || {};
+    if (!fb.apiKey || !fb.projectId || !CFG.characterId || !window.firebase) { setStatus("This device only"); return; }
+    firebase.initializeApp(fb);
+    var store = firebase.firestore();
+    store.enablePersistence({ synchronizeTabs: true }).catch(function () {});
+    auth = firebase.auth();
+    ref = store.collection("trackers").doc(CFG.characterId);
+    setReadOnly("Loading");
+    hookAccount();
+    renderAcct();
+    auth.onAuthStateChanged(setUser);
+    ref.onSnapshot({ includeMetadataChanges: true }, applyRemote, function () { setStatus("Can't reach the tracker"); });
+    window.addEventListener("online", function () { setUser(user); });
+    window.addEventListener("offline", function () { if (readOnly) setReadOnly("Offline, last saved copy"); else setStatus("Offline, saved on this device"); });
+  }
+
+  render();
+  initStore();
+  if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(function () {});
+})();
+</script>
+</body>
+</html>
+
