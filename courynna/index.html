@@ -76,6 +76,11 @@ h1 { font-family: var(--font-display); font-weight: 400; font-size: 1.5rem; line
 .ipchip { display: flex; align-items: baseline; gap: 6px; padding: 4px 10px; border: 1px solid var(--gold-fill); border-radius: 9px; background: rgba(235, 198, 118, 0.08); }
 .ipchip b { font-family: var(--font-display); font-weight: 400; font-size: 1.35rem; line-height: 1; color: var(--gold); }
 .ipchip .lbl { color: var(--gold); }
+.pchip { border-color: var(--moon); background: rgba(169, 193, 255, 0.08); }
+.pchip b, .pchip .lbl { color: var(--moon); }
+.pip.day { border-color: var(--moon); }
+.pip.day.on { background: radial-gradient(circle at 35% 30%, #e4ecff, var(--moon)); box-shadow: 0 0 10px rgba(169, 193, 255, 0.35); }
+.btn.moon { background: linear-gradient(180deg, #c3d4ff, var(--moon)); border-color: var(--moon); color: var(--moon-ink); }
 
 /* buttons */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--fg); font-weight: 600; font-size: 0.9rem; cursor: pointer; white-space: nowrap; }
@@ -194,6 +199,7 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
     </div>
     <div class="clock">
       <span class="ipchip" title="Inspiration points left"><span class="lbl">Insp.</span><b id="ipTop" class="num">4</b></span>
+      <span class="ipchip pchip" title="Opportunistic Piety uses left today"><span class="lbl">Piety</span><b id="pietyTop" class="num">4</b></span>
       <button type="button" class="rchip" data-goturn="1" aria-label="Round, go to This round"><span class="lbl">Round</span><b id="roundTop" class="num">1</b></button>
       <button class="btn" id="dayBtn" data-act="newday" title="After 8 hours of rest: Arcane Dilettante spells and Cunning Knowledge come back, Opportunistic Piety refills, inspiration refills, and she heals 5 hit points.">New day</button>
     </div>
@@ -203,10 +209,11 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
 <div class="wrap">
 <main>
   <section class="panel" id="pInsp"></section>
+  <section class="panel" id="pPiety"></section>
   <section class="panel" id="pHp"></section>
-  <section class="panel full" id="pTurn"></section>
   <section class="panel" id="pSpells"></section>
-  <section class="panel" id="pStock"></section>
+  <section class="panel full" id="pTurn"></section>
+  <section class="panel full" id="pStock"></section>
   <section class="panel full" id="pSheet"></section>
   <section class="panel full" id="pLog"></section>
 </main>
@@ -407,10 +414,11 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
   /* ---------- render ---------- */
   function render() {
     $("ipTop").textContent = state.ip;
+    $("pietyTop").textContent = state.piety;
     $("roundTop").textContent = state.round;
     $("dayBtn").textContent = ui.dayArmed ? "Confirm new day" : "New day";
     $("dayBtn").classList.toggle("warn", ui.dayArmed);
-    renderInsp(); renderHp(); renderTurn(); renderSpells(); renderStock(); renderSheet(); renderLog();
+    renderInsp(); renderPiety(); renderHp(); renderTurn(); renderSpells(); renderStock(); renderSheet(); renderLog();
   }
 
   function renderInsp() {
@@ -454,12 +462,22 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
       (st[0] ? '<p class="hpstate' + (st[1] ? " bad" : "") + '">' + st[0] + "</p>" : "") +
       '<div class="row edit">' + b(-10) + b(-5) + b(-1) + b(1) + b(5) + b(10) + "</div>" +
       '<div class="row edit" style="margin-top:8px"><input type="text" inputmode="numeric" id="hpAmt" maxlength="3" placeholder="Amount" style="width:90px;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px">' +
-      '<button class="btn sm" data-act="hpamt" data-s="-1">Damage</button><button class="btn sm" data-act="hpamt" data-s="1">Heal</button></div>' +
-      '<h3>Opportunistic Piety</h3><p class="hint">' + state.piety + " of " + PIETY_MAX + " uses left today. 1 inspiration and a standard action each.</p>" +
-      '<div class="row edit" style="margin-top:6px"><select data-ui="piety" style="background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px">' +
+      '<button class="btn sm" data-act="hpamt" data-s="-1">Damage</button><button class="btn sm" data-act="hpamt" data-s="1">Heal</button></div>';
+  }
+
+  /* Opportunistic Piety: a daily pool, shown like inspiration; each use also costs 1 inspiration point */
+  function renderPiety() {
+    var n = state.piety, pips = "";
+    for (var i = 0; i < PIETY_MAX; i++) pips += '<span class="pip day' + (i < n ? " on" : "") + '"></span>';
+    $("pPiety").innerHTML = '<div class="ph"><h2>Opportunistic Piety</h2><span class="hint">' + n + " of " + PIETY_MAX + " uses left today</span></div>" +
+      '<div class="pips" aria-label="' + n + ' piety uses left">' + pips + "</div>" +
+      '<p class="hint">' + PIETY_MAX + " a day (3 + Wis), back with New day. Each use is a standard action and also costs 1 inspiration point.</p>" +
+      '<div class="row edit" style="margin:8px 0"><button class="btn sm" data-act="pietyset" data-d="-1"' + (n < 1 ? " disabled" : "") + '>−1</button><button class="btn sm" data-act="pietyset" data-d="1"' + (n >= PIETY_MAX ? " disabled" : "") + ">+1</button></div>" +
+      '<div class="row edit"><select data-ui="piety" style="background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px">' +
         [["heal", "Heal herself " + PIETY_AMT], ["healAlly", "Heal an ally " + PIETY_AMT], ["harm", "Harm undead " + PIETY_AMT], ["turn", "Turn undead (cleric " + LEVEL + ")"]].map(function (o) { return '<option value="' + o[0] + '"' + (ui.piety === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
-      '</select><button class="btn sm gold" data-act="piety"' + (state.ip < 1 || state.piety < 1 ? " disabled" : "") + ">Use</button></div>" +
-      (ui.piety === "turn" ? '<p class="hint" style="margin-top:6px">Turning check d20 ' + sg(mod("cha")) + " (Cha); turning damage 2d6 " + sg(LEVEL + mod("cha")) + ".</p>" : "");
+      '</select><button class="btn sm moon" data-act="piety"' + (state.ip < 1 || n < 1 ? " disabled" : "") + ">Use</button></div>" +
+      (ui.piety === "turn" ? '<p class="hint" style="margin-top:6px">Turning check d20 ' + sg(mod("cha")) + " (Cha); turning damage 2d6 " + sg(LEVEL + mod("cha")) + ".</p>" : "") +
+      (n < 1 ? '<p class="warn-text">No uses left today.</p>' : state.ip < 1 ? '<p class="warn-text">No inspiration left to pay for it this encounter.</p>' : "");
   }
 
   function renderTurn() {
@@ -654,6 +672,7 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
       var id = t.getAttribute("data-id");
       mutate(function (s) { var g = s.turn.filter(function (x) { return x.id === id; })[0]; s.turn = s.turn.filter(function (x) { return x.id !== id; }); if (g) undoAction(s, g); });
     }
+    else if (a === "pietyset") { var pd = +t.getAttribute("data-d"); mutate(function (s) { var o = s.piety; s.piety = Math.max(0, Math.min(PIETY_MAX, s.piety + pd)); log("Opportunistic Piety set by hand " + o + " → " + s.piety); }); }
     else if (a === "ip") { var dd = +t.getAttribute("data-d"); mutate(function (s) { var o = s.ip; s.ip = Math.max(0, Math.min(IP_MAX, s.ip + dd)); log("Inspiration set by hand " + o + " → " + s.ip); }); }
     else if (a === "hp" || a === "hpamt") {
       var n = a === "hp" ? +t.getAttribute("data-d") : (parseInt(($("hpAmt") || {}).value, 10) || 0) * +t.getAttribute("data-s");
