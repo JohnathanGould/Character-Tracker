@@ -1,6 +1,6 @@
 # Daerlieth Nightstar tracker: build brief
 
-This folder is a working single-file tracker (`index.html`) for a Pathfinder 1e gestalt character: Eternal Mage 8 (Artillery Expert) / Spell-less Ranger 8, mythic Archmage tier 2. The player is the only editor. Her GM only needs to view.
+This folder is a working single-file tracker (`index.html`) for a Pathfinder 1e gestalt character: Eternal Mage 8 (Artillery Expert) // Spell-less Ranger 8, mythic Archmage tier 2. The player is the only editor. Her GM only needs to view.
 
 ## Site layout
 Repo `JohnathanGould/Character-Tracker`, served at https://johnathangould.github.io/Character-Tracker/ (Daerlieth: `.../Character-Tracker/daerlieth/`, GM view `.../daerlieth/?view`). The path is case-sensitive. It was `daerlieth-tracker` before the rename; GitHub Pages does not redirect the old address.

@@ -1758,7 +1758,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     if (L > Levels.MAX) return;
     var g = Levels.gains(L), conMod = dv().ab.con.mod;
     var li = function (x) { return "<li>" + x + "</li>"; };
-    var body = '<p class="hint">Level ' + state.level + " → " + L + ": Eternal Mage " + L + " / Spell-less Ranger " + L + ". The tracker updates these on its own:</p>" +
+    var body = '<p class="hint">Level ' + state.level + " → " + L + ": Eternal Mage " + L + " // Spell-less Ranger " + L + ". The tracker updates these on its own:</p>" +
       '<ul class="lvgain">' + g.gains.map(function (x) { return li("<b>" + esc(x[0]) + "</b>: " + esc(x[1])); }).join("") + "</ul>" +
       (g.features.length ? '<p class="hint">New class features:</p><ul class="lvgain">' + g.features.map(function (f) { return li(esc(f[0]) + ": " + esc(f[1])); }).join("") + "</ul>" : "") +
       (g.picks.length ? '<p class="hint">Picks to make afterwards (empty slots under Level-up picks on her tab):</p><ul class="lvgain">' + g.picks.map(function (c) { return li(esc(c.group) + ": " + esc(c.label)); }).join("") + "</ul>" : "") +

@@ -4,7 +4,7 @@ Live site: https://johnathangould.github.io/Character-Tracker/ (Daerlieth: https
 
 ## Daerlieth Nightstar
 
-Burnout, overdrive, mythic power and concentration tracker for a Pathfinder 1e gestalt character (Eternal Mage 8 / Spell-less Ranger 8, Archmage tier 2). Rules live in `CLAUDE.md`.
+Burnout, overdrive, mythic power and concentration tracker for a Pathfinder 1e gestalt character (Eternal Mage 8 // Spell-less Ranger 8, Archmage tier 2). Rules live in `CLAUDE.md`.
 
 - **GM:** open the site link. No account; the page updates live as the player plays.
 - **Player:** open the link with `?edit` once, tap **Sign in**, and add the page to the home screen. It works offline; changes made offline sync when the phone reconnects. While signed in, the plain link opens the editor on that device (with Sign out); add `?view` to see the page exactly as the GM does.
