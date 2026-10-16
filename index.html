@@ -113,7 +113,9 @@ footer { margin-top: 28px; color: var(--muted); font-size: 0.78rem; }
       game: { name: "Cormanthyr", system: "Pathfinder 1e", url: "https://rpol.net/game.php?gi=80510&date=1792113654" } },
     { path: "courynna/", doc: "courynna", name: "Courynna Talaudrym", thumb: "courynna/images/courynna-thumb.webp",
       line: function () { return "Human · Factotum 5"; }, live: function (s) { return " · inspiration <b>" + s.ip + "</b>/4"; },
-      game: { name: "Emerging", system: "D&D 3.5", url: "https://rpol.net/game.php?gi=80341&date=1792177427" } }
+      game: { name: "Emerging", system: "D&D 3.5", url: "https://rpol.net/game.php?gi=80341&date=1792177427" } },
+    { name: "Nhym Ashcloak", line: function () { return "Whisper gnome · Rogue 5"; },
+      game: { name: "Forgotten Realms", system: "D&D 3.5", url: "https://rpol.net/game.php?gi=80363" } }
   ];
   var PROJECT = "tracker-fe359";
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
