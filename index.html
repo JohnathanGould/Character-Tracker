@@ -72,6 +72,8 @@ h1 { font-family: var(--font-display); font-weight: 400; font-size: 1.9rem; line
 .pet img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line-strong); }
 .game { margin: 0; font-size: 0.84rem; color: var(--muted); }
 .game a { color: var(--moon); text-underline-offset: 2px; }
+.noimg { width: 72px; height: 72px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--line-strong); color: var(--muted); font-family: var(--font-display); font-size: 1.5rem; }
+.soon { margin: 0; color: var(--muted); font-size: 0.82rem; font-style: italic; }
 .live { font-family: var(--font-mono); font-size: 0.74rem; color: var(--muted); min-height: 1.2em; margin: 0; }
 .live b { color: var(--fg); font-weight: 500; }
 .live .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--good); margin-right: 6px; vertical-align: 1px; }
@@ -93,7 +95,7 @@ footer { margin-top: 28px; color: var(--muted); font-size: 0.78rem; }
     <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1.5l1.7 6.1 5.7-2.8-2.8 5.7 6.1 1.7-6.1 1.7 2.8 5.7-5.7-2.8L12 22.5l-1.7-6.1-5.7 2.8 2.8-5.7L1.3 12l6.1-1.7-2.8-5.7 5.7 2.8z"/></svg>
     <div>
       <h1>Character Tracker</h1>
-      <p class="sub">Balthazar's Pathfinder 1e characters. Each one updates live; anyone with the link can watch.</p>
+      <p class="sub">Balthazar's characters, game by game. Each tracker updates live; anyone with the link can watch.</p>
     </div>
   </header>
   <main class="list" id="list" aria-label="Characters"></main>
@@ -107,7 +109,9 @@ footer { margin-top: 28px; color: var(--muted); font-size: 0.78rem; }
     { path: "daerlieth/", doc: "daerlieth", name: "Daerlieth Nightstar", thumb: "daerlieth/images/daerlieth-thumb.webp",
       line: function (L) { return "Moon elf · Eternal Mage " + L + " / Spell-less Ranger " + L + " · Archmage 2"; },
       pet: { name: "Gwathfaron, panther", thumb: "daerlieth/images/gwathfaron-thumb.webp" },
-      game: { name: "Cormanthyr", url: "https://rpol.net/game.php?gi=80510&date=1792113654" } }
+      game: { name: "Cormanthyr", system: "Pathfinder 1e", url: "https://rpol.net/game.php?gi=80510&date=1792113654" } },
+    /* no tracker yet: a card without path, doc or thumb shows the name and a "tracker coming" note */
+    { name: "Courynna Talaudrym", line: function () { return "Details to come"; } }
   ];
   var PROJECT = "tracker-fe359";
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
@@ -116,17 +120,21 @@ footer { margin-top: 28px; color: var(--muted); font-size: 0.78rem; }
     return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " d ago";
   };
   var list = document.getElementById("list");
+  var initials = function (n) { return n.split(/\s+/).map(function (w) { return w.charAt(0); }).join("").slice(0, 2); };
   list.innerHTML = CHARACTERS.map(function (c, i) {
+    var face = c.thumb ? '<img src="' + c.thumb + '" alt="" width="72" height="72">' : '<span class="noimg" aria-hidden="true">' + esc(initials(c.name)) + "</span>";
+    var who = face + '<div><h2>' + esc(c.name) + '</h2><p id="line' + i + '">' + esc(c.line(8)) + "</p></div>";
     return '<article class="card">' +
-      '<a class="who" href="' + c.path + '"><img src="' + c.thumb + '" alt="" width="72" height="72"><div><h2>' + esc(c.name) + '</h2><p id="line' + i + '">' + esc(c.line(8)) + "</p></div></a>" +
-      (c.game ? '<p class="game">Game: <a href="' + esc(c.game.url) + '" target="_blank" rel="noopener">' + esc(c.game.name) + ' on RPoL ↗</a></p>' : "") +
+      (c.path ? '<a class="who" href="' + c.path + '">' + who + "</a>" : '<div class="who">' + who + "</div>") +
+      (c.game ? '<p class="game">' + (c.game.system ? esc(c.game.system) + " game: " : "Game: ") + (c.game.url ? '<a href="' + esc(c.game.url) + '" target="_blank" rel="noopener">' + esc(c.game.name) + ' on RPoL ↗</a>' : esc(c.game.name)) + "</p>" : "") +
       (c.pet ? '<div class="pet"><img src="' + c.pet.thumb + '" alt="" width="28" height="28">' + esc(c.pet.name) + "</div>" : "") +
       '<p class="live" id="live' + i + '"></p>' +
-      '<div class="row"><a class="btn primary" href="' + c.path + '">Open tracker</a><a class="btn" href="' + c.path + '?view">GM view</a></div></article>';
+      (c.path ? '<div class="row"><a class="btn primary" href="' + c.path + '">Open tracker</a><a class="btn" href="' + c.path + '?view">GM view</a></div>' : '<p class="soon">Tracker not built yet.</p>') + "</article>";
   }).join("") + '<div class="card empty"><p>More characters to come. Each gets its own tracker and sheet here.</p></div>';
 
   /* live line from each character's public document: level, hit points, round, last change */
   CHARACTERS.forEach(function (c, i) {
+    if (!c.doc) return;
     fetch("https://firestore.googleapis.com/v1/projects/" + PROJECT + "/databases/(default)/documents/trackers/" + c.doc)
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
