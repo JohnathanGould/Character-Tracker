@@ -182,6 +182,14 @@ pre.txt { white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.74r
 .portrait-full { width: 100%; border-radius: 10px; display: block; }
 textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--fg); white-space: pre; }
 
+/* tabs: Skabs and Greg (like Daerlieth's and Gwathfaron's) */
+.tabs { max-width: 1120px; margin: 8px auto -11px; display: flex; gap: 6px; }
+.tab { min-height: 38px; padding: 0 18px; border: 1px solid var(--line); border-bottom-color: transparent; border-radius: 8px 8px 0 0; background: transparent; color: var(--muted); font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+.tab:hover { color: var(--fg); }
+.tab[aria-selected="true"] { color: var(--moon); background: var(--surface); border-color: var(--line-strong); box-shadow: inset 0 -2px 0 var(--moon); }
+body.view-pet .her, body:not(.view-pet) .pet { display: none !important; }
+.idrow { display: flex; align-items: center; gap: 12px; }
+.idrow .portrait { width: 64px; height: 64px; }
 /* GM view: every editing control hidden */
 .ro .edit, .ro [data-act]:not([data-act="copylog"]):not([data-act="rpol"]):not([data-act="gregrpol"]):not([data-act="ooccopy"]) { display: none !important; }
 </style>
@@ -204,17 +212,22 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
       <button class="btn" id="dayBtn" data-act="newday" title="A night's rest: eats a ration and heals back to full hit points.">Rest</button>
     </div>
   </div>
+  <nav class="tabs" role="tablist" aria-label="View">
+    <button type="button" class="tab" role="tab" data-tab="her" aria-selected="true">Skabs</button>
+    <button type="button" class="tab" role="tab" data-tab="pet" aria-selected="false">Greg</button>
+  </nav>
 </div>
 
 <div class="wrap">
 <main>
-  <section class="panel" id="pCombat"></section>
-  <section class="panel" id="pHp"></section>
-  <section class="panel" id="pGreg"></section>
-  <section class="panel" id="pTorch"></section>
+  <section class="panel her" id="pCombat"></section>
+  <section class="panel her" id="pHp"></section>
+  <section class="panel pet" id="pGreg"></section>
+  <section class="panel pet" id="pGregSheet"></section>
+  <section class="panel her" id="pTorch"></section>
+  <section class="panel her" id="pGear"></section>
   <section class="panel full" id="pTurn"></section>
-  <section class="panel full" id="pGear"></section>
-  <section class="panel full" id="pSheet"></section>
+  <section class="panel full her" id="pSheet"></section>
   <section class="panel full" id="pLog"></section>
 </main>
 </div>
@@ -367,7 +380,7 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
     $("dayBtn").textContent = ui.dayArmed ? "Confirm rest" : "Rest";
     $("dayBtn").classList.toggle("warn", ui.dayArmed);
     renderTorchTop();
-    renderCombat(); renderHp(); renderGreg(); renderTurn(); renderTorch(); renderGear(); renderSheet(); renderLog();
+    renderCombat(); renderHp(); renderGreg(); renderGregSheet(); renderTurn(); renderTorch(); renderGear(); renderSheet(); renderLog();
   }
   function renderTorchTop() { var l = torchLeft(); $("torchTop").textContent = state.torch.on || l ? fmtTime(l) : "—"; }
   function tog(key, label, on, hint) { return '<button type="button" class="btn sm' + (on ? " primary" : "") + '" data-act="cond" data-k="' + key + '" aria-pressed="' + !!on + '" title="' + esc(hint || "") + '">' + label + "</button>"; }
@@ -409,7 +422,7 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
     var g = state.greg, m = !!state.cond.mounted, pct = g.max ? Math.max(0, Math.min(100, Math.round(g.hp / g.max * 100))) : 0;
     var b = function (n) { return '<button class="btn sm" data-act="greg" data-d="' + n + '">' + (n > 0 ? "+" : "−") + Math.abs(n) + "</button>"; };
     var fs = "background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px";
-    $("pGreg").innerHTML = '<div class="ph"><h2>Greg</h2><span class="hint">War pony · mount level ' + GREG.lvl + " (+" + HALF + " from Skabs)</span></div>" +
+    $("pGreg").innerHTML = '<div class="ph"><div class="idrow"><button type="button" class="portrait" data-portrait="greg" aria-label="Show Greg\'s portrait"><img src="images/greg-thumb.webp" alt="" width="64" height="64"></button><div><h2>Greg</h2><span class="hint">War pony · mount level ' + GREG.lvl + " (+" + HALF + " from Skabs)" + (m ? " · Skabs is riding him" : "") + "</span></div></div></div>" +
       '<div class="stats">' +
         '<div class="stat"><span class="lbl">HP</span><b class="num">' + g.hp + "</b><small>of " + g.max + "</small></div>" +
         '<div class="stat"><span class="lbl">AC</span><b class="num">' + (GREG.ac + (m ? HALF : 0)) + "</b><small>" + (m ? "ridden +" + HALF : "unridden") + "</small></div>" +
@@ -488,8 +501,16 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
     h += sec("deeds", "Deeds", '<ul class="plain">' + state.deeds.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" +
       '<div class="row edit"><input type="text" data-ui="deed" maxlength="200" placeholder="A new deed" value="' + esc(ui.deed) + '" style="flex:1;min-width:200px;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px"><button class="btn sm" data-act="deed">Add deed</button></div>' +
       "<h3>Deed awards (XP)</h3><ul class=\"plain\">" + AWARDS.map(function (a) { return "<li>" + esc(a[0]) + ": " + esc(a[1]) + "</li>"; }).join("") + "</ul>");
+    h += sec("bg", "Who he is", '<div id="bgTxt" style="font-size:0.88rem">Loading…</div>');
+    h += '<div class="row" style="margin-top:12px"><button class="btn sm" data-act="rpol">Generate RPoL sheet</button></div>';
+    $("pSheet").innerHTML = h;
+    loadDocs(function () { var b = $("bgTxt"); if (b) b.innerHTML = DOCS.bg ? DOCS.bg.replace(/^# .*\n+/, "").split(/\n\n+/).map(function (p) { return /^## /.test(p) ? "<h3>" + esc(p.slice(3)) + "</h3>" : '<p style="white-space:pre-line">' + esc(p) + "</p>"; }).join("") : "Not loaded."; });
+  }
+  /* Greg's tab: his sheet, like Gwathfaron's on Daerlieth's tracker */
+  function renderGregSheet() {
+    var stat = function (l, v, s) { return '<div class="stat"><span class="lbl">' + l + '</span><b class="num">' + v + "</b>" + (s ? "<small>" + s + "</small>" : "") + "</div>"; };
     var ga = GREG.ab;
-    h += sec("greg", "Greg (war pony)", '<div class="stats">' + ["str", "dex", "con", "int", "wis"].map(function (k) { return stat(k.toUpperCase(), ga[k][0], sg(ga[k][1])); }).join("") + stat("CHA", "—", "animal") + "</div>" +
+    var body = '<div class="stats">' + ["str", "dex", "con", "int", "wis"].map(function (k) { return stat(k.toUpperCase(), ga[k][0], sg(ga[k][1])); }).join("") + stat("CHA", "—", "animal") + "</div>" +
       '<ul class="plain"><li><b>Mount, level ' + GREG.lvl + ".</b> AC " + GREG.ac + " (9 + DEX), " + (GREG.ac + HALF) + " when ridden. HP " + GREG.hp + ". Hooves +" + GREG.atk + " (" + GREG.dmg + "). Bravery +" + GREG.brave + " (his WIS).</li>" +
       "<li><b>Speed.</b> 4 km per hour cruising; 48 km per hour flat out, only for a few minutes.</li>" +
       "<li><b>Gear slots.</b> Up to " + GREG.slots + " slots plus his rider. Each slot over his CON (" + GREG.con + ") takes 1 from CON + DEX (" + GREG.conDex + ") when working out his speed.</li>" +
@@ -497,12 +518,11 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
       "<li><b>Bravery.</b> Whenever he takes damage in combat: a Bravery check against DC 10 + the damage. On a failure he tries to flee; his rider must use an action to keep him or be thrown.</li>" +
       "<li><b>Compact war mount.</b> Can traverse narrow trails and small spaces.</li><li><b>Hardy.</b> Advantage on saves against exhaustion.</li>" +
       "<li><b>Talent (1st).</b> Trained mount: he can be used as a mount. Without this talent, any attack made on an untrained mount is at disadvantage.</li></ul>" +
-      '<p class="hint"><a href="https://shadowdark.fandom.com/wiki/Mounted_Combat" target="_blank" rel="noopener">Mounted combat rules ↗</a></p>');
-    h += sec("bg", "Who he is", '<div id="bgTxt" style="font-size:0.88rem">Loading…</div>');
-    h += '<div class="row" style="margin-top:12px"><button class="btn sm" data-act="rpol">Generate RPoL sheet</button><button class="btn sm" data-act="gregrpol">Greg\'s RPoL sheet</button></div>';
-    $("pSheet").innerHTML = h;
-    loadDocs(function () { var b = $("bgTxt"); if (b) b.innerHTML = DOCS.bg ? DOCS.bg.replace(/^# .*\n+/, "").split(/\n\n+/).map(function (p) { return /^## /.test(p) ? "<h3>" + esc(p.slice(3)) + "</h3>" : '<p style="white-space:pre-line">' + esc(p) + "</p>"; }).join("") : "Not loaded."; });
+      '<p class="hint"><a href="https://shadowdark.fandom.com/wiki/Mounted_Combat" target="_blank" rel="noopener">Mounted combat rules ↗</a></p>';
+    $("pGregSheet").innerHTML = '<div class="ph"><h2>Greg\'s sheet</h2><span class="hint">Mount, level ' + GREG.lvl + "</span></div>" + body +
+      '<div class="row" style="margin-top:12px"><button class="btn sm" data-act="gregrpol">Greg\'s RPoL sheet</button></div>';
   }
+
   function renderLog() {
     $("pLog").innerHTML = '<div class="ph"><h2>Log</h2><div class="row"><button class="btn sm" data-act="copylog">Copy log</button>' +
       '<button class="btn sm' + (ui.clearArmed ? " warn" : "") + '" data-act="clearlog">' + (ui.clearArmed ? "Tap again to clear" : "Clear log") + "</button></div></div>" +
@@ -536,6 +556,16 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
     return t.replace(/(<Red>\n)/, "$1Current: HP " + state.hp + "/" + HP_MAX + ", AC " + D.ac + (D.mounted ? " mounted" : "") + ". " + now + (state.cond.broken ? "Oath broken. " : "") + "Torches " + state.stock.torches + ", rations " + state.stock.rations + ".\n");
   }
 
+  /* ---------- tabs: Skabs or Greg; remembered on this device, #greg opens Greg's ---------- */
+  var VIEW_KEY = KEY + ":view";
+  function setView(v, keep) {
+    v = v === "pet" ? "pet" : "her";
+    document.body.classList.toggle("view-pet", v === "pet");
+    document.querySelectorAll("[data-tab]").forEach(function (t) { t.setAttribute("aria-selected", String(t.getAttribute("data-tab") === v)); });
+    if (!keep) { try { localStorage.setItem(VIEW_KEY, v); } catch (e) {} history.replaceState(null, "", location.pathname + location.search + (v === "pet" ? "#greg" : "")); }
+  }
+  (function () { var v = /#greg\b/.test(location.hash) ? "pet" : null; if (!v) { try { v = localStorage.getItem(VIEW_KEY); } catch (e) {} } setView(v, true); })();
+
   /* ---------- events ---------- */
   function openInfo(title, html, wide) { $("helpTitle").textContent = title; $("helpBody").innerHTML = html; $("helpForm").classList.toggle("wide", !!wide); $("helpSheet").hidden = false; }
   function closeHelp() { $("helpSheet").hidden = true; }
@@ -547,7 +577,9 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, function () {}); else done();
   };
   document.addEventListener("click", function (e) {
-    if (e.target.closest && e.target.closest("[data-portrait]")) { openInfo("Skabs", '<img class="portrait-full" src="images/skabs.webp" alt="Skabs, a goblin in plate armor with a masked helm, a torch and a longsword, with his war pony Greg in a ruined cavern" width="1408" height="768">', true); return; }
+    var tb = e.target.closest && e.target.closest("[data-tab]");
+    if (tb) { setView(tb.getAttribute("data-tab")); return; }
+    if (e.target.closest && e.target.closest("[data-portrait]")) { openInfo(e.target.closest("[data-portrait]").getAttribute("data-portrait") === "greg" ? "Greg and Skabs" : "Skabs", '<img class="portrait-full" src="images/skabs.webp" alt="Skabs, a goblin in plate armor with a masked helm, a torch and a longsword, with his war pony Greg in a ruined cavern" width="1408" height="768">', true); return; }
     if (e.target.closest && e.target.closest("[data-goturn]")) { var pt = $("pTurn"), tp = document.querySelector(".top"); window.scrollTo({ top: pt.getBoundingClientRect().top + window.scrollY - (tp ? tp.offsetHeight : 0) - 8, behavior: "smooth" }); return; }
     var t = e.target.closest && e.target.closest("[data-act]");
     if (!t) return;
