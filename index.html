@@ -116,7 +116,10 @@ footer { margin-top: 28px; color: var(--muted); font-size: 0.78rem; }
       game: { name: "Emerging", system: "D&D 3.5", url: "https://rpol.net/game.php?gi=80341&date=1792177427" } },
     { path: "nhym/", doc: "nhym", name: "Nhym Ashcloak", thumb: "nhym/images/nhym-thumb.webp",
       line: function () { return "Whisper gnome · Rogue 5 · Shadowdale"; }, live: function (s) { var n = 4 - Object.keys(s.sla || {}).length; return " · spell-like <b>" + n + "</b>/4"; },
-      game: { name: "Forgotten Realms 3.5", system: "D&D 3.5", url: "https://rpol.net/game.php?gi=80363" } }
+      game: { name: "Forgotten Realms 3.5", system: "D&D 3.5", url: "https://rpol.net/game.php?gi=80363" } },
+    { path: "skabs/", doc: "skabs", name: "Skabs", thumb: "skabs/images/skabs-thumb.webp",
+      line: function () { return "Goblin · Paladin 4 · with Greg, his war pony"; }, live: function (s) { return " · luck <b>" + (s.luck || 0) + "</b>" + (s.torch && s.torch.on ? " · torch lit" : ""); },
+      game: { name: "The Alright Company", system: "Shadowdark" } }
   ];
   var PROJECT = "tracker-fe359";
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };

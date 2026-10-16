@@ -1,0 +1,119 @@
+<table width=1000>
+<tr><td> <large><Goldenrod><b><center>CHARACTER INFORMATION</center></b></Goldenrod></large></td></tr>
+<tr><td><tt>
+Name       : Skabs        Class : Paladin            Level : 4          Deity  : Saint Terragnis
+Ancestry   : Goblin       Title : Defender           XP    : 5 / 40     Align  : Lawful
+HP         : 20/20
+AC         : 17/19 when mounted - Adamantine layer absorbs 3 points of physical damage from all attacks
+</tt></td></tr></table>
+<center>Paladin Class Information: https://www.enworld.org/attachments/paladin_draft-png.401128/</center>
+
+<table width=1000>
+<tr><td> <large><Goldenrod><b>STATS</b></Goldenrod></large> </td><td> <large><Goldenrod><b>TALENTS</b></Goldenrod></large> </td></tr>
+<tr><td><tt>
+[dice=1d20+3 text="STRENGTH" memo="STRENGTH Check"]      16 (+3) | [dice=2d20+3 dok=dl drop=1 record=yes text="ADV" memo="STRENGTH Check - ADV"] | [dice=2d20+3 dok=dh drop=1 record=yes text="DIS" memo="STRENGTH Check - DIS"]
+[dice=1d20+0 text="DEXTERITY" memo="DEXTERITY Check"]     11 (+0) | [dice=2d20+0 dok=dl drop=1 record=yes text="ADV" memo="DEXTERITY Check - ADV"] | [dice=2d20+0 dok=dh drop=1 record=yes text="DIS" memo="DEXTERITY Check - DIS"]
+[dice=1d20+0 text="CONSTITUTION" memo="CONSTITUTION Check"]  10 (+0) | [dice=2d20+0 dok=dl drop=1 record=yes text="ADV" memo="CONSTITUTION Check - ADV"] | [dice=2d20+0 dok=dh drop=1 record=yes text="DIS" memo="CONSTITUTION Check - DIS"]
+[dice=1d20+0 text="INTELLIGENCE" memo="INTELLIGENCE Check"]  10 (+0) | [dice=2d20+0 dok=dl drop=1 record=yes text="ADV" memo="INTELLIGENCE Check - ADV"] | [dice=2d20+0 dok=dh drop=1 record=yes text="DIS" memo="INTELLIGENCE Check - DIS"]
+[dice=1d20-2 text="WISDOM" memo="WISDOM Check"]         7 (-2) | [dice=2d20-2 dok=dl drop=1 record=yes text="ADV" memo="WISDOM Check - ADV"] | [dice=2d20-2 dok=dh drop=1 record=yes text="DIS" memo="WISDOM - DIS"]
+[dice=1d20+0 text="CHARISMA" memo="CHARISMA Check"]      11 (+0) | [dice=2d20+0 dok=dl drop=1 record=yes text="ADV" memo="CHARISMA Check - ADV"] | [dice=2d20+0 dok=dh drop=1 record=yes text="DIS" memo="CHARISMA Check - DIS"]
+</tt></td>
+<td><tt>
+ <b>Paladin L1 :</b> +2 to CON score
+ <b>Paladin L2 :</b> Increase Inspiring Presence dying roll range by 1
+ <b>Ancestry   :</b> Keen Senses (You can't be surprised.)
+ <b>Languages  :</b> Common, Goblin
+ <b>Background :</b> Drifter – You have walked many long and lonely roads.
+</tt></td></tr>
+<tr><td colspan=2><tt>
+ <b>LUCK TOKEN</b> - re-roll any roll, second roll must be used: 0
+<Red>
+</Red></tt></td></tr>
+</table>
+
+<table width=1000>
+<tr><td> <large><Goldenrod><b>COMBAT</b></Goldenrod></large></td></tr>
+<tr><td><tt>
+Attack on foot                         : [dice=1d20+4 text="Longsword (Runthar) +1" memo="Longsword attack"]
+Attacking from mounted vs. non-mounted : [dice=1d20+6 text="Longsword (Runthar) +1" memo="Longsword attack while mounted vs on foot"]
+Damage                                 : [dice=1d8+1 text="1d8+1" memo="Longsword damage"]
+Range                                  : Melee/Close
+</tt></td></tr>
+</table>
+
+<table HEIGHT=30 WIDTH=220><tr><th><b><Goldenrod>Paladin Features</Goldenrod></b></th></tr></table>
+|!2 <Goldenrod><b>Core Features</b></Goldenrod> |
+|<Goldenrod><b>Feature</b></Goldenrod> | <Goldenrod><b>Effect</b></Goldenrod> |
+|!< <b>Chivalric Code</b> |< Act with integrity, humility, and chivalry; give honor and mercy to the deserving; if the oath is broken, Inspiring Presence and Named Blade are lost until a holy quest or great challenge restores them
+|!< <b>[dice=1d20 text="Inspiring Presence" memo="Inspiring Presence Check 17-20"]</b> |< Allies near you rise from dying on 17–20 and regain HP equal to CHA bonus (minimum +1)
+|!< <b>Mount (Greg)</b> |< Warhorse comes when called; only one mount at a time; mount gains additional levels equal to half your level;  replacement mount requires DC 15 CHA check, easier with repeated attempts
+|!< <b>Named Blade</b> |< Gain a +0 magic sword at level 1; becomes +1 at 3rd, +2 at 5th, +3 at 9th; replacement requires holy quest or great challenge
+|!< <b>Mounted Combat</b> |< +2 to attack foes on foot while mounted
+|!< |< enemies on foot take -4 to attack you while mounted
+|!< |< EXTRA MOVEMENT - If a rider's mount is not directly attacked on a turn, the rider character can use it to move on their turn. A mount can move a number of hexes equal to its (Con+Dex)/5 in a single turn = (7+17=24/5 = 4 hexes)
+|!< |< MOUNTED AC - While riding your mount, you both get a bonus to AC equal to half your level (round down).
+|!< |< Your mount has additional levels equal to half your level (round down).
+|!< |< You can freely leap on or off your mount once per round.
+
+<table HEIGHT=30 WIDTH=220><tr><th><b><Goldenrod>Current Combat Loadout</Goldenrod></b></th></tr></table>
+|!!<Goldenrod><b>Field</b></Goldenrod> | <Goldenrod><b>Current</b></Goldenrod>
+|!< <b>Weapon</b> |< +1 Longsword (Runthar)
+|!< <b>Armor</b>  |< +2 Mithril Plate Mail (Armor of the Invincible King)
+|!< <b>Item in Use</b> |<
+
+<table HEIGHT=30 WIDTH=220><tr><th><b><Goldenrod>Wealth</Goldenrod></b></th></tr></table>
+|!!<Goldenrod><b>Coin</b></Goldenrod> | <Goldenrod><b>Amount</b></Goldenrod>
+|!< <b>Gold</b>   |^ 0
+|!< <b>Copper</b> |^ 9
+
+<table HEIGHT=30 WIDTH=220><tr><th><b><Goldenrod>Inventory</Goldenrod></b></th></tr></table>
+|!!<Goldenrod><b>Slot</b></Goldenrod> | <Goldenrod><b>Item</b></Goldenrod>
+|!< 1  | Armor (2 Slots)
+|!< 2  | Armor (2 Slots)
+|!< 3  | Sword
+|!< 4  | Rations x2
+|!< 5  | Rations x3
+|!< 6  | 1 waterskin
+|!< 7  | Rope 60'
+|!< 8  | Grapple Hook
+|!< 9  | Flint and Steel
+|!< 10 | 1 bedroll
+|!< 11 | 10 iron spikes
+|!< 12 | Torch
+|!< 13 | Torch
+|!< 14 | Torch
+|!< 15 |
+|!< 16 |
+
+<table HEIGHT=30 WIDTH=220><tr><th><b><Goldenrod>Free to Carry</Goldenrod></b></th></tr></table>
+|!!<Goldenrod><b>Item</b></Goldenrod> |
+|!< Backpack
+|!< Cold Weather Cloak
+
+<table HEIGHT=30 WIDTH=220><tr><th><b><Goldenrod>Deeds</Goldenrod></b></th></tr></table>
+<pre>- Grappled a Vampire so it could be staked
+- Dragged another Vampire out of a crypt to be destroyed by the sun
+- Fed 3 street urchins his only food, then set out to find them a place to live and someone to care for them
+- Killed a Stingerbat that attacked the driver of the carriage
+- Party killed Jabberwocky (Damage by Skabs = 7 hp)
+- Negotiated employment and a rent free Base of Operations for the Almighty Company
+- Unintentionally fixed an aqueduct by waking a giant that fell into a mote and plugged a hole to the caverns below
+- Fought 2 werewolves (Damage by Skabs = 8 hp; one killed, the other fled)
+- Fought 4 giant spiders, burned webs with a torch, and saved 3 cocooned people
+- Risked his life to save 4/6 members of the Alright Company in a mudslide
+  Paul died. Skabs, Dazooc, and Benjamin were separated from the party
+- Fought 2 Driders.  he was seriously injured and paralyzed for a round. does 12 damage to Driders
+</pre>
+
+<table HEIGHT=30 WIDTH=220><tr><th><b><Goldenrod>Deed Awards</Goldenrod></b></th></tr></table>
+|!!<Goldenrod><b>Award</b></Goldenrod> | <Goldenrod><b>Value</b></Goldenrod>
+|!< Gauntlet             |^ +3
+|!< Carousing            |^ +5
+|!< Feeding the kids     |^ +1
+|!< Killing Jabberwocky  |^ +2 [Level 2] 1/20 to 3rd
+|!< Obtaining base       |^ +2
+|!< Fixed aqueduct       |^ +3
+|!< Battle vs Werewolves |^ +3
+|!< Battle vs Spiders    |^ +6
+|!< Battle with Drow     |^ +39 [Level 3 and 4] 4/40 to 5th
+|!< Traded 2nd Gauntlet for mechanical limbs |^ +1

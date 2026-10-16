@@ -1,8 +1,8 @@
 /* Service worker for the character list at the site root. It replaces the one that used to serve Daerlieth's
    tracker from here: each character folder registers its own worker (daerlieth/sw.js) for its pages, and this one
    only caches the list page so it opens offline. Bump VERSION when the list page changes. */
-var VERSION = "characters-v11";
-var SHELL = ["./", "index.html", "manifest.webmanifest", "daerlieth/icons/icon.svg", "daerlieth/images/daerlieth-thumb.webp", "daerlieth/images/gwathfaron-thumb.webp", "courynna/images/courynna-thumb.webp", "nhym/images/nhym-thumb.webp"];
+var VERSION = "characters-v12";
+var SHELL = ["./", "index.html", "manifest.webmanifest", "daerlieth/icons/icon.svg", "daerlieth/images/daerlieth-thumb.webp", "daerlieth/images/gwathfaron-thumb.webp", "courynna/images/courynna-thumb.webp", "nhym/images/nhym-thumb.webp", "skabs/images/skabs-thumb.webp"];
 var ROOT = new URL("./", self.location).pathname;
 
 self.addEventListener("install", function (e) {

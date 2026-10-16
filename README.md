@@ -6,6 +6,8 @@ Courynna Talaudrym (D&D 3.5 Factotum): https://johnathangould.github.io/Characte
 
 Nhym Ashcloak (D&D 3.5 whisper gnome rogue): https://johnathangould.github.io/Character-Tracker/nhym/ (GM view: add `?view`).
 
+Skabs (Shadowdark goblin paladin): https://johnathangould.github.io/Character-Tracker/skabs/ (GM view: add `?view`).
+
 ## Daerlieth Nightstar
 
 Burnout, overdrive, mythic power and concentration tracker for a Pathfinder 1e gestalt character (Eternal Mage 8 // Spell-less Ranger 8, Archmage tier 2). Rules live in `CLAUDE.md`.
