@@ -259,6 +259,7 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
   </form>
 </div>
 
+<datalist id="spl35"></datalist>
 <script src="config.js"></script>
 <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-auth-compat.js"></script>
@@ -511,29 +512,80 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
       (state.kd ? " Knowledge Devotion +" + state.kd + "." : "");
   }
 
+  /* ---------- the D&D 3.5 sorcerer/wizard spell library (data/spells35.json, from the SRD; tools/make-spells35.py) ---------- */
+  var LIB = null, LIB_IX = {}, libWait = null;
+  function loadLib() {
+    if (!libWait) libWait = fetch("data/spells35.json").then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) {
+      LIB = j.spells; LIB.forEach(function (x) { LIB_IX[x.n.toLowerCase()] = x; });
+      var dl = $("spl35"); if (dl) dl.innerHTML = LIB.filter(function (x) { return x.l <= MAX_SPELL; }).map(function (x) {
+        return '<option value="' + esc(x.n) + '">Level ' + x.l + " · " + esc(x.s) + " · " + esc(x.sum) + "</option>"; }).join("");
+      render();
+    }).catch(function () { libWait = null; });
+    return libWait;
+  }
+  /* spell names as typed: exact, or "greater invisibility" for the SRD's "Invisibility, Greater" */
+  function libFind(n) {
+    if (!LIB || !n) return null;
+    var k = String(n).trim().toLowerCase();
+    if (LIB_IX[k]) return LIB_IX[k];
+    var m = /^(greater|lesser|mass) (.+)$/.exec(k);
+    return m && LIB_IX[m[2] + ", " + m[1]] || null;
+  }
+  function spellLine(x) { return [x.ct, x.r && "range " + x.r, x.d && "duration " + x.d, x.sv && x.sv !== "None" ? "save " + x.sv : ""].filter(Boolean).join(" · "); }
+  function spellCard(x) {
+    var row = function (k, v) { return v ? "<tr><th>" + k + "</th><td>" + esc(v) + "</td></tr>" : ""; };
+    return '<p class="hint">' + esc(x.s) + (x.f ? " · " + esc({ M: "costly material component", F: "costly focus", X: "XP cost" }[x.f] || x.f.split("").join(", ")) : "") + "</p>" +
+      '<div class="tscroll"><table class="t">' + row("Level", x.lv) + row("Components", x.c) + row("Casting time", x.ct) + row("Range", x.r) + row("Target / area / effect", x.a) +
+      row("Duration", x.d) + row("Saving throw", x.sv) + row("Spell resistance", x.sr) + "</table></div>" +
+      (x.b ? '<p class="hint" style="margin-top:6px">Builds on ' + esc(x.b) + "; lines it doesn't change come from that spell.</p>" : "") +
+      '<div style="font-size:0.88rem;margin-top:8px">' + x.t.split(/\n\n+/).map(function (p) { return "<p style=\"margin:0 0 8px;white-space:pre-line\">" + esc(p) + "</p>"; }).join("") + "</div>" +
+      '<p class="hint">System Reference Document 3.5 (Open Game License). <a href="' + esc(x.u) + '" target="_blank" rel="noopener">Open on d20srd.org ↗</a></p>' +
+      (LEVEL && x.l <= MAX_SPELL ? '<p class="hint">As Arcane Dilettante: caster level ' + LEVEL + ", save DC " + DC(x.l) + ".</p>" : "");
+  }
+  function showSpell(n) {
+    var go = function () { var x = libFind(n); openInfo(x ? x.n : n, x ? spellCard(x) : '<p class="hint">' + (LIB ? "This spell is not in the SRD sorcerer/wizard list." : "Spell text could not be loaded. It needs a connection the first time.") + "</p>", true); };
+    if (LIB) go(); else { openInfo(n, '<p class="hint">Loading spell text…</p>'); loadLib().then(go, go); }
+  }
+  /* what is wrong with a prepared pick, if anything */
+  function prepProblem(p) {
+    var x = libFind(p.n);
+    if (!LIB) return "";
+    if (!x) return "Not in the SRD sorcerer/wizard list (check the name, or ask the GM).";
+    if (x.l > MAX_SPELL) return x.n + " is level " + x.l + "; Arcane Dilettante reaches level " + MAX_SPELL + " at Factotum " + LEVEL + ".";
+    if (/X/.test(x.f || "")) return x.n + " has an XP cost, which Arcane Dilettante can't use.";
+    return "";
+  }
+
   function renderSpells() {
     var prep = state.prepared, maxCount = prep.filter(function (p) { return p.l === MAX_SPELL; }).length;
+    if (!LIB) loadLib();
+    var fs = 'style="background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px"';
     $("pSpells").innerHTML = '<div class="ph"><h2>Arcane Dilettante</h2><span class="hint">Caster level ' + LEVEL + " · spell-like abilities</span></div>" +
-      '<p class="hint">Prepared today. 1 inspiration casts one; each works once until 8 hours of rest.</p>' +
+      '<p class="hint">Prepared today. 1 inspiration casts one; each works once until 8 hours of rest. Tap a name for its text.</p>' +
       '<div class="tscroll"><table class="t"><tr><th>Spell</th><th class="n">Level</th><th class="n">DC</th><th></th></tr>' +
       prep.map(function (p, i) {
-        var used = !!state.adUsed[i];
-        return "<tr><td>" + esc(p.n) + (used ? ' <span class="chip used">used</span>' : "") + '</td><td class="n">' + p.l + '</td><td class="n">' + DC(p.l) + "</td>" +
+        var used = !!state.adUsed[i], x = libFind(p.n);
+        return '<tr><td><a href="#" data-spell="' + esc(p.n) + '">' + esc(x ? x.n : p.n) + "</a>" + (used ? ' <span class="chip used">used</span>' : "") +
+          (x ? '<br><span class="hint">' + esc(spellLine(x)) + "</span>" : "") + '</td><td class="n">' + p.l + '</td><td class="n">' + DC(p.l) + "</td>" +
           '<td><button class="btn sm gold" data-act="cast" data-i="' + i + '"' + (used || state.ip < 1 ? " disabled" : "") + ">Cast</button></td></tr>";
       }).join("") + "</table></div>" +
-      '<details class="sec edit"><summary>Change prepared spells</summary>' +
-        '<p class="hint">Sorcerer/wizard spells up to ' + MAX_SPELL + "nd level, only one of " + MAX_SPELL + "nd. Changing them is for the start of the day.</p>" +
+      '<details class="sec edit" data-sec="prep"' + (ui.prepOpen ? " open" : "") + '><summary>Change prepared spells</summary>' +
+        '<p class="hint">Sorcerer/wizard spells up to ' + MAX_SPELL + "nd level, only one of " + MAX_SPELL + "nd, none with an XP cost. Type to search the SRD list; the level fills in. Changing them is for the start of the day.</p>" +
         prep.map(function (p, i) {
-          return '<div class="row" style="margin-top:6px"><input type="text" data-prep="' + i + '" value="' + esc(p.n) + '" maxlength="40" style="flex:1;min-width:150px;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px">' +
-            '<select data-prepl="' + i + '" style="background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px">' + [0, 1, 2].map(function (l) { return '<option value="' + l + '"' + (p.l === l ? " selected" : "") + ">Level " + l + "</option>"; }).join("") + "</select></div>";
+          var pr = prepProblem(p);
+          return '<div class="row" style="margin-top:6px"><input type="text" list="spl35" data-prep="' + i + '" value="' + esc(p.n) + '" maxlength="60" placeholder="Spell name" style="flex:1;min-width:150px;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px">' +
+            '<select data-prepl="' + i + '" ' + fs + ">" + [0, 1, 2].map(function (l) { return '<option value="' + l + '"' + (p.l === l ? " selected" : "") + ">Level " + l + "</option>"; }).join("") + "</select>" +
+            '<button type="button" class="btn sm" data-act="prepdel" data-i="' + i + '" aria-label="Remove">×</button></div>' +
+            (pr ? '<p class="warn-text">' + esc(pr) + "</p>" : "");
         }).join("") +
+        '<div class="row" style="margin-top:8px"><button type="button" class="btn sm" data-act="prepadd">Add a spell</button></div>' +
         (maxCount > 1 ? '<p class="warn-text">Only one spell of ' + MAX_SPELL + "nd level may be prepared.</p>" : "") +
       "</details>";
   }
 
   function renderStock() {
     var row = function (k, label, n, note) {
-      return "<span>" + esc(label) + (note ? ' <span class="hint">' + esc(note) + "</span>" : "") + '</span><span class="q"><b>' + n + "</b>" +
+      return "<span>" + (/^scroll:/.test(k) ? '<a href="#" data-spell="' + esc(label) + '">' + esc(label) + "</a>" : esc(label)) + (note ? ' <span class="hint">' + esc(note) + "</span>" : "") + '</span><span class="q"><b>' + n + "</b>" +
         '<button class="btn sm edit" data-act="use" data-k="' + k + '"' + (n < 1 ? " disabled" : "") + '>Use</button><button class="btn sm edit" data-act="add" data-k="' + k + '">+</button></span>';
     };
     var umd = skillTotal(SKILLS.filter(function (s) { return s[0] === "Use Magic Device"; })[0]);
@@ -635,9 +687,24 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
   document.addEventListener("click", function (e) {
     if (e.target.closest && e.target.closest("[data-portrait]")) { openInfo("Courynna Talaudrym", '<img class="portrait-full" src="images/courynna.webp" alt="Courynna, a red-haired woman in a mithral shirt and navy cloak, holding a book and a rapier" width="1024" height="1536">'); return; }
     if (e.target.closest && e.target.closest("[data-goturn]")) { var pt = $("pTurn"), tp = document.querySelector(".top"); window.scrollTo({ top: pt.getBoundingClientRect().top + window.scrollY - (tp ? tp.offsetHeight : 0) - 8, behavior: "smooth" }); return; }
+    var sl = e.target.closest && e.target.closest("[data-spell]");
+    if (sl) { e.preventDefault(); showSpell(sl.getAttribute("data-spell")); return; }
     var t = e.target.closest && e.target.closest("[data-act]");
     if (!t) return;
     var a = t.getAttribute("data-act");
+    if (a === "prepadd" || a === "prepdel") {
+      if (readOnly) return;
+      ui.prepOpen = true;
+      var di = +t.getAttribute("data-i");
+      mutate(function (s) {
+        if (a === "prepadd") { s.prepared.push({ n: "", l: 1 }); return; }
+        var gone = s.prepared.splice(di, 1)[0], used = {};
+        Object.keys(s.adUsed).forEach(function (k) { k = +k; if (k < di) used[k] = true; else if (k > di) used[k - 1] = true; });
+        s.adUsed = used;
+        if (gone && gone.n) log("Removed prepared spell " + gone.n);
+      });
+      return;
+    }
     if (a === "copylog") { copy(state.log.slice().reverse().map(function (x) { return "R" + x.r + "  " + x.t; }).join("\n"), t); return; }
     if (a === "ooccopy") { copy(oocText(), t); return; }
     if (a === "rpol") {
@@ -717,6 +784,7 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
       ui.clearArmed = false; mutate(function (s) { s.log = []; });
     }
   });
+  document.addEventListener("toggle", function (e) { if (e.target.getAttribute && e.target.getAttribute("data-sec") === "prep") ui.prepOpen = e.target.open; }, true);
   document.addEventListener("input", function (e) {
     var u = e.target.getAttribute && e.target.getAttribute("data-ui");
     if (u === "def" || u === "custom") ui[u] = e.target.value;
@@ -727,8 +795,12 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
     if (u === "def" || u === "custom") { ui[u] = t.value; return; } /* text boxes: no redraw, or the button tapped next would be replaced under the tap */
     if (u) { ui[u] = t.value; render(); return; }
     if (readOnly) return;
-    if (t.hasAttribute("data-prep")) { var i = +t.getAttribute("data-prep"), nm = t.value.trim().slice(0, 40); mutate(function (s) { if (nm) { log("Prepared spell " + (i + 1) + ": " + s.prepared[i].n + " → " + nm); s.prepared[i].n = nm; } }); }
-    if (t.hasAttribute("data-prepl")) { var j = +t.getAttribute("data-prepl"), l = +t.value; mutate(function (s) { s.prepared[j].l = l; }); }
+    if (t.hasAttribute("data-prep")) {
+      var i = +t.getAttribute("data-prep"), nm = t.value.trim().slice(0, 60), x = libFind(nm);
+      ui.prepOpen = true;
+      mutate(function (s) { if (!nm) return; if (x) nm = x.n; log("Prepared spell " + (i + 1) + ": " + s.prepared[i].n + " → " + nm); s.prepared[i].n = nm; if (x && x.l <= MAX_SPELL) s.prepared[i].l = x.l; delete s.adUsed[i]; });
+    }
+    if (t.hasAttribute("data-prepl")) { var j = +t.getAttribute("data-prepl"), l = +t.value; ui.prepOpen = true; mutate(function (s) { s.prepared[j].l = l; }); }
   });
 
   /* ---------- storage (as in Daerlieth's tracker: Firestore document trackers/courynna, public read, owner writes) ---------- */
