@@ -1,4 +1,8 @@
-# Daerlieth Nightstar tracker
+# Character Tracker
+
+Live site: https://johnathangould.github.io/Character-Tracker/ (Daerlieth: https://johnathangould.github.io/Character-Tracker/daerlieth/, GM view: add `?view`).
+
+## Daerlieth Nightstar
 
 Burnout, overdrive, mythic power and concentration tracker for a Pathfinder 1e gestalt character (Eternal Mage 8 / Spell-less Ranger 8, Archmage tier 2). Rules live in `CLAUDE.md`.
 
