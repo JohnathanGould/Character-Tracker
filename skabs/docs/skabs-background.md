@@ -8,7 +8,7 @@ His face is blunt and unrefined. Crooked teeth. A jaw that sets hard when things
 
 He does not hesitate in those moments.
 
-He wears worn leather armor and carries a longsword—Rûnthar—with a reverence that is simple and absolute. The blade is not polished out of discipline, but out of belief. It is the one thing he knows he was given for a reason.
+He wears the Armor of the Invincible King, +2 mithril plate mail, and carries a longsword—Rûnthar—with a reverence that is simple and absolute. The blade is not polished out of discipline, but out of belief. It is the one thing he knows he was given for a reason.
 
 Because Skabs was not trained.
 

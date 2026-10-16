@@ -297,7 +297,7 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
     ["Mount (Greg)", "His war pony comes when called; one mount at a time; Greg gains levels equal to half his level (+" + HALF + "). A replacement needs a DC 15 CHA check, easier with repeated attempts."],
     ["Named Blade (Rûnthar)", "A +0 magic sword at 1st level; +1 at 3rd, +2 at 5th, +3 at 9th. A replacement needs a holy quest or great challenge."],
     ["Mounted combat", "While mounted: +2 to attack foes on foot; foes on foot take −4 to attack him; he and Greg both get +" + HALF + " AC; if Greg isn't attacked on a turn, Skabs can use him to move (4 hexes). He can leap on or off once per round."],
-    ["Adamantine layer", "His armor absorbs " + ABSORB + " points of physical damage from every attack."],
+    ["Armor of the Invincible King", "+2 mithril plate mail with an adamantine layer that absorbs " + ABSORB + " points of physical damage from every attack. AC " + AC_BASE + ", " + (AC_BASE + HALF) + " mounted. Takes 2 gear slots."],
     ["Keen Senses (goblin)", "He can't be surprised."],
     ["Talents", "Paladin 1: +2 to CON. Paladin 2: Inspiring Presence range +1."],
     ["Background: Drifter", "He has walked many long and lonely roads."]
@@ -373,7 +373,7 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
   function tog(key, label, on, hint) { return '<button type="button" class="btn sm' + (on ? " primary" : "") + '" data-act="cond" data-k="' + key + '" aria-pressed="' + !!on + '" title="' + esc(hint || "") + '">' + label + "</button>"; }
   function renderCombat() {
     var D = d(), c = state.cond;
-    $("pCombat").innerHTML = '<div class="ph"><h2>Combat</h2><span class="hint">Rûnthar, +2 mithril plate</span></div>' +
+    $("pCombat").innerHTML = '<div class="ph"><h2>Combat</h2><span class="hint">+1 longsword Rûnthar · +2 mithril plate mail (Armor of the Invincible King)</span></div>' +
       '<div class="stats">' +
         '<div class="stat"><span class="lbl">AC</span><b class="num">' + D.ac + "</b><small>" + (D.mounted ? "mounted +" + HALF : "on foot") + "</small></div>" +
         '<div class="stat"><span class="lbl">Attack</span><b class="num">' + sg(D.atk) + "</b><small>longsword</small></div>" +

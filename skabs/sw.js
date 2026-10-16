@@ -1,5 +1,5 @@
 /* App shell cache so Skabs's tracker opens offline. Bump VERSION when shipping changes. */
-var VERSION = "skabs-v2";
+var VERSION = "skabs-v3";
 var SHELL = ["./", "index.html", "config.js", "docs/skabs-sheet.txt", "docs/skabs-background.md", "docs/greg-sheet.txt", "vendor/firebase-app-compat.js", "vendor/firebase-auth-compat.js", "vendor/firebase-firestore-compat.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "images/skabs-thumb.webp", "images/skabs.webp"];
 
 self.addEventListener("install", function (e) {
