@@ -183,7 +183,7 @@ pre.txt { white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.74r
 textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--fg); white-space: pre; }
 
 /* GM view: every editing control hidden */
-.ro .edit, .ro [data-act]:not([data-act="copylog"]):not([data-act="rpol"]):not([data-act="ooccopy"]) { display: none !important; }
+.ro .edit, .ro [data-act]:not([data-act="copylog"]):not([data-act="rpol"]):not([data-act="gregrpol"]):not([data-act="ooccopy"]) { display: none !important; }
 </style>
 </head>
 <body>
@@ -210,9 +210,10 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
 <main>
   <section class="panel" id="pCombat"></section>
   <section class="panel" id="pHp"></section>
-  <section class="panel full" id="pTurn"></section>
+  <section class="panel" id="pGreg"></section>
   <section class="panel" id="pTorch"></section>
-  <section class="panel" id="pGear"></section>
+  <section class="panel full" id="pTurn"></section>
+  <section class="panel full" id="pGear"></section>
   <section class="panel full" id="pSheet"></section>
   <section class="panel full" id="pLog"></section>
 </main>
@@ -276,6 +277,9 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
   var BLADE = 1; /* Named Blade (Rûnthar): +1 from 3rd level, +2 at 5th */
   var HALF = Math.floor(LEVEL / 2); /* mounted AC bonus and Greg's extra levels */
   var IP_LOW = 16; /* Inspiring Presence: 17–20, widened by 1 with his 2nd-level talent */
+  /* Greg, war pony (Shadowdark mount, level 2), from his sheet */
+  var GREG = { lvl: 2, hp: 8, ac: 12, atk: 3, dmg: "1d6", brave: 2, con: 7, conDex: 24, slots: 24,
+    ab: { str: [17, 3], dex: [17, 3], con: [7, -3], int: [6, -3], wis: [15, 2] } };
   var STOCK = [["torches", "Torches", 3, "1 hour each, real time"], ["rations", "Rations", 5, "1 a day; a rest eats one"], ["spikes", "Iron spikes", 10, ""]];
   var START_SLOTS = ["Armor (2 slots)", "Armor (2 slots)", "Sword", "Rations x2", "Rations x3", "1 waterskin", "Rope 60'", "Grapple hook", "Flint and steel", "1 bedroll", "10 iron spikes", "Torch", "Torch", "Torch", "", ""];
   var START_DEEDS = ["Grappled a Vampire so it could be staked", "Dragged another Vampire out of a crypt to be destroyed by the sun",
@@ -303,7 +307,7 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
   var KEY = "skabs-tracker-v1", UNDO_MAX = 20, LOG_MAX = 500;
   function fresh() {
     var st = {}; STOCK.forEach(function (x) { st[x[0]] = x[2]; });
-    return { v: 1, round: 1, hp: HP_MAX, dying: 0, luck: 0, xp: 5, gold: 0, copper: 9, greg: { hp: 0, max: 0 },
+    return { v: 1, round: 1, hp: HP_MAX, dying: 0, luck: 0, xp: 5, gold: 0, copper: 9, greg: { hp: GREG.hp, max: GREG.hp, load: 0 },
       torch: { on: false, end: 0, left: 0 }, stock: st, slots: START_SLOTS.slice(), deeds: START_DEEDS.slice(), cond: {}, turn: [], prevOoc: "", undo: [], log: [] };
   }
   function normalize(s) {
@@ -312,6 +316,8 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
     Object.keys(f).forEach(function (k) { if (s[k] == null || typeof s[k] !== typeof f[k] || Array.isArray(f[k]) !== Array.isArray(s[k])) s[k] = f[k]; });
     STOCK.forEach(function (x) { if (typeof s.stock[x[0]] !== "number") s.stock[x[0]] = x[2]; });
     while (s.slots.length < SLOTS) s.slots.push("");
+    if (!s.greg.max) { s.greg.max = GREG.hp; s.greg.hp = GREG.hp; }
+    if (typeof s.greg.load !== "number") s.greg.load = 0;
     return s;
   }
   var state = fresh(), readOnly = false, roLabel = "", dirty = false, saveTimer = null;
@@ -361,7 +367,7 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
     $("dayBtn").textContent = ui.dayArmed ? "Confirm rest" : "Rest";
     $("dayBtn").classList.toggle("warn", ui.dayArmed);
     renderTorchTop();
-    renderCombat(); renderHp(); renderTurn(); renderTorch(); renderGear(); renderSheet(); renderLog();
+    renderCombat(); renderHp(); renderGreg(); renderTurn(); renderTorch(); renderGear(); renderSheet(); renderLog();
   }
   function renderTorchTop() { var l = torchLeft(); $("torchTop").textContent = state.torch.on || l ? fmtTime(l) : "—"; }
   function tog(key, label, on, hint) { return '<button type="button" class="btn sm' + (on ? " primary" : "") + '" data-act="cond" data-k="' + key + '" aria-pressed="' + !!on + '" title="' + esc(hint || "") + '">' + label + "</button>"; }
@@ -395,12 +401,32 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
         '<div class="row edit" style="margin-bottom:8px">' + [1, 2, 3, 4].map(function (n) { return '<button class="btn sm" data-act="dying" data-n="' + n + '">' + n + " rounds</button>"; }).join("") + "</div>" : "") +
       '<div class="row edit">' + b(-5) + b(-1) + b(1) + b(5) + "</div>" +
       '<div class="row edit" style="margin-top:8px"><input type="text" inputmode="numeric" id="hpAmt" maxlength="3" placeholder="Damage" style="width:90px;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px">' +
-      '<button class="btn sm primary" data-act="hit" data-p="1" title="Physical hit: the adamantine layer takes ' + ABSORB + '">Physical hit (−' + ABSORB + ')</button><button class="btn sm" data-act="hit" data-p="0">Other damage</button><button class="btn sm" data-act="heal">Heal</button></div>' +
-      "<h3>Greg (war pony)</h3>" +
-      (g.max ? '<p><b class="num">' + g.hp + "</b> of " + g.max + ' HP · +' + HALF + " levels from Skabs" + (state.cond.mounted ? " · AC +" + HALF + " while ridden" : "") + "</p>" +
-        '<div class="row edit"><button class="btn sm" data-act="greg" data-d="-5">−5</button><button class="btn sm" data-act="greg" data-d="-1">−1</button><button class="btn sm" data-act="greg" data-d="1">+1</button><button class="btn sm" data-act="greg" data-d="5">+5</button></div>' : '<p class="hint">Greg\'s hit points aren\'t on the sheet yet.</p>') +
-      '<div class="row edit" style="margin-top:6px"><input type="text" inputmode="numeric" id="gregMax" maxlength="3" placeholder="Greg\'s max HP" value="' + (g.max || "") + '" style="width:120px;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px"><button class="btn sm" data-act="gregmax">Set</button></div>';
+      '<button class="btn sm primary" data-act="hit" data-p="1" title="Physical hit: the adamantine layer takes ' + ABSORB + '">Physical hit (−' + ABSORB + ')</button><button class="btn sm" data-act="hit" data-p="0">Other damage</button><button class="btn sm" data-act="heal">Heal</button></div>';
   }
+  /* Greg: his own hit points, AC, hooves, Bravery after damage, and how far he moves under his load */
+  function gregMove() { return Math.floor((GREG.conDex - Math.max(0, state.greg.load - GREG.con)) / 5); }
+  function renderGreg() {
+    var g = state.greg, m = !!state.cond.mounted, pct = g.max ? Math.max(0, Math.min(100, Math.round(g.hp / g.max * 100))) : 0;
+    var b = function (n) { return '<button class="btn sm" data-act="greg" data-d="' + n + '">' + (n > 0 ? "+" : "−") + Math.abs(n) + "</button>"; };
+    var fs = "background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px";
+    $("pGreg").innerHTML = '<div class="ph"><h2>Greg</h2><span class="hint">War pony · mount level ' + GREG.lvl + " (+" + HALF + " from Skabs)</span></div>" +
+      '<div class="stats">' +
+        '<div class="stat"><span class="lbl">HP</span><b class="num">' + g.hp + "</b><small>of " + g.max + "</small></div>" +
+        '<div class="stat"><span class="lbl">AC</span><b class="num">' + (GREG.ac + (m ? HALF : 0)) + "</b><small>" + (m ? "ridden +" + HALF : "unridden") + "</small></div>" +
+        '<div class="stat"><span class="lbl">Hooves</span><b class="num">' + sg(GREG.atk) + "</b><small>" + GREG.dmg + "</small></div>" +
+        '<div class="stat"><span class="lbl">Bravery</span><b class="num">' + sg(GREG.brave) + "</b><small>WIS</small></div>" +
+        '<div class="stat"><span class="lbl">Moves</span><b class="num">' + gregMove() + "</b><small>hexes</small></div>" +
+        '<div class="stat"><span class="lbl">Load</span><b class="num">' + g.load + "</b><small>of " + GREG.slots + " slots</small></div></div>" +
+      '<div class="hpbar' + (g.hp <= g.max / 4 ? " low" : "") + '" style="margin-top:10px"><i style="width:' + pct + '%"></i></div>' +
+      (g.hp <= 0 ? '<p class="hpstate bad">Greg is down.</p>' : "") +
+      '<div class="row edit">' + b(-5) + b(-1) + b(1) + b(5) + "</div>" +
+      '<div class="row edit" style="margin-top:8px"><input type="text" inputmode="numeric" id="gregHit" maxlength="3" placeholder="Damage" style="width:90px;' + fs + '"><button class="btn sm primary" data-act="greghit">Greg is hit</button></div>' +
+      '<p class="hint" style="margin-top:6px">When Greg takes damage he makes a Bravery check: d20 ' + sg(GREG.brave) + " against DC 10 + the damage. On a failure he tries to flee, and Skabs must use an action to hold him or be thrown.</p>" +
+      '<div class="row edit" style="margin-top:8px"><span class="hint">Gear slots on Greg:</span><button class="btn sm" data-act="gregload" data-d="-1">−</button><button class="btn sm" data-act="gregload" data-d="1">+</button>' +
+        '<span class="hint">Max HP</span><input type="text" inputmode="numeric" id="gregMax" maxlength="3" value="' + g.max + '" style="width:60px;' + fs + '"><button class="btn sm" data-act="gregmax">Set</button></div>' +
+      '<p class="hint" style="margin-top:6px">Each slot over his CON (' + GREG.con + ") takes 1 from his CON + DEX (" + GREG.conDex + ") for speed: hexes = (" + GREG.conDex + " − extra slots) ÷ 5. Trained for battle; hardy (advantage on saves vs exhaustion); compact: fits narrow trails.</p>";
+  }
+
   function renderTurn() {
     var D = d(), ooc = oocText();
     $("pTurn").innerHTML = '<div class="ph"><h2>This round</h2><span class="hint">Actions add themselves here; × takes one back. End round makes the round final (− rolls it back).</span></div>' +
@@ -414,7 +440,7 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
       '<div class="row edit" style="margin-top:10px">' +
         '<button class="btn sm" data-act="quick" data-n="Attack with Rûnthar" data-x="' + sg(D.atk) + ", " + D.dmg + '">Attack</button>' +
         '<button class="btn sm" data-act="quick" data-n="Hold the line">Hold the line</button><button class="btn sm" data-act="quick" data-n="Grapple">Grapple</button>' +
-        '<button class="btn sm" data-act="quick" data-n="Move">Move</button>' + (D.mounted ? '<button class="btn sm" data-act="quick" data-n="Ride Greg" data-x="4 hexes">Ride Greg</button>' : "") +
+        '<button class="btn sm" data-act="quick" data-n="Move">Move</button>' + (D.mounted ? '<button class="btn sm" data-act="quick" data-n="Ride Greg" data-x="' + gregMove() + ' hexes">Ride Greg</button><button class="btn sm" data-act="quick" data-n="Greg kicks" data-x="hooves ' + sg(GREG.atk) + ", " + GREG.dmg + '">Greg kicks</button>' : "") +
         (D.broken ? "" : '<button class="btn sm moon" data-act="quick" data-n="Inspiring Presence" data-x="ally rises on ' + IP_LOW + '–20">Inspiring Presence</button>') + "</div>" +
       '<div class="row edit" style="margin-top:8px"><input type="text" data-ui="custom" maxlength="80" placeholder="Another action" value="' + esc(ui.custom) + '" style="flex:1;min-width:200px;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px">' +
       '<button class="btn sm" data-act="custom">Add</button></div>' +
@@ -462,8 +488,18 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
     h += sec("deeds", "Deeds", '<ul class="plain">' + state.deeds.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" +
       '<div class="row edit"><input type="text" data-ui="deed" maxlength="200" placeholder="A new deed" value="' + esc(ui.deed) + '" style="flex:1;min-width:200px;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px"><button class="btn sm" data-act="deed">Add deed</button></div>' +
       "<h3>Deed awards (XP)</h3><ul class=\"plain\">" + AWARDS.map(function (a) { return "<li>" + esc(a[0]) + ": " + esc(a[1]) + "</li>"; }).join("") + "</ul>");
+    var ga = GREG.ab;
+    h += sec("greg", "Greg (war pony)", '<div class="stats">' + ["str", "dex", "con", "int", "wis"].map(function (k) { return stat(k.toUpperCase(), ga[k][0], sg(ga[k][1])); }).join("") + stat("CHA", "—", "animal") + "</div>" +
+      '<ul class="plain"><li><b>Mount, level ' + GREG.lvl + ".</b> AC " + GREG.ac + " (9 + DEX), " + (GREG.ac + HALF) + " when ridden. HP " + GREG.hp + ". Hooves +" + GREG.atk + " (" + GREG.dmg + "). Bravery +" + GREG.brave + " (his WIS).</li>" +
+      "<li><b>Speed.</b> 4 km per hour cruising; 48 km per hour flat out, only for a few minutes.</li>" +
+      "<li><b>Gear slots.</b> Up to " + GREG.slots + " slots plus his rider. Each slot over his CON (" + GREG.con + ") takes 1 from CON + DEX (" + GREG.conDex + ") when working out his speed.</li>" +
+      "<li><b>Trained for battle.</b> Won't flee combat on his own and can fight with a rider.</li>" +
+      "<li><b>Bravery.</b> Whenever he takes damage in combat: a Bravery check against DC 10 + the damage. On a failure he tries to flee; his rider must use an action to keep him or be thrown.</li>" +
+      "<li><b>Compact war mount.</b> Can traverse narrow trails and small spaces.</li><li><b>Hardy.</b> Advantage on saves against exhaustion.</li>" +
+      "<li><b>Talent (1st).</b> Trained mount: he can be used as a mount. Without this talent, any attack made on an untrained mount is at disadvantage.</li></ul>" +
+      '<p class="hint"><a href="https://shadowdark.fandom.com/wiki/Mounted_Combat" target="_blank" rel="noopener">Mounted combat rules ↗</a></p>');
     h += sec("bg", "Who he is", '<div id="bgTxt" style="font-size:0.88rem">Loading…</div>');
-    h += '<div class="row" style="margin-top:12px"><button class="btn sm" data-act="rpol">Generate RPoL sheet</button></div>';
+    h += '<div class="row" style="margin-top:12px"><button class="btn sm" data-act="rpol">Generate RPoL sheet</button><button class="btn sm" data-act="gregrpol">Greg\'s RPoL sheet</button></div>';
     $("pSheet").innerHTML = h;
     loadDocs(function () { var b = $("bgTxt"); if (b) b.innerHTML = DOCS.bg ? DOCS.bg.replace(/^# .*\n+/, "").split(/\n\n+/).map(function (p) { return /^## /.test(p) ? "<h3>" + esc(p.slice(3)) + "</h3>" : '<p style="white-space:pre-line">' + esc(p) + "</p>"; }).join("") : "Not loaded."; });
   }
@@ -484,8 +520,8 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
   var DOCS = null;
   function loadDocs(cb) {
     if (DOCS) return cb();
-    Promise.all(["docs/skabs-sheet.txt", "docs/skabs-background.md"].map(function (u) { return fetch(u).then(function (r) { return r.ok ? r.text() : ""; }).catch(function () { return ""; }); }))
-      .then(function (t) { DOCS = { sheet: t[0], bg: t[1] }; cb(); });
+    Promise.all(["docs/skabs-sheet.txt", "docs/skabs-background.md", "docs/greg-sheet.txt"].map(function (u) { return fetch(u).then(function (r) { return r.ok ? r.text() : ""; }).catch(function () { return ""; }); }))
+      .then(function (t) { DOCS = { sheet: t[0], bg: t[1], greg: t[2] }; cb(); });
   }
   /* his RPoL sheet as he posts it, with the live numbers, slots, coin and deeds written in */
   function rpolText() {
@@ -518,6 +554,14 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
     var a = t.getAttribute("data-act");
     if (a === "copylog") { copy(state.log.slice().reverse().map(function (x) { return "R" + x.r + "  " + x.t; }).join("\n"), t); return; }
     if (a === "ooccopy") { copy(oocText(), t); return; }
+    if (a === "gregrpol") {
+      loadDocs(function () {
+        var g = state.greg, txt = DOCS.greg.replace(/HP         : +\d+ /, "HP         : " + g.hp + "/" + g.max + " ");
+        openInfo("Greg: RPoL sheet", '<textarea class="rpol" readonly>' + esc(txt) + '</textarea><div class="row"><button type="button" class="btn primary" id="rpolCopy">Copy</button></div>', true);
+        $("rpolCopy").addEventListener("click", function () { copy(txt, $("rpolCopy")); });
+      });
+      return;
+    }
     if (a === "rpol") {
       loadDocs(function () {
         var txt = rpolText();
@@ -541,6 +585,11 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
       });
     }
     else if (a === "dying") { var dn = +t.getAttribute("data-n") + 0; mutate(function (s) { s.dying = Math.max(1, dn + mod("con")); log("Dying: " + s.dying + " rounds"); }); }
+    else if (a === "greghit") {
+      var gh = num("gregHit"); if (!gh) return;
+      mutate(function (s) { var o = s.greg.hp; s.greg.hp = Math.max(0, s.greg.hp - gh); act("Greg is hit for " + gh, "HP " + o + " → " + s.greg.hp + "; Bravery d20" + sg(GREG.brave) + " vs DC " + (10 + gh)); });
+    }
+    else if (a === "gregload") { var gl = +t.getAttribute("data-d"); mutate(function (s) { s.greg.load = Math.max(0, Math.min(GREG.slots, s.greg.load + gl)); }); }
     else if (a === "greg") { var gd = +t.getAttribute("data-d"); mutate(function (s) { var o = s.greg.hp; s.greg.hp = Math.max(0, Math.min(s.greg.max, s.greg.hp + gd)); log("Greg HP " + o + " → " + s.greg.hp); }); }
     else if (a === "gregmax") { var gm = num("gregMax"); if (!gm) return; mutate(function (s) { s.greg.max = gm; if (!s.greg.hp || s.greg.hp > gm) s.greg.hp = gm; log("Greg's max HP set to " + gm); }); }
     else if (a === "luck") { var ld = +t.getAttribute("data-d"); mutate(function (s) { s.luck = Math.max(0, s.luck + ld); if (ld < 0) act("Luck token: re-roll", "the second roll stands"); else log("Luck token gained (" + s.luck + ")"); }); }

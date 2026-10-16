@@ -1,0 +1,41 @@
+Greg (War Pony)
+
+Class      : Mount ( https://shadowdark.fandom.com/wiki/Mounted_Combat )
+Level      : 2
+
+STATS
+
+AC         : 12 (9 + Dex) 14 (When Mounted)
+HP         :  8 (3 - 3 + 8)
+ATK        : 1 hooves +3 (1d6)
+Bravery    : +2
+Gear Slots : 28 (more than 7 decreases speed)
+
+STR        : 17  +3 (13 + 4)
+DEX        : 17  +3 (16 + 1)
+CON        :  7  -3 ( 5 + 2)
+INT        :  6  -3 ( 8 - 2)
+WIS        : 15  +2 (14 + 1)
+CHA        : Animals don't have Charisma scores
+
+Traits
+
+- Speed              :  4km per hour (cruising speed)
+                     : 48km per hour (max sped - only for a few minutes)
+- Gear Slots         : Can carry up to 24 gear slots + rider
+- Bulk               : Too many "Gear Slots" can reduce a mount's speed.
+                       For each point of gear slot above the mount's "Con" (7),
+                       its "Con+Dex" (24) get a penalty of 1 point when determining speed.
+- Trained for battle : will not automatically flee from combat and can fight with a rider.
+- Bravery            : During combat, whenever the mount receives damage it must perform
+                       a "Bravery" check against a DC of 10 plus the amount of damage points
+                       received.
+                       On a failure, it will try to flee and its rider will need to use an
+                       action controlling it to prevent it from leaving or throw it to the
+                       ground. A mount's Bravery equals its "Wis" modifier.
+- Compact war mount  : can traverse narrow trails and small spaces
+- Hardy              : advantage on saves vs exhaustion
+
+Talents:
+
+1L = Trained mount. You can be used as a mount. Without this talent, any attack made on an untrained mount is at disadvantage.
