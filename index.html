@@ -103,16 +103,16 @@ footer { margin-top: 28px; color: var(--muted); font-size: 0.78rem; }
 </div>
 <script>
 (function () {
-  /* one entry per character: its folder, Firestore document id (trackers/{doc}) and the card text.
+  /* one entry per character (a card without path/doc is one with no tracker yet: name and a "tracker coming" note;
+     `full` then makes the portrait open the full picture): its folder, Firestore document id (trackers/{doc}) and the card text.
      A new tracker goes in its own folder next to daerlieth/, then gets a line here. */
   var CHARACTERS = [
     { path: "daerlieth/", doc: "daerlieth", name: "Daerlieth Nightstar", thumb: "daerlieth/images/daerlieth-thumb.webp",
       line: function (L) { return "Moon elf · Eternal Mage " + L + " // Spell-less Ranger " + L + " · Archmage 2"; },
       pet: { name: "Gwathfaron, panther", thumb: "daerlieth/images/gwathfaron-thumb.webp" },
       game: { name: "Cormanthyr", system: "Pathfinder 1e", url: "https://rpol.net/game.php?gi=80510&date=1792113654" } },
-    /* no tracker yet: a card without path, doc or thumb shows the name and a "tracker coming" note */
-    { name: "Courynna Talaudrym", thumb: "courynna/images/courynna-thumb.webp", full: "courynna/images/courynna.webp",
-      line: function () { return "Details to come"; },
+    { path: "courynna/", doc: "courynna", name: "Courynna Talaudrym", thumb: "courynna/images/courynna-thumb.webp",
+      line: function () { return "Human · Factotum 5"; }, live: function (s) { return " · inspiration <b>" + s.ip + "</b>/4"; },
       game: { name: "Emerging", system: "D&D 3.5", url: "https://rpol.net/game.php?gi=80341&date=1792177427" } }
   ];
   var PROJECT = "tracker-fe359";
@@ -145,7 +145,7 @@ footer { margin-top: 28px; color: var(--muted); font-size: 0.78rem; }
         document.getElementById("line" + i).textContent = c.line(L);
         var t = up && (up.timestampValue ? Date.parse(up.timestampValue) : up.integerValue ? +up.integerValue : up.doubleValue ? +up.doubleValue : 0);
         document.getElementById("live" + i).innerHTML = '<span class="dot"></span>Round <b>' + (s.round || 1) + "</b> · HP <b>" + s.hp + "</b>" +
-          (c.pet && s.petHp != null ? " · " + esc(c.pet.name.split(",")[0]) + " <b>" + s.petHp + "</b>" : "") + (t ? " · updated " + ago(t) : "");
+          (c.pet && s.petHp != null ? " · " + esc(c.pet.name.split(",")[0]) + " <b>" + s.petHp + "</b>" : "") + (c.live ? c.live(s) : "") + (t ? " · updated " + ago(t) : "");
       })
       .catch(function () { /* offline: the card works without the live line */ });
   });

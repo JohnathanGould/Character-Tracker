@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05060a">
+<meta name="description" content="Courynna Talaudrym: live D&amp;D 3.5 Factotum tracker">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Courynna">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<style>html{color-scheme:dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Courynna Talaudrym Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Marcellus&display=swap">
+<style>
+/* Same look as Daerlieth's tracker: black ground, moon-silver accent, gold for inspiration. */
+:root {
+  --bg: #05060a;
+  --surface: #0c0f17;
+  --surface-2: #141925;
+  --line: #1d2333;
+  --line-strong: #394460;
+  --fg: #e9edf7;
+  --muted: #8f99b5;
+  --moon: #a9c1ff;
+  --moon-ink: #060914;
+  --gold: #ebc676;
+  --gold-fill: #d9a93f;
+  --heat: #ff8f61;
+  --good: #6fd6a4;
+  --font-display: "Marcellus", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-body: "Albert Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 900px 520px at 50% -120px, rgba(120, 150, 255, 0.10), transparent 70%);
+  color: var(--fg);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  padding-inline: 16px;
+  padding-block: 0 40px;
+}
+button, select, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--moon); outline-offset: 2px; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1120px; margin-inline: auto; }
+a { color: var(--moon); text-underline-offset: 2px; }
+
+/* top bar */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: rgba(5, 6, 10, 0.88); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); margin-inline: -16px; padding: 10px 16px; }
+.top-in { max-width: 1120px; margin-inline: auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 20px; }
+.ident { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.portrait { flex: none; width: 52px; height: 52px; padding: 0; border-radius: 50%; overflow: hidden; border: 1px solid var(--moon); background: var(--surface-2); cursor: zoom-in; box-shadow: 0 0 0 3px rgba(169, 193, 255, 0.08); }
+.portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: 1.5rem; line-height: 1.1; letter-spacing: 0.02em; margin: 0; }
+.home { display: inline-block; color: var(--muted); font-family: var(--font-mono); font-size: 0.7rem; text-decoration: none; margin-bottom: 2px; }
+.home:hover { color: var(--moon); }
+.sub { margin: 2px 0 0; color: var(--muted); font-size: 0.8rem; }
+.sub .game { color: var(--moon); text-decoration: none; }
+.sub .game:hover { text-decoration: underline; }
+.status { font-family: var(--font-mono); font-size: 0.72rem; }
+.acct { background: none; border: 0; padding: 0; margin-left: 6px; color: var(--moon); font-family: var(--font-mono); font-size: 0.72rem; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.clock { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rchip { display: flex; align-items: baseline; gap: 6px; padding: 4px 10px; border: 1px solid var(--moon); border-radius: 9px; background: rgba(169, 193, 255, 0.08); cursor: pointer; }
+.rchip b { font-family: var(--font-display); font-weight: 400; font-size: 1.35rem; line-height: 1; color: var(--fg); }
+.lbl { font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.rchip .lbl { color: var(--moon); }
+.ipchip { display: flex; align-items: baseline; gap: 6px; padding: 4px 10px; border: 1px solid var(--gold-fill); border-radius: 9px; background: rgba(235, 198, 118, 0.08); }
+.ipchip b { font-family: var(--font-display); font-weight: 400; font-size: 1.35rem; line-height: 1; color: var(--gold); }
+.ipchip .lbl { color: var(--gold); }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--fg); font-weight: 600; font-size: 0.9rem; cursor: pointer; white-space: nowrap; }
+.btn:hover:not(:disabled) { background: var(--surface-2); border-color: var(--moon); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn.primary { background: linear-gradient(180deg, #c3d4ff, var(--moon)); border-color: var(--moon); color: var(--moon-ink); box-shadow: 0 0 18px rgba(169, 193, 255, 0.22); }
+.btn.gold { background: linear-gradient(180deg, #f3d995, var(--gold-fill)); border-color: var(--gold); color: #1b1404; }
+.btn.warn { border-color: var(--heat); color: var(--heat); }
+.btn.sm { min-height: 34px; padding: 0 10px; font-size: 0.82rem; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* panels */
+main { display: grid; gap: 14px; padding-top: 14px; grid-template-columns: 1fr; }
+@media (min-width: 900px) { main { grid-template-columns: 1fr 1fr; } .full { grid-column: 1 / -1; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+.ph { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.panel h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.2rem; margin: 0; }
+.panel h3 { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 14px 0 6px; }
+.hint { color: var(--muted); font-size: 0.8rem; margin: 0; }
+.warn-text { color: var(--heat); font-size: 0.82rem; margin: 6px 0 0; }
+
+/* inspiration */
+.pips { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 10px; }
+.pip { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--gold-fill); background: transparent; }
+.pip.on { background: radial-gradient(circle at 35% 30%, #fbe7b0, var(--gold-fill)); box-shadow: 0 0 10px rgba(235, 198, 118, 0.35); }
+.spend { display: grid; gap: 8px; grid-template-columns: 1fr; }
+@media (min-width: 560px) { .spend { grid-template-columns: 1fr 1fr; } }
+.opt { border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--surface-2); display: flex; flex-direction: column; gap: 6px; }
+.opt b { font-weight: 600; }
+.opt .hint { font-size: 0.76rem; }
+.opt select, .opt input, .field input, .field select { width: 100%; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 7px 9px; color: var(--fg); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font-family: var(--font-mono); font-size: 0.72rem; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line-strong); color: var(--muted); }
+.chip.used { text-decoration: line-through; opacity: 0.6; }
+.chip.ok { border-color: var(--good); color: var(--good); }
+
+/* round */
+.tclock { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.rframe { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 64px; padding: 4px 12px 5px; border: 1px solid var(--moon); border-radius: 10px; background: rgba(169, 193, 255, 0.08); }
+.rframe b { font-family: var(--font-display); font-weight: 400; font-size: 2.2rem; line-height: 1; }
+.rframe .lbl { color: var(--moon); font-size: 0.62rem; margin-top: 2px; }
+.rstep { display: flex; flex-direction: column; gap: 3px; }
+.rplus { min-width: 40px; min-height: 26px; height: 26px; padding: 0 10px; font-size: 1.2rem; line-height: 1; border-radius: 7px; }
+.tclock [data-act="endround"] { margin-left: auto; }
+.tlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.tlist li { display: flex; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; background: var(--surface-2); font-size: 0.86rem; }
+.tlist .tname { flex: 1; min-width: 0; }
+.tlist .tx { min-width: 30px; min-height: 30px; padding: 0; }
+textarea.ooc { width: 100%; min-height: 96px; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px; font-family: var(--font-mono); font-size: 0.76rem; color: var(--fg); resize: vertical; }
+
+/* hit points */
+.hpbig { display: flex; align-items: baseline; gap: 8px; }
+.hpbig b { font-family: var(--font-display); font-weight: 400; font-size: 2.6rem; line-height: 1; }
+.hpbar { height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin: 8px 0; }
+.hpbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--good), #9ff0c8); }
+.hpbar.low i { background: linear-gradient(90deg, var(--heat), #ffb08f); }
+.hpstate { font-size: 0.82rem; color: var(--muted); }
+.hpstate.bad { color: var(--heat); }
+
+/* sheet */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+@media (min-width: 560px) { .stats { grid-template-columns: repeat(6, 1fr); } }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 8px; text-align: center; background: var(--surface-2); }
+.stat .lbl { display: block; }
+.stat b { font-family: var(--font-display); font-weight: 400; font-size: 1.4rem; display: block; line-height: 1.2; }
+.stat small { color: var(--muted); font-family: var(--font-mono); font-size: 0.72rem; }
+details.sec { border-top: 1px solid var(--line); padding: 8px 0; }
+details.sec > summary { cursor: pointer; font-family: var(--font-display); font-size: 1.08rem; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+details.sec > summary::-webkit-details-marker { display: none; }
+details.sec > summary::after { content: "+"; color: var(--muted); font-family: var(--font-mono); }
+details.sec[open] > summary::after { content: "−"; }
+table.t { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin-top: 6px; }
+table.t th, table.t td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.t th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+table.t td.n, table.t th.n { text-align: right; font-family: var(--font-mono); }
+.tscroll { overflow-x: auto; }
+ul.plain { margin: 6px 0; padding-left: 18px; font-size: 0.86rem; }
+ul.plain li { margin: 3px 0; }
+pre.txt { white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.74rem; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin: 6px 0; max-height: 420px; overflow: auto; }
+.stock { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; font-size: 0.86rem; }
+.stock .q { display: flex; align-items: center; gap: 6px; }
+.stock .q b { min-width: 2ch; text-align: right; font-family: var(--font-mono); }
+.stock .btn { min-height: 30px; min-width: 34px; padding: 0 8px; }
+
+/* log */
+.log { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow: auto; font-size: 0.82rem; }
+.log li { padding: 4px 0; border-bottom: 1px solid var(--line); }
+.log .r { font-family: var(--font-mono); color: var(--muted); margin-right: 8px; }
+
+/* dialogs */
+.sheet { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.7); }
+.sheet form { width: 100%; max-width: 360px; max-height: calc(100vh - 32px); overflow: auto; display: flex; flex-direction: column; gap: 12px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px; padding: 20px; }
+.sheet form.wide { max-width: 760px; }
+.sheet h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.25rem; margin: 0; }
+.sheet label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--muted); }
+.sheet input { background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; padding: 9px 10px; color: var(--fg); }
+.sheet .row { justify-content: flex-end; }
+.sheet .err { color: var(--heat); font-size: 0.85rem; margin: 0; min-height: 1.2em; }
+.portrait-full { width: 100%; border-radius: 10px; display: block; }
+textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--fg); white-space: pre; }
+
+/* GM view: every editing control hidden */
+.ro .edit, .ro [data-act]:not([data-act="copylog"]):not([data-act="rpol"]):not([data-act="ooccopy"]) { display: none !important; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="top-in">
+    <div class="ident">
+      <button type="button" class="portrait" data-portrait="1" aria-label="Show Courynna's portrait"><img src="images/courynna-thumb.webp" alt="" width="52" height="52"></button>
+      <div>
+        <a class="home" href="../" title="All of Balthazar's characters">‹ Characters</a>
+        <h1>Courynna Talaudrym</h1>
+        <p class="sub"><a class="game" href="https://rpol.net/game.php?gi=80341&amp;date=1792177427" target="_blank" rel="noopener" title="Courynna's game on RPoL">Emerging ↗</a> · D&amp;D 3.5 · Human Factotum 5 · <span id="status" class="status" aria-live="polite">Loading</span><button type="button" id="acctBtn" class="acct" hidden></button><button type="button" id="pwBtn" class="acct" hidden>Change password</button></p>
+      </div>
+    </div>
+    <div class="clock">
+      <span class="ipchip" title="Inspiration points left"><span class="lbl">Insp.</span><b id="ipTop" class="num">4</b></span>
+      <button type="button" class="rchip" data-goturn="1" aria-label="Round, go to This round"><span class="lbl">Round</span><b id="roundTop" class="num">1</b></button>
+      <button class="btn" id="dayBtn" data-act="newday" title="After 8 hours of rest: Arcane Dilettante spells and Cunning Knowledge come back, Opportunistic Piety refills, inspiration refills, and she heals 5 hit points.">New day</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+<main>
+  <section class="panel" id="pInsp"></section>
+  <section class="panel" id="pHp"></section>
+  <section class="panel full" id="pTurn"></section>
+  <section class="panel" id="pSpells"></section>
+  <section class="panel" id="pStock"></section>
+  <section class="panel full" id="pSheet"></section>
+  <section class="panel full" id="pLog"></section>
+</main>
+</div>
+
+<div class="sheet" id="signin" hidden>
+  <form id="signinForm" autocomplete="on">
+    <h2>Sign in to edit</h2>
+    <label id="siEmailRow">Email<input id="siEmail" type="email" autocomplete="username" required></label>
+    <p class="sub" id="siAs" hidden>Signing in as <span id="siAsEmail"></span> · <button type="button" class="acct" id="siOther">use another email</button></p>
+    <label>Password<input id="siPass" type="password" autocomplete="current-password" required></label>
+    <p class="err" id="siErr" aria-live="polite"></p>
+    <div class="row"><button type="button" class="acct" id="siForgot" style="margin-right:auto">Forgot password?</button><button type="button" class="btn" id="siCancel">Cancel</button><button type="submit" class="btn primary" id="siGo">Sign in</button></div>
+  </form>
+</div>
+<div class="sheet" id="rsSheet" hidden>
+  <form id="rsForm" autocomplete="on">
+    <h2>Set a new password</h2>
+    <input type="text" id="rsUser" autocomplete="username" hidden>
+    <p class="sub" id="rsFor"></p>
+    <label>New password<input id="rsNew" type="password" autocomplete="new-password" minlength="6" required></label>
+    <label>New password again<input id="rsNew2" type="password" autocomplete="new-password" minlength="6" required></label>
+    <p class="err" id="rsErr" aria-live="polite"></p>
+    <div class="row"><button type="button" class="btn" id="rsCancel">Cancel</button><button type="submit" class="btn primary" id="rsGo">Save password</button></div>
+  </form>
+</div>
+<div class="sheet" id="pwSheet" hidden>
+  <form id="pwForm" autocomplete="on">
+    <h2>Change password</h2>
+    <input type="text" id="pwUser" autocomplete="username" hidden>
+    <label>Current password<input id="pwOld" type="password" autocomplete="current-password" required></label>
+    <label>New password<input id="pwNew" type="password" autocomplete="new-password" minlength="6" required></label>
+    <label>New password again<input id="pwNew2" type="password" autocomplete="new-password" minlength="6" required></label>
+    <p class="err" id="pwErr" aria-live="polite"></p>
+    <div class="row"><button type="button" class="btn" id="pwCancel">Cancel</button><button type="submit" class="btn primary" id="pwGo">Change</button></div>
+  </form>
+</div>
+<div class="sheet" id="helpSheet" hidden>
+  <form id="helpForm">
+    <h2 id="helpTitle"></h2>
+    <div id="helpBody"></div>
+    <div class="row"><button type="submit" class="btn primary">Close</button></div>
+  </form>
+</div>
+
+<script src="config.js"></script>
+<script src="vendor/firebase-app-compat.js"></script>
+<script src="vendor/firebase-auth-compat.js"></script>
+<script src="vendor/firebase-firestore-compat.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var sg = function (n) { return (n >= 0 ? "+" : "") + n; };
+
+  /* ---------- Courynna at Factotum 5 (D&D 3.5, Dungeonscape), from her printed sheet ---------- */
+  var LEVEL = 5, HP_MAX = 30, DEAD = -10, IP_MAX = 4, PIETY_MAX = 4;
+  var AB = { str: 10, dex: 19, con: 14, int: 21, wis: 12, cha: 16 };
+  var mod = function (k) { return Math.floor((AB[k] - 10) / 2); };
+  var INT = mod("int"); /* +5: Cunning Insight, Cunning Defense, Brains over Brawn, Arcane Dilettante DCs */
+  var BAB = 3, SAVE_BASE = { fort: 1, ref: 4, will: 1 };
+  var PIETY_AMT = 2 * LEVEL + INT; /* 15 */
+  var DC = function (lvl) { return 10 + lvl + INT; };
+  var MAX_SPELL = 2; /* highest Arcane Dilettante spell level at 5th; only one spell of that level */
+
+  /* skills: [name, key ability, ranks, synergy]; misc bonuses come from her feats and class (see skillTotal) */
+  var SKILLS = [
+    ["Appraise", "int", 0, 0], ["Balance", "dex", 1, 0], ["Bluff", "cha", 5, 0], ["Climb", "str", 0, 0],
+    ["Craft (cartography)", "int", 0, 0], ["Concentration", "con", 0, 0], ["Decipher Script", "int", 1, 0],
+    ["Diplomacy", "cha", 6, 4], ["Disable Device", "int", 5, 0], ["Escape Artist", "dex", 1, 0], ["Forgery", "int", 1, 0],
+    ["Gather Information", "cha", 1, 0], ["Heal", "wis", 0, 0], ["Hide", "dex", 6, 0], ["Intimidate", "cha", 3, 2],
+    ["Jump", "str", 0, 0], ["Knowledge (arcana)", "int", 5, 0], ["Knowledge (dungeoneering)", "int", 5, 0],
+    ["Knowledge (local)", "int", 5, 0], ["Knowledge (nature)", "int", 5, 0], ["Knowledge (planes)", "int", 5, 0],
+    ["Knowledge (religion)", "int", 5, 0], ["Listen", "wis", 7, 0], ["Move Silently", "dex", 6, 0], ["Open Lock", "dex", 1, 0],
+    ["Perform (mandolin)", "cha", 0, 0], ["Ride", "dex", 1, 0], ["Search", "int", 5, 0], ["Sense Motive", "wis", 5, 0],
+    ["Sleight of Hand", "dex", 1, 2], ["Spellcraft", "int", 1, 0], ["Spot", "wis", 7, 0], ["Survival", "wis", 0, 0],
+    ["Swim", "str", 0, 0], ["Tumble", "dex", 1, 0], ["Use Magic Device", "cha", 7, 0], ["Use Rope", "dex", 1, 0]
+  ];
+  function skillParts(s) {
+    var p = [[s[1].toUpperCase(), mod(s[1])]];
+    if (s[2]) p.push(["ranks", s[2]]);
+    if (s[3]) p.push(["synergy", s[3]]);
+    if (s[1] === "str" || s[1] === "dex") p.push(["Brains over Brawn", INT]);
+    if (s[1] === "cha") p.push(["Nymph's Kiss", 2]);
+    if (s[0] === "Listen" || s[0] === "Spot") p.push(["Alertness", 2]);
+    if (s[0] === "Use Magic Device") p.push(["Skill Focus", 3]);
+    return p;
+  }
+  function skillTotal(s) { return skillParts(s).reduce(function (a, p) { return a + p[1]; }, 0); }
+
+  var FEATS = [
+    ["Nymph's Kiss", "Human bonus feat", "+1 skill point a level; +2 circumstance bonus on Charisma-based checks; +1 on saves against spells and spell-like abilities."],
+    ["Luck of Heroes", "Regional (1st)", "Luck bonus on saving throws (her sheet also counts +1 luck to AC)."],
+    ["Skill Focus (Use Magic Device)", "Bonus (1st)", "+3 on Use Magic Device checks."],
+    ["Improved Initiative", "Flaw (1st)", "+4 on initiative checks."],
+    ["Weapon Finesse", "Flaw (1st)", "Dex instead of Str on attack rolls with light weapons and the rapier."],
+    ["Alertness", "1st", "+2 on Listen and Spot checks."],
+    ["Knowledge Devotion", "3rd", "After a Knowledge check to identify a creature, an insight bonus on attack and damage rolls against creatures of that kind, rising with the check result. Set the bonus in This round."]
+  ];
+  var CLASS = [
+    ["Trapfinding (Ex)", "Search finds traps above DC 20; Disable Device works on magic traps."],
+    ["Brains over Brawn (Ex)", "+" + INT + " (Int) on Strength and Dexterity checks and on Strength- and Dexterity-based skill checks (counted in the skills below)."],
+    ["Inspiration", IP_MAX + " inspiration points at the start of each encounter."],
+    ["Cunning Insight (Ex)", "1 point, no action, before the roll: +" + INT + " competence on one attack roll, damage roll or saving throw."],
+    ["Cunning Knowledge (Ex)", "1 point: +" + LEVEL + " on a skill check in a skill with at least 1 rank. Once a day per skill."],
+    ["Arcane Dilettante (Sp)", "Prepare sorcerer/wizard spells each day (up to " + MAX_SPELL + "nd level, only one of the highest level). 1 point casts one as a spell-like ability, caster level " + LEVEL + ", DC 10 + spell level + " + INT + ". Each prepared spell works once until 8 hours of rest. No XP-cost spells; material components still needed."],
+    ["Cunning Defense (Ex)", "1 point, free action: +" + INT + " dodge bonus to AC against one opponent for 1 round. Once per turn against each opponent; works in any armor."],
+    ["Cunning Strike (Ex)", "1 point before an attack: +1d6 sneak attack damage on it (Factotum level counts as rogue level against uncanny dodge)."],
+    ["Opportunistic Piety (Su)", "1 point and a standard action, " + PIETY_MAX + " times a day (3 + Wis): heal a living creature " + PIETY_AMT + " hp, deal " + PIETY_AMT + " to an undead, or turn undead as a cleric of level " + LEVEL + " (no rebuking or commanding)."]
+  ];
+  var LANGS = ["Common", "Kíprat", "Elven", "Dwarven", "Dragoncarve", "Dragontongue", "Infernal", "Uestor", "Crounet"];
+  /* consumables she tracks: key, label, starting count, what using one does */
+  var STOCK = [
+    ["cmw", "Potion of cure moderate wounds", 1, "2d8+3 hit points"], ["clw", "Potion of cure light wounds", 2, "1d8+1 hit points"],
+    ["arrows", "Arrows (quiver)", 20, ""], ["arrowsSpare", "Arrows (spare, haversack)", 20, ""],
+    ["smoke", "Smokesticks", 3, ""], ["tangle", "Tanglefoot bag", 1, ""], ["thunder", "Thunderstone", 1, ""],
+    ["alch", "Alchemist's fire", 2, ""], ["anti", "Antitoxin", 2, ""], ["holy", "Holy water", 1, ""],
+    ["sunrod", "Sunrods", 3, ""], ["tinder", "Tindertwigs", 4, ""], ["oil", "Oil flasks", 4, ""], ["rations", "Trail rations (days)", 7, ""]
+  ];
+  var SCROLLS = ["Comprehend Languages", "Disguise Self", "Charm Person", "Alarm", "Obscuring Mist", "Shield"];
+
+  /* ---------- state ---------- */
+  var KEY = "courynna-tracker-v1", UNDO_MAX = 20, LOG_MAX = 500;
+  function fresh() {
+    var st = {};
+    STOCK.forEach(function (x) { st[x[0]] = x[2]; });
+    var sc = {}; SCROLLS.forEach(function (n) { sc[n] = 1; });
+    return { v: 1, round: 1, inEnc: false, ip: IP_MAX, hp: HP_MAX, piety: PIETY_MAX, ck: {}, adUsed: {},
+      prepared: [{ n: "Silent Image", l: 1 }, { n: "Invisibility", l: 2 }], stock: st, scrolls: sc,
+      defs: [], kd: 0, flank: false, turn: [], prevOoc: "", undo: [], log: [] };
+  }
+  function normalize(s) {
+    var f = fresh();
+    s = s && typeof s === "object" ? s : {};
+    Object.keys(f).forEach(function (k) { if (s[k] == null || typeof s[k] !== typeof f[k] || Array.isArray(f[k]) !== Array.isArray(s[k])) s[k] = f[k]; });
+    STOCK.forEach(function (x) { if (typeof s.stock[x[0]] !== "number") s.stock[x[0]] = x[2]; });
+    SCROLLS.forEach(function (n) { if (typeof s.scrolls[n] !== "number") s.scrolls[n] = 1; });
+    return s;
+  }
+  var state = fresh(), readOnly = false, roLabel = "", dirty = false, saveTimer = null;
+  var ui = { ck: "", ad: "", def: "", insight: "attack", piety: "heal", dayArmed: false, clearArmed: false, custom: "" };
+
+  function log(t) { state.log.unshift({ r: state.round, t: t }); state.log = state.log.slice(0, LOG_MAX); }
+  var NUMS = ["ip", "hp", "piety"];
+  /* every change that adds an action remembers what it changed, so × on the action takes back just that */
+  function mutate(fn) {
+    if (readOnly) return;
+    var pre = { ip: state.ip, hp: state.hp, piety: state.piety, ck: JSON.stringify(state.ck), ad: JSON.stringify(state.adUsed),
+      stock: JSON.stringify(state.stock), scrolls: JSON.stringify(state.scrolls), defs: state.defs.slice(), turn: state.turn, n: state.turn.length };
+    fn(state);
+    if (state.turn === pre.turn && state.turn.length > pre.n) {
+      var e = state.turn[state.turn.length - 1], f = {};
+      NUMS.forEach(function (k) { if (state[k] !== pre[k]) (f.d = f.d || {})[k] = state[k] - pre[k]; });
+      if (JSON.stringify(state.ck) !== pre.ck) f.ck = JSON.parse(pre.ck);
+      if (JSON.stringify(state.adUsed) !== pre.ad) f.ad = JSON.parse(pre.ad);
+      if (JSON.stringify(state.stock) !== pre.stock) f.stock = diffObj(JSON.parse(pre.stock), state.stock);
+      if (JSON.stringify(state.scrolls) !== pre.scrolls) f.scrolls = diffObj(JSON.parse(pre.scrolls), state.scrolls);
+      if (state.defs.length > pre.defs.length) f.def = state.defs[state.defs.length - 1];
+      if (Object.keys(f).length) e.eff = f;
+    }
+    render();
+    scheduleSave();
+  }
+  function diffObj(a, b) { var d = {}; Object.keys(b).forEach(function (k) { if (a[k] !== b[k]) d[k] = b[k] - (a[k] || 0); }); return d; }
+  function undoAction(s, e) {
+    var f = e.eff || {};
+    Object.keys(f.d || {}).forEach(function (k) { s[k] -= f.d[k]; });
+    s.ip = Math.max(0, Math.min(IP_MAX, s.ip)); s.piety = Math.max(0, Math.min(PIETY_MAX, s.piety)); s.hp = Math.max(DEAD, Math.min(HP_MAX, s.hp));
+    if (f.ck) s.ck = f.ck;
+    if (f.ad) s.adUsed = f.ad;
+    Object.keys(f.stock || {}).forEach(function (k) { s.stock[k] -= f.stock[k]; });
+    Object.keys(f.scrolls || {}).forEach(function (k) { s.scrolls[k] -= f.scrolls[k]; });
+    if (f.def != null) { var i = s.defs.lastIndexOf(f.def); if (i >= 0) s.defs.splice(i, 1); }
+    log("Took back: " + e.name);
+  }
+  function act(name, note) { state.turn.push({ id: "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: name, note: note || "" }); }
+  function snap(s) { var c = JSON.parse(JSON.stringify(s)); delete c.undo; delete c.log; return c; }
+
+  /* ---------- derived numbers ---------- */
+  function d() {
+    var defl = 1, luck = 1, armor = 5, dex = mod("dex");
+    var ac = 10 + armor + dex + defl + luck, kd = state.kd || 0, fl = state.flank ? 2 : 0;
+    return {
+      ac: ac, touch: 10 + dex + defl + luck, ff: 10 + armor + defl + luck, cdAc: ac + INT,
+      init: dex + 4,
+      fort: SAVE_BASE.fort + mod("con") + 1 + 1, ref: SAVE_BASE.ref + dex + 1 + 1, will: SAVE_BASE.will + mod("wis") + 1 + 1,
+      rapier: BAB + dex + 1 - 2 + kd + fl, bow: BAB + dex + 1 - 2 + kd, dmg: kd, kd: kd, fl: fl
+    };
+  }
+  function hpState(hp) {
+    if (hp <= DEAD) return ["Dead", true];
+    if (hp < 0) return ["Dying: loses 1 hp a round until stable (10% chance each round)", true];
+    if (hp === 0) return ["Disabled: one move or standard action a round; a strenuous action costs 1 hp", true];
+    return [hp <= HP_MAX / 4 ? "Badly hurt" : "", hp <= HP_MAX / 4];
+  }
+
+  /* ---------- render ---------- */
+  function render() {
+    $("ipTop").textContent = state.ip;
+    $("roundTop").textContent = state.round;
+    $("dayBtn").textContent = ui.dayArmed ? "Confirm new day" : "New day";
+    $("dayBtn").classList.toggle("warn", ui.dayArmed);
+    renderInsp(); renderHp(); renderTurn(); renderSpells(); renderStock(); renderSheet(); renderLog();
+  }
+
+  function renderInsp() {
+    var D = d(), ip = state.ip, none = ip < 1, pips = "";
+    for (var i = 0; i < IP_MAX; i++) pips += '<span class="pip' + (i < ip ? " on" : "") + '"></span>';
+    var ranked = SKILLS.filter(function (s) { return s[2] > 0; });
+    var ckOpts = '<option value="">Choose a skill…</option>' + ranked.map(function (s) {
+      var used = !!state.ck[s[0]];
+      return '<option value="' + esc(s[0]) + '"' + (used ? " disabled" : "") + (ui.ck === s[0] ? " selected" : "") + ">" + esc(s[0]) + " " + sg(skillTotal(s)) + " → " + sg(skillTotal(s) + LEVEL) + (used ? " (used today)" : "") + "</option>";
+    }).join("");
+    $("pInsp").innerHTML = '<div class="ph"><h2>Inspiration</h2><span class="hint">' + ip + " of " + IP_MAX + " points" + (state.inEnc ? " · in an encounter" : "") + "</span></div>" +
+      '<div class="pips" aria-label="' + ip + ' inspiration points">' + pips + "</div>" +
+      '<div class="row edit" style="margin-bottom:10px">' +
+        (state.inEnc ? '<button class="btn sm" data-act="endenc" title="The encounter is over: inspiration refills (Mearls: points come back after the encounter or 5 minutes of rest).">End encounter</button>'
+          : '<button class="btn sm primary" data-act="startenc" title="Start of an encounter: 4 inspiration points, round 1.">Start encounter</button>') +
+        '<button class="btn sm" data-act="ip" data-d="-1"' + (none ? " disabled" : "") + '>−1</button><button class="btn sm" data-act="ip" data-d="1"' + (ip >= IP_MAX ? " disabled" : "") + ">+1</button></div>" +
+      '<div class="spend">' +
+        '<div class="opt"><b>Cunning Insight</b><span class="hint">+' + INT + " competence on one roll. No action; spend before rolling.</span>" +
+          '<select class="edit" data-ui="insight">' + [["attack", "Attack roll"], ["damage", "Damage roll"], ["save", "Saving throw"]].map(function (o) { return '<option value="' + o[0] + '"' + (ui.insight === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") + "</select>" +
+          '<button class="btn sm gold" data-act="insight"' + (none ? " disabled" : "") + ">Spend 1</button></div>" +
+        '<div class="opt"><b>Cunning Defense</b><span class="hint">+' + INT + " dodge AC against one opponent this round (AC " + D.cdAc + "). Free action.</span>" +
+          '<input class="edit" type="text" data-ui="def" maxlength="40" placeholder="Which opponent (optional)" value="' + esc(ui.def) + '">' +
+          '<button class="btn sm gold" data-act="defense"' + (none ? " disabled" : "") + ">Spend 1</button>" +
+          (state.defs.length ? '<span class="hint">This round against: ' + state.defs.map(esc).join(", ") + "</span>" : "") + "</div>" +
+        '<div class="opt"><b>Cunning Strike</b><span class="hint">+1d6 sneak attack on one attack. Spend before the attack.</span>' +
+          '<button class="btn sm gold" data-act="strike"' + (none ? " disabled" : "") + ">Spend 1</button></div>" +
+        '<div class="opt"><b>Cunning Knowledge</b><span class="hint">+' + LEVEL + " on a check in a skill with ranks. Once a day per skill.</span>" +
+          '<select class="edit" data-ui="ck">' + ckOpts + "</select>" +
+          '<button class="btn sm gold" data-act="ck"' + (none || !ui.ck ? " disabled" : "") + ">Spend 1</button>" +
+          (Object.keys(state.ck).length ? '<span class="hint">Used today: ' + Object.keys(state.ck).map(esc).join(", ") + "</span>" : "") + "</div>" +
+      "</div>" +
+      (none ? '<p class="warn-text">No inspiration left. It comes back at the end of the encounter.</p>' : "");
+  }
+
+  function renderHp() {
+    var hp = state.hp, st = hpState(hp), pct = Math.max(0, Math.min(100, Math.round(hp / HP_MAX * 100)));
+    var b = function (n) { return '<button class="btn sm" data-act="hp" data-d="' + n + '">' + (n > 0 ? "+" : "−") + Math.abs(n) + "</button>"; };
+    $("pHp").innerHTML = '<div class="ph"><h2>Hit points</h2><span class="hint">Disabled at 0, dying below, dead at ' + DEAD + "</span></div>" +
+      '<div class="hpbig"><b class="num">' + hp + '</b><span class="hint">of ' + HP_MAX + "</span></div>" +
+      '<div class="hpbar' + (st[1] ? " low" : "") + '"><i style="width:' + pct + '%"></i></div>' +
+      (st[0] ? '<p class="hpstate' + (st[1] ? " bad" : "") + '">' + st[0] + "</p>" : "") +
+      '<div class="row edit">' + b(-10) + b(-5) + b(-1) + b(1) + b(5) + b(10) + "</div>" +
+      '<div class="row edit" style="margin-top:8px"><input type="text" inputmode="numeric" id="hpAmt" maxlength="3" placeholder="Amount" style="width:90px;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px">' +
+      '<button class="btn sm" data-act="hpamt" data-s="-1">Damage</button><button class="btn sm" data-act="hpamt" data-s="1">Heal</button></div>' +
+      '<h3>Opportunistic Piety</h3><p class="hint">' + state.piety + " of " + PIETY_MAX + " uses left today. 1 inspiration and a standard action each.</p>" +
+      '<div class="row edit" style="margin-top:6px"><select data-ui="piety" style="background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px">' +
+        [["heal", "Heal herself " + PIETY_AMT], ["healAlly", "Heal an ally " + PIETY_AMT], ["harm", "Harm undead " + PIETY_AMT], ["turn", "Turn undead (cleric " + LEVEL + ")"]].map(function (o) { return '<option value="' + o[0] + '"' + (ui.piety === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
+      '</select><button class="btn sm gold" data-act="piety"' + (state.ip < 1 || state.piety < 1 ? " disabled" : "") + ">Use</button></div>" +
+      (ui.piety === "turn" ? '<p class="hint" style="margin-top:6px">Turning check d20 ' + sg(mod("cha")) + " (Cha); turning damage 2d6 " + sg(LEVEL + mod("cha")) + ".</p>" : "");
+  }
+
+  function renderTurn() {
+    var D = d(), ooc = oocText();
+    $("pTurn").innerHTML = '<div class="ph"><h2>This round</h2><span class="hint">Spends add themselves here; × takes one back. End round makes the round final (− rolls it back).</span></div>' +
+      '<div class="tclock"><div class="rframe"><b class="num">' + state.round + '</b><span class="lbl">Round</span></div>' +
+      '<div class="rstep"><button class="btn rplus" data-act="roundplus" title="Next round, nothing done" aria-label="Next round (no actions)">+</button>' +
+      '<button class="btn rplus" data-act="roundminus"' + (state.undo.length ? "" : " disabled") + ' title="Undo the last round (up to 20 back)" aria-label="Undo the last round">−</button></div>' +
+      '<button class="btn sm" data-act="reset" title="Back to round 1 and full inspiration">Reset</button>' +
+      '<button class="btn primary" data-act="endround">End round</button></div>' +
+      (state.turn.length ? '<ul class="tlist">' + state.turn.map(function (e) {
+        return '<li><span class="tname">' + esc(e.name) + (e.note ? ' <span class="hint">' + esc(e.note) + "</span>" : "") + '</span><button class="btn sm tx" data-act="turnrm" data-id="' + e.id + '" aria-label="Take back">×</button></li>';
+      }).join("") + "</ul>" : '<p class="hint">Nothing this round yet.</p>') +
+      '<div class="row edit" style="margin-top:10px"><input type="text" data-ui="custom" maxlength="80" placeholder="Another action (attack, move, skill…)" value="' + esc(ui.custom) + '" style="flex:1;min-width:200px;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px">' +
+      '<button class="btn sm" data-act="custom">Add</button></div>' +
+      '<h3>Attacks now</h3><div class="tscroll"><table class="t"><tr><th>Weapon</th><th class="n">Attack</th><th>Damage</th><th>Crit</th><th>Notes</th></tr>' +
+      "<tr><td>Rapier (masterwork)</td><td class=\"n\">" + sg(D.rapier) + "</td><td>1d6" + (D.kd ? sg(D.kd) : "") + "</td><td>18–20/×2</td><td>Weapon Finesse; Noncombatant −2" + (D.fl ? "; flanking +2" : "") + "</td></tr>" +
+      "<tr><td>Longbow (masterwork)</td><td class=\"n\">" + sg(D.bow) + "</td><td>1d8" + (D.kd ? sg(D.kd) : "") + "</td><td>×3</td><td>100 ft increment; Shaky −2; " + state.stock.arrows + " arrows in the quiver</td></tr></table></div>" +
+      '<p class="hint" style="margin-top:6px">Cunning Insight adds +' + INT + " to one attack or damage roll; Cunning Strike adds +1d6 sneak attack.</p>" +
+      '<div class="row edit" style="margin-top:8px"><label class="hint" style="display:flex;gap:6px;align-items:center">Knowledge Devotion <select data-ui="kd" style="background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:5px 8px">' +
+        [0, 1, 2, 3, 4, 5].map(function (n) { return '<option value="' + n + '"' + (state.kd === n ? " selected" : "") + ">" + (n ? "+" + n + " vs this foe" : "none") + "</option>"; }).join("") + "</select></label>" +
+      '<button class="btn sm" data-act="flank" aria-pressed="' + !!state.flank + '">' + (state.flank ? "Flanking ✓" : "Not flanking") + "</button></div>" +
+      '<h3>OOC for RPoL</h3><textarea class="ooc" id="oocText" readonly>' + esc(ooc) + '</textarea><div class="row"><button class="btn sm" data-act="ooccopy">Copy</button></div>' +
+      (state.prevOoc ? '<details class="sec"><summary>Last round</summary><pre class="txt">' + esc(state.prevOoc) + "</pre></details>" : "");
+  }
+  function oocText() {
+    var D = d();
+    return "OOC: Round " + state.round + (state.inEnc ? "" : " (no encounter)") + "\n" +
+      "Courynna: " + (state.turn.length ? state.turn.map(function (e) { return e.name + (e.note ? " (" + e.note + ")" : ""); }).join("; ") : "nothing yet") + ".\n" +
+      "HP " + state.hp + "/" + HP_MAX + ", inspiration " + state.ip + "/" + IP_MAX + ", piety " + state.piety + "/" + PIETY_MAX + ". AC " + D.ac + (state.defs.length ? " (" + D.cdAc + " vs " + state.defs.join(", ") + ")" : "") + ", touch " + D.touch + ", flat-footed " + D.ff + "." +
+      (state.kd ? " Knowledge Devotion +" + state.kd + "." : "");
+  }
+
+  function renderSpells() {
+    var prep = state.prepared, maxCount = prep.filter(function (p) { return p.l === MAX_SPELL; }).length;
+    $("pSpells").innerHTML = '<div class="ph"><h2>Arcane Dilettante</h2><span class="hint">Caster level ' + LEVEL + " · spell-like abilities</span></div>" +
+      '<p class="hint">Prepared today. 1 inspiration casts one; each works once until 8 hours of rest.</p>' +
+      '<div class="tscroll"><table class="t"><tr><th>Spell</th><th class="n">Level</th><th class="n">DC</th><th></th></tr>' +
+      prep.map(function (p, i) {
+        var used = !!state.adUsed[i];
+        return "<tr><td>" + esc(p.n) + (used ? ' <span class="chip used">used</span>' : "") + '</td><td class="n">' + p.l + '</td><td class="n">' + DC(p.l) + "</td>" +
+          '<td><button class="btn sm gold" data-act="cast" data-i="' + i + '"' + (used || state.ip < 1 ? " disabled" : "") + ">Cast</button></td></tr>";
+      }).join("") + "</table></div>" +
+      '<details class="sec edit"><summary>Change prepared spells</summary>' +
+        '<p class="hint">Sorcerer/wizard spells up to ' + MAX_SPELL + "nd level, only one of " + MAX_SPELL + "nd. Changing them is for the start of the day.</p>" +
+        prep.map(function (p, i) {
+          return '<div class="row" style="margin-top:6px"><input type="text" data-prep="' + i + '" value="' + esc(p.n) + '" maxlength="40" style="flex:1;min-width:150px;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px">' +
+            '<select data-prepl="' + i + '" style="background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px">' + [0, 1, 2].map(function (l) { return '<option value="' + l + '"' + (p.l === l ? " selected" : "") + ">Level " + l + "</option>"; }).join("") + "</select></div>";
+        }).join("") +
+        (maxCount > 1 ? '<p class="warn-text">Only one spell of ' + MAX_SPELL + "nd level may be prepared.</p>" : "") +
+      "</details>";
+  }
+
+  function renderStock() {
+    var row = function (k, label, n, note) {
+      return "<span>" + esc(label) + (note ? ' <span class="hint">' + esc(note) + "</span>" : "") + '</span><span class="q"><b>' + n + "</b>" +
+        '<button class="btn sm edit" data-act="use" data-k="' + k + '"' + (n < 1 ? " disabled" : "") + '>Use</button><button class="btn sm edit" data-act="add" data-k="' + k + '">+</button></span>';
+    };
+    var umd = skillTotal(SKILLS.filter(function (s) { return s[0] === "Use Magic Device"; })[0]);
+    $("pStock").innerHTML = '<div class="ph"><h2>Consumables</h2><span class="hint">Use counts one down and logs it</span></div>' +
+      '<div class="stock">' + STOCK.map(function (x) { return row(x[0], x[1], state.stock[x[0]], x[3]); }).join("") + "</div>" +
+      "<h3>Scrolls (caster level 1)</h3>" +
+      '<p class="hint">No sorcerer/wizard spell list, so reading one takes Use Magic Device ' + sg(umd) + " against DC 21 (20 + caster level).</p>" +
+      '<div class="stock" style="margin-top:6px">' + SCROLLS.map(function (n) { return row("scroll:" + n, n, state.scrolls[n], ""); }).join("") + "</div>";
+  }
+
+  function renderSheet() {
+    var D = d(), open = {};
+    document.querySelectorAll("#pSheet details[data-sec]").forEach(function (x) { open[x.getAttribute("data-sec")] = x.open; });
+    var sec = function (id, title, body) { return '<details class="sec" data-sec="' + id + '"' + (open[id] ? " open" : "") + "><summary>" + title + "</summary>" + body + "</details>"; };
+    var stat = function (l, v, s) { return '<div class="stat"><span class="lbl">' + l + "</span><b class=\"num\">" + v + "</b>" + (s ? "<small>" + s + "</small>" : "") + "</div>"; };
+    var abl = ["str", "dex", "con", "int", "wis", "cha"];
+    var h = '<div class="ph"><h2>Sheet</h2><span class="hint">Human Factotum 5 · Neutral · Boccob · XP 10,000 (next 15,000)</span></div>' +
+      '<div class="stats">' + stat("AC", D.ac, "touch " + D.touch + " · ff " + D.ff) + stat("HP", state.hp + "/" + HP_MAX, "") + stat("Init", sg(D.init), "") +
+        stat("Fort", sg(D.fort), "") + stat("Ref", sg(D.ref), "") + stat("Will", sg(D.will), "") + "</div>" +
+      '<p class="hint" style="margin:8px 0">Saves: +1 more against spells and spell-like abilities (Nymph\'s Kiss). Speed 30 ft. Spell DCs ' + DC(1) + " (1st), " + DC(2) + " (2nd).</p>";
+    h += sec("abl", "Abilities", '<div class="stats">' + abl.map(function (k) { return stat(k.toUpperCase(), AB[k], sg(mod(k))); }).join("") + "</div>");
+    h += sec("combat", "Combat", '<div class="tscroll"><table class="t">' +
+      "<tr><th>AC</th><td>" + D.ac + " = 10 + 5 armor (+1 mithral shirt) + 4 Dex + 1 deflection (ring) + 1 luck (Luck of Heroes)</td></tr>" +
+      "<tr><th>Touch / flat-footed</th><td>" + D.touch + " / " + D.ff + "</td></tr>" +
+      "<tr><th>Cunning Defense</th><td>AC " + D.cdAc + " against one opponent for a round (dodge, lost when flat-footed)</td></tr>" +
+      "<tr><th>Melee</th><td>" + sg(BAB - 2) + " (BAB 3, Str 0, Noncombatant −2); rapier " + sg(BAB + mod("dex") + 1 - 2) + " with Weapon Finesse and masterwork</td></tr>" +
+      "<tr><th>Ranged</th><td>" + sg(BAB + mod("dex") - 2) + " (BAB 3, Dex 4, Shaky −2); longbow " + sg(BAB + mod("dex") + 1 - 2) + " with masterwork</td></tr>" +
+      "<tr><th>Grapple</th><td>" + sg(BAB + mod("str")) + "</td></tr>" +
+      "<tr><th>Saves</th><td>Fort " + sg(D.fort) + " = 1 base + 2 Con + 1 cloak + 1 luck; Ref " + sg(D.ref) + " = 4 + 4 Dex + 1 + 1; Will " + sg(D.will) + " = 1 + 1 Wis + 1 + 1</td></tr>" +
+      "<tr><th>Armor</th><td>+1 mithral chain shirt: light, +5, max Dex +6, no check penalty, 12.5 lb. Arcane Dilettante spells are spell-like: no spell failure.</td></tr></table></div>");
+    h += sec("class", "Factotum features", '<ul class="plain">' + CLASS.map(function (c) { return "<li><b>" + esc(c[0]) + ".</b> " + esc(c[1]) + "</li>"; }).join("") + "</ul>");
+    h += sec("feats", "Feats and flaws", '<ul class="plain">' + FEATS.map(function (f) { return "<li><b>" + esc(f[0]) + "</b> <span class=\"hint\">" + esc(f[1]) + "</span>: " + esc(f[2]) + "</li>"; }).join("") +
+      "<li><b>Noncombatant</b> <span class=\"hint\">flaw</span>: −2 on melee attack rolls.</li><li><b>Shaky</b> <span class=\"hint\">flaw</span>: −2 on ranged attack rolls.</li></ul>");
+    h += sec("skills", "Skills", '<p class="hint">Every skill is a class skill (max 8 ranks). Cunning Knowledge adds +' + LEVEL + " once a day per skill with ranks.</p>" +
+      '<div class="tscroll"><table class="t"><tr><th>Skill</th><th class="n">Ranks</th><th class="n">Total</th><th>From</th></tr>' +
+      SKILLS.map(function (s) { var t = skillTotal(s);
+        return "<tr><td>" + esc(s[0]) + (state.ck[s[0]] ? ' <span class="chip used">CK used</span>' : "") + '</td><td class="n">' + (s[2] || "") + '</td><td class="n"><b>' + sg(t) + "</b></td><td class=\"hint\">" + skillParts(s).map(function (p) { return p[0] + " " + sg(p[1]); }).join(", ") + "</td></tr>"; }).join("") +
+      "</table></div><p class=\"hint\" style=\"margin-top:6px\">1 skill point spent on Speak Language (Uestor).</p>");
+    h += sec("lang", "Languages", "<p>" + LANGS.map(esc).join(", ") + "</p>");
+    h += sec("gear", "Gear and money", '<pre class="txt" id="gearTxt">Loading…</pre>');
+    h += '<div class="row" style="margin-top:12px"><button class="btn sm" data-act="rpol">Generate RPoL sheet</button></div>';
+    $("pSheet").innerHTML = h;
+    loadTpl(function (t) { var el = $("gearTxt"); if (el) el.textContent = slice(t, "COIN:", "DESCRIPTION") || "Gear list not loaded."; });
+  }
+
+  function renderLog() {
+    $("pLog").innerHTML = '<div class="ph"><h2>Log</h2><div class="row"><button class="btn sm" data-act="copylog">Copy log</button>' +
+      '<button class="btn sm' + (ui.clearArmed ? " warn" : "") + '" data-act="clearlog">' + (ui.clearArmed ? "Tap again to clear" : "Clear log") + "</button></div></div>" +
+      (state.log.length ? '<ul class="log">' + state.log.map(function (e) { return '<li><span class="r">R' + e.r + "</span>" + esc(e.t) + "</li>"; }).join("") + "</ul>" : '<p class="hint">Nothing logged yet.</p>');
+  }
+
+  /* ---------- printed sheet (RPoL export and gear list) ---------- */
+  var TPL = null;
+  function loadTpl(cb) {
+    if (TPL != null) return cb(TPL);
+    fetch("docs/courynna-sheet.txt").then(function (r) { return r.ok ? r.text() : ""; }).catch(function () { return ""; }).then(function (t) { TPL = t; cb(t); });
+  }
+  function slice(t, from, to) {
+    var a = t.indexOf(from), b = to ? t.indexOf(to, a + 1) : -1;
+    if (a < 0) return "";
+    return t.slice(a, b < 0 ? undefined : b).replace(/\s*-{20,}\s*$/, "").trim();
+  }
+  /* her printed sheet with the live numbers written in: inspiration, current HP, prepared spells, consumables, status */
+  function rpolText(t) {
+    var D = d(), now = new Date(), M = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var out = t.replace(/Inspiration Points : \d+\/\d+/, "Inspiration Points : " + state.ip + "/" + IP_MAX)
+      .replace(/^(HP    : 30)\s{4,}(\s*\|)/m, function (m, a, b) { return a + "      " + String(state.hp).padStart(3) + "               |"; });
+    var prep = "PREPARED SORCERER/WIZARD SPELLS\n";
+    [0, 1, 2].forEach(function (l) {
+      var at = state.prepared.map(function (p, i) { return [p, i]; }).filter(function (x) { return x[0].l === l; });
+      if (at.length) prep += "\nLEVEL " + l + " (DC:" + DC(l) + ")\n" + at.map(function (x) { return "- " + x[0].n + (state.adUsed[x[1]] ? " (used, back after 8 hours of rest)" : ""); }).join("\n") + "\n";
+    });
+    out = out.replace(/PREPARED SORCERER\/WIZARD SPELLS[\s\S]*?(?=-{20,})/, prep);
+    var status = "CURRENT STATUS (" + M[now.getMonth()] + " " + now.getDate() + " " + now.getFullYear() + ", round " + state.round + ")\n" +
+      " - Hit points " + state.hp + " of " + HP_MAX + ". Inspiration " + state.ip + " of " + IP_MAX + ". Opportunistic Piety " + state.piety + " of " + PIETY_MAX + " left today.\n" +
+      " - Cunning Knowledge used today: " + (Object.keys(state.ck).join(", ") || "none") + ".\n" +
+      " - Consumables: " + STOCK.map(function (x) { return x[1] + " " + state.stock[x[0]]; }).join(", ") + ".\n" +
+      " - Scrolls: " + SCROLLS.map(function (n) { return n + " " + state.scrolls[n]; }).join(", ") + ".\n" +
+      (state.defs.length ? " - Cunning Defense this round against " + state.defs.join(", ") + " (AC " + D.cdAc + ").\n" : "") +
+      (state.kd ? " - Knowledge Devotion +" + state.kd + " against the current foe.\n" : "") +
+      "----------------------------------------------------------------------------\n";
+    return out.replace(/(-{20,}\n)(DESCRIPTION)/, "$1" + status + "$2");
+  }
+
+  /* ---------- events ---------- */
+  function openInfo(title, html, wide) {
+    $("helpTitle").textContent = title; $("helpBody").innerHTML = html;
+    $("helpForm").classList.toggle("wide", !!wide); $("helpSheet").hidden = false;
+  }
+  function closeHelp() { $("helpSheet").hidden = true; }
+  $("helpForm").addEventListener("submit", function (e) { e.preventDefault(); closeHelp(); });
+  $("helpSheet").addEventListener("click", function (e) { if (e.target === $("helpSheet")) closeHelp(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("helpSheet").hidden) closeHelp(); });
+  var copy = function (txt, btn) {
+    var done = function () { var o = btn.textContent; btn.textContent = "Copied"; setTimeout(function () { btn.textContent = o; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, function () {}); else done();
+  };
+
+  document.addEventListener("click", function (e) {
+    if (e.target.closest && e.target.closest("[data-portrait]")) { openInfo("Courynna Talaudrym", '<img class="portrait-full" src="images/courynna.webp" alt="Courynna, a red-haired woman in a mithral shirt and navy cloak, holding a book and a rapier" width="1024" height="1536">'); return; }
+    if (e.target.closest && e.target.closest("[data-goturn]")) { var pt = $("pTurn"), tp = document.querySelector(".top"); window.scrollTo({ top: pt.getBoundingClientRect().top + window.scrollY - (tp ? tp.offsetHeight : 0) - 8, behavior: "smooth" }); return; }
+    var t = e.target.closest && e.target.closest("[data-act]");
+    if (!t) return;
+    var a = t.getAttribute("data-act");
+    if (a === "copylog") { copy(state.log.slice().reverse().map(function (x) { return "R" + x.r + "  " + x.t; }).join("\n"), t); return; }
+    if (a === "ooccopy") { copy(oocText(), t); return; }
+    if (a === "rpol") {
+      loadTpl(function (tp) {
+        var txt = rpolText(tp);
+        openInfo("Courynna: RPoL sheet", '<p class="hint">Her printed sheet with today\'s numbers written in.</p><textarea class="rpol" id="rpolTxt" readonly>' + esc(txt) + '</textarea><div class="row"><button type="button" class="btn primary" id="rpolCopy">Copy</button></div>', true);
+        $("rpolCopy").addEventListener("click", function () { copy(txt, $("rpolCopy")); });
+      });
+      return;
+    }
+    if (readOnly) return;
+    var spend = function (name, note, extra) {
+      if (state.ip < 1) return;
+      mutate(function (s) { s.ip -= 1; if (extra) extra(s); log(name + (note ? ": " + note : "") + " (inspiration " + (s.ip + 1) + " → " + s.ip + ")"); act(name, note); });
+    };
+    if (a === "insight") spend("Cunning Insight", "+" + INT + " on " + ({ attack: "an attack roll", damage: "a damage roll", save: "a saving throw" }[ui.insight]));
+    else if (a === "defense") { var who = ui.def.trim() || "one opponent"; ui.def = ""; spend("Cunning Defense", "+" + INT + " dodge AC vs " + who, function (s) { s.defs.push(who); }); }
+    else if (a === "strike") spend("Cunning Strike", "+1d6 sneak attack");
+    else if (a === "ck") { var sk = ui.ck; if (!sk || state.ck[sk]) return; ui.ck = ""; spend("Cunning Knowledge", sk + " +" + LEVEL, function (s) { s.ck[sk] = true; }); }
+    else if (a === "cast") {
+      var i = +t.getAttribute("data-i"), p = state.prepared[i];
+      if (!p || state.adUsed[i]) return;
+      spend("Arcane Dilettante: " + p.n, "level " + p.l + ", CL " + LEVEL + ", DC " + DC(p.l), function (s) { s.adUsed[i] = true; });
+    }
+    else if (a === "piety") {
+      if (state.piety < 1 || state.ip < 1) return;
+      var k = ui.piety, txt = { heal: "heals herself " + PIETY_AMT, healAlly: "heals an ally " + PIETY_AMT, harm: PIETY_AMT + " damage to an undead", turn: "turn undead (check d20" + sg(mod("cha")) + ", damage 2d6" + sg(LEVEL + mod("cha")) + ")" }[k];
+      spend("Opportunistic Piety", txt, function (s) { s.piety -= 1; if (k === "heal") s.hp = Math.min(HP_MAX, s.hp + PIETY_AMT); });
+    }
+    else if (a === "custom") { var c = ui.custom.trim(); if (!c) return; ui.custom = ""; mutate(function (s) { act(c); }); }
+    else if (a === "turnrm") {
+      var id = t.getAttribute("data-id");
+      mutate(function (s) { var g = s.turn.filter(function (x) { return x.id === id; })[0]; s.turn = s.turn.filter(function (x) { return x.id !== id; }); if (g) undoAction(s, g); });
+    }
+    else if (a === "ip") { var dd = +t.getAttribute("data-d"); mutate(function (s) { var o = s.ip; s.ip = Math.max(0, Math.min(IP_MAX, s.ip + dd)); log("Inspiration set by hand " + o + " → " + s.ip); }); }
+    else if (a === "hp" || a === "hpamt") {
+      var n = a === "hp" ? +t.getAttribute("data-d") : (parseInt(($("hpAmt") || {}).value, 10) || 0) * +t.getAttribute("data-s");
+      if (!n) return;
+      mutate(function (s) { var o = s.hp; s.hp = Math.max(DEAD, Math.min(HP_MAX, s.hp + n)); var top = s.log[0];
+        if (top && top.k === "hp" && top.r === s.round) { top.t = "HP " + top.from + " → " + s.hp; } else s.log.unshift({ r: s.round, k: "hp", from: o, t: "HP " + o + " → " + s.hp }); });
+    }
+    else if (a === "use" || a === "add") {
+      var key = t.getAttribute("data-k"), sc = /^scroll:/.test(key), nm = sc ? key.slice(7) : key, dl = a === "use" ? -1 : 1;
+      var label = sc ? "Scroll of " + nm : (STOCK.filter(function (x) { return x[0] === nm; })[0] || [0, nm])[1];
+      mutate(function (s) {
+        var bag = sc ? s.scrolls : s.stock;
+        if (dl < 0 && bag[nm] < 1) return;
+        bag[nm] += dl;
+        log((dl < 0 ? "Used " : "Added ") + label + " (" + (bag[nm] - dl) + " → " + bag[nm] + ")");
+        if (dl < 0) act("Used " + label, sc ? "Use Magic Device vs DC 21" : "");
+      });
+    }
+    else if (a === "startenc") mutate(function (s) { s.undo = []; s.inEnc = true; s.round = 1; s.ip = IP_MAX; s.defs = []; s.turn = []; s.kd = 0; s.flank = false; log("Encounter starts: inspiration " + IP_MAX); });
+    else if (a === "endenc") mutate(function (s) { s.inEnc = false; s.ip = IP_MAX; s.defs = []; s.turn = []; s.kd = 0; s.flank = false; s.undo = []; log("Encounter over: inspiration back to " + IP_MAX); });
+    else if (a === "endround" || a === "roundplus") mutate(function (s) {
+      s.undo = s.undo.concat([snap(s)]).slice(-UNDO_MAX);
+      if (s.turn.length) log("Round " + s.round + " actions: " + s.turn.map(function (x) { return x.name + (x.note ? " (" + x.note + ")" : ""); }).join("; "));
+      else log("Round " + s.round + " passed, no actions");
+      s.prevOoc = oocText(); s.turn = []; s.defs = []; s.round += 1;
+    });
+    else if (a === "roundminus") mutate(function (s) {
+      var u = s.undo.pop(); if (!u) return;
+      Object.keys(u).forEach(function (k) { s[k] = u[k]; });
+      log("Back to round " + s.round + " (undid the end of round " + s.round + ")");
+    });
+    else if (a === "reset") mutate(function (s) { s.round = 1; s.turn = []; s.defs = []; s.undo = []; s.ip = IP_MAX; log("Reset to round 1"); });
+    else if (a === "flank") mutate(function (s) { s.flank = !s.flank; });
+    else if (a === "newday") {
+      if (!ui.dayArmed) { ui.dayArmed = true; render(); setTimeout(function () { ui.dayArmed = false; render(); }, 4000); return; }
+      ui.dayArmed = false;
+      mutate(function (s) { var o = s.hp; s.hp = Math.min(HP_MAX, s.hp + LEVEL); s.ip = IP_MAX; s.piety = PIETY_MAX; s.ck = {}; s.adUsed = {}; s.round = 1; s.turn = []; s.defs = []; s.undo = []; s.inEnc = false; s.kd = 0; s.flank = false;
+        log("New day: spells and Cunning Knowledge back, piety " + PIETY_MAX + ", inspiration " + IP_MAX + ", HP " + o + " → " + s.hp); });
+    }
+    else if (a === "clearlog") {
+      if (!ui.clearArmed) { ui.clearArmed = true; renderLog(); setTimeout(function () { ui.clearArmed = false; renderLog(); }, 4000); return; }
+      ui.clearArmed = false; mutate(function (s) { s.log = []; });
+    }
+  });
+  document.addEventListener("input", function (e) {
+    var u = e.target.getAttribute && e.target.getAttribute("data-ui");
+    if (u === "def" || u === "custom") ui[u] = e.target.value;
+  });
+  document.addEventListener("change", function (e) {
+    var t = e.target, u = t.getAttribute && t.getAttribute("data-ui");
+    if (u === "kd") { var v = +t.value; mutate(function (s) { s.kd = v; if (v) log("Knowledge Devotion +" + v + " against the current foe"); }); return; }
+    if (u === "def" || u === "custom") { ui[u] = t.value; return; } /* text boxes: no redraw, or the button tapped next would be replaced under the tap */
+    if (u) { ui[u] = t.value; render(); return; }
+    if (readOnly) return;
+    if (t.hasAttribute("data-prep")) { var i = +t.getAttribute("data-prep"), nm = t.value.trim().slice(0, 40); mutate(function (s) { if (nm) { log("Prepared spell " + (i + 1) + ": " + s.prepared[i].n + " → " + nm); s.prepared[i].n = nm; } }); }
+    if (t.hasAttribute("data-prepl")) { var j = +t.getAttribute("data-prepl"), l = +t.value; mutate(function (s) { s.prepared[j].l = l; }); }
+  });
+
+  /* ---------- storage (as in Daerlieth's tracker: Firestore document trackers/courynna, public read, owner writes) ---------- */
+  var CFG = window.TRACKER_CONFIG || {};
+  var WANTS_EDIT = KEY + ":edit";
+  var VIEW_ONLY = /[?&#]view\b/.test(location.search + location.hash);
+  var auth = null, ref = null, user = null, saveSeq = 0;
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* storage unavailable */ } }
+  function setStatus(t) { var el = $("status"); if (el) el.textContent = readOnly ? roLabel : t; }
+  function setReadOnly(label) { readOnly = true; roLabel = label; document.body.classList.add("ro"); setStatus(""); }
+  function setEditable(label) { readOnly = false; roLabel = ""; document.body.classList.remove("ro"); setStatus(label); }
+  function scheduleSave() { dirty = true; setStatus("Saving"); clearTimeout(saveTimer); saveTimer = setTimeout(flush, 350); }
+  var SAVE_LIMIT = 180000;
+  function bytes(str) { try { return unescape(encodeURIComponent(str)).length; } catch (e) { return str.length * 3; } }
+  function fitPayload() {
+    var payload = JSON.stringify(state);
+    while (bytes(payload) > SAVE_LIMIT && (state.undo.length || state.log.length > 50)) {
+      if (state.undo.length > 5) state.undo.shift();
+      else if (state.log.length > 50) state.log = state.log.slice(0, Math.max(50, Math.floor(state.log.length * 0.8)));
+      else state.undo.shift();
+      payload = JSON.stringify(state);
+    }
+    return payload;
+  }
+  function flush() {
+    if (!dirty) return;
+    dirty = false;
+    var payload = fitPayload();
+    lsSet(KEY, payload);
+    if (!ref) { setStatus("Saved on this device"); return; }
+    var mine = ++saveSeq;
+    if (!navigator.onLine) setStatus("Offline, saved on this device");
+    ref.set({ json: payload, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+      .then(function () { if (mine === saveSeq && !dirty) setStatus("Saved"); })
+      .catch(function (err) {
+        if (err && err.code === "permission-denied") setReadOnly("Save refused by the Firestore rules for " + ((user && user.email) || "this account"));
+        else setStatus("Not saved");
+      });
+  }
+  function applyRemote(sn) {
+    if (sn.metadata.hasPendingWrites || dirty) return;
+    if (sn.exists) {
+      try {
+        var incoming = normalize(JSON.parse(sn.data().json || "{}"));
+        lsSet(KEY, JSON.stringify(incoming));
+        if (JSON.stringify(incoming) !== JSON.stringify(state)) { state = incoming; render(); }
+      } catch (e) { /* keep what is shown */ }
+    }
+    var label = sn.metadata.fromCache ? "Offline, last saved copy" : "Live";
+    if (readOnly) setReadOnly(sn.exists || sn.metadata.fromCache ? label : "Waiting for the first save");
+    else setStatus(sn.metadata.fromCache ? "Offline, saved on this device" : "Saved");
+  }
+  function setUser(u) {
+    user = u || null;
+    if (VIEW_ONLY) setReadOnly(navigator.onLine ? "Live (viewer preview)" : "Offline, last saved copy");
+    else if (user && [].concat(CFG.ownerUids || CFG.ownerUid || []).indexOf(user.uid) >= 0) setEditable(navigator.onLine ? "Saved" : "Offline, saved on this device");
+    else setReadOnly(user ? "Signed in as " + (user.email || "?") + ", view only" : navigator.onLine ? "Live" : "Offline, last saved copy");
+    render();
+    renderAcct();
+  }
+  function renderAcct() {
+    var b = $("acctBtn");
+    if (!auth || VIEW_ONLY) { b.hidden = true; $("pwBtn").hidden = true; return; }
+    b.hidden = !user && !lsGet(WANTS_EDIT);
+    b.textContent = user ? "Sign out" : "Sign in";
+    $("pwBtn").hidden = !user || readOnly;
+  }
+  function hookAccount() {
+    if (/[?&#]edit\b/.test(location.search + location.hash)) lsSet(WANTS_EDIT, "1");
+    var sheet = $("signin"), err = $("siErr");
+    if (CFG.editorEmail) {
+      $("siEmail").value = CFG.editorEmail; $("siEmailRow").hidden = true; $("siAs").hidden = false; $("siAsEmail").textContent = CFG.editorEmail;
+      $("siOther").addEventListener("click", function () { $("siAs").hidden = true; $("siEmailRow").hidden = false; $("siEmail").value = ""; $("siEmail").focus(); });
+    }
+    function close() { sheet.hidden = true; err.textContent = ""; }
+    $("acctBtn").addEventListener("click", function () { if (user) { auth.signOut(); return; } sheet.hidden = false; (CFG.editorEmail ? $("siPass") : $("siEmail")).focus(); });
+    $("siCancel").addEventListener("click", close);
+    sheet.addEventListener("click", function (e) { if (e.target === sheet) close(); });
+    var pw = $("pwSheet"), pwErr = $("pwErr");
+    function closePw() { pw.hidden = true; pwErr.textContent = ""; $("pwForm").reset(); }
+    $("pwBtn").addEventListener("click", function () { if (!user) return; $("pwUser").value = user.email || ""; pw.hidden = false; $("pwOld").focus(); });
+    $("pwCancel").addEventListener("click", closePw);
+    $("pwForm").addEventListener("submit", function (e) {
+      e.preventDefault(); pwErr.textContent = "";
+      var nw = $("pwNew").value;
+      if (nw !== $("pwNew2").value) { pwErr.textContent = "The new passwords don't match."; return; }
+      if (nw.length < 6) { pwErr.textContent = "Use at least 6 characters."; return; }
+      $("pwGo").disabled = true;
+      user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(user.email, $("pwOld").value))
+        .then(function () { return user.updatePassword(nw); })
+        .then(function () { closePw(); setStatus("Password changed"); })
+        .catch(function (x) { pwErr.textContent = /invalid-credential|wrong-password/.test((x && x.code) || "") ? "The current password is wrong." : (x && x.message) || "Could not change the password."; })
+        .then(function () { $("pwGo").disabled = false; });
+    });
+    $("siForgot").addEventListener("click", function () {
+      var email = CFG.editorEmail || $("siEmail").value.trim();
+      if (!email) { err.textContent = "Enter the email first."; return; }
+      err.textContent = "Sending…";
+      auth.sendPasswordResetEmail(email, { url: location.origin + location.pathname + "?edit" })
+        .then(function () { err.textContent = "Reset email requested for " + email + "."; })
+        .catch(function (x) { err.textContent = (x && x.message) || "Could not send the email."; });
+    });
+    var rs = $("rsSheet"), rsErr = $("rsErr"), q = new URLSearchParams(location.search), rsCode = q.get("mode") === "resetPassword" ? q.get("oobCode") : null;
+    function closeRs() { rs.hidden = true; rsErr.textContent = ""; $("rsForm").reset(); history.replaceState(null, "", location.pathname + "?edit"); }
+    if (rsCode) {
+      lsSet(WANTS_EDIT, "1"); rs.hidden = false;
+      auth.verifyPasswordResetCode(rsCode).then(function (email) { $("rsUser").value = email; $("rsFor").textContent = "For " + email; })
+        .catch(function () { rsErr.textContent = "This reset link has expired or was already used."; $("rsGo").disabled = true; });
+    }
+    $("rsCancel").addEventListener("click", closeRs);
+    $("rsForm").addEventListener("submit", function (e) {
+      e.preventDefault(); rsErr.textContent = "";
+      var nw = $("rsNew").value;
+      if (nw !== $("rsNew2").value) { rsErr.textContent = "The passwords don't match."; return; }
+      $("rsGo").disabled = true;
+      auth.confirmPasswordReset(rsCode, nw).then(function () { return auth.signInWithEmailAndPassword($("rsUser").value, nw); })
+        .then(function () { closeRs(); setStatus("Password changed"); })
+        .catch(function (x) { rsErr.textContent = (x && x.message) || "Could not set the password."; $("rsGo").disabled = false; });
+    });
+    $("signinForm").addEventListener("submit", function (e) {
+      e.preventDefault(); err.textContent = ""; $("siGo").disabled = true;
+      auth.signInWithEmailAndPassword($("siEmail").value.trim(), $("siPass").value)
+        .then(function () { $("siPass").value = ""; close(); })
+        .catch(function (x) {
+          var c = (x && x.code) || "";
+          err.textContent = /invalid-credential|wrong-password|user-not-found|invalid-email/.test(c) ? "Wrong email or password." : /too-many-requests/.test(c) ? "Too many tries. Wait a few minutes." : (x && x.message) || "Could not sign in.";
+        })
+        .then(function () { $("siGo").disabled = false; });
+    });
+  }
+  function initStore() {
+    var cached = lsGet(KEY);
+    if (cached) { try { state = normalize(JSON.parse(cached)); render(); } catch (e) { /* ignore a bad copy */ } }
+    var fb = CFG.firebase || {};
+    if (!fb.apiKey || !fb.projectId || !CFG.characterId || !window.firebase) { setStatus("This device only"); return; }
+    firebase.initializeApp(fb);
+    var store = firebase.firestore();
+    store.enablePersistence({ synchronizeTabs: true }).catch(function () {});
+    auth = firebase.auth();
+    ref = store.collection("trackers").doc(CFG.characterId);
+    setReadOnly("Loading");
+    hookAccount();
+    renderAcct();
+    auth.onAuthStateChanged(setUser);
+    ref.onSnapshot({ includeMetadataChanges: true }, applyRemote, function () { setStatus("Can't reach the tracker"); });
+    window.addEventListener("online", function () { setUser(user); });
+    window.addEventListener("offline", function () { if (readOnly) setReadOnly("Offline, last saved copy"); else setStatus("Offline, saved on this device"); });
+  }
+
+  render();
+  initStore();
+  if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(function () {});
+})();
+</script>
+</body>
+</html>
