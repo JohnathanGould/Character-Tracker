@@ -1,5 +1,5 @@
 /* App shell cache so Nhym's tracker opens offline. Bump VERSION when shipping changes. */
-var VERSION = "nhym-v1";
+var VERSION = "nhym-v2";
 var SHELL = ["./", "index.html", "config.js", "docs/nhym-sheet.txt", "docs/nhym-background.md", "data/sla35.json", "vendor/firebase-app-compat.js", "vendor/firebase-auth-compat.js", "vendor/firebase-firestore-compat.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "images/nhym-thumb.webp", "images/nhym.webp"];
 
 self.addEventListener("install", function (e) {

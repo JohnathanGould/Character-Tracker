@@ -179,7 +179,7 @@ pre.txt { white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.74r
 .sheet input { background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; padding: 9px 10px; color: var(--fg); }
 .sheet .row { justify-content: flex-end; }
 .sheet .err { color: var(--heat); font-size: 0.85rem; margin: 0; min-height: 1.2em; }
-.portrait-full { width: 100%; border-radius: 10px; display: block; }
+.portrait-full { width: 100%; height: auto; max-height: 75vh; object-fit: contain; border-radius: 10px; display: block; }
 textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--fg); white-space: pre; }
 
 /* tabs: Skabs and Greg (like Daerlieth's and Gwathfaron's) */
@@ -579,7 +579,11 @@ body.view-pet .her, body:not(.view-pet) .pet { display: none !important; }
   document.addEventListener("click", function (e) {
     var tb = e.target.closest && e.target.closest("[data-tab]");
     if (tb) { setView(tb.getAttribute("data-tab")); return; }
-    if (e.target.closest && e.target.closest("[data-portrait]")) { openInfo(e.target.closest("[data-portrait]").getAttribute("data-portrait") === "greg" ? "Greg and Skabs" : "Skabs", '<img class="portrait-full" src="images/skabs.webp" alt="Skabs, a goblin in plate armor with a masked helm, a torch and a longsword, with his war pony Greg in a ruined cavern" width="1408" height="768">', true); return; }
+    if (e.target.closest && e.target.closest("[data-portrait]")) {
+      if (e.target.closest("[data-portrait]").getAttribute("data-portrait") === "greg") openInfo("Greg", '<img class="portrait-full" src="images/greg.webp" alt="Greg, a brown war pony with a saddle and bedroll, in a dark cavern" width="345" height="550">');
+      else openInfo("Skabs", '<img class="portrait-full" src="images/skabs.webp" alt="Skabs, a goblin in plate armor and a masked helm, holding a torch and a longsword" width="555" height="728">');
+      return;
+    }
     if (e.target.closest && e.target.closest("[data-goturn]")) { var pt = $("pTurn"), tp = document.querySelector(".top"); window.scrollTo({ top: pt.getBoundingClientRect().top + window.scrollY - (tp ? tp.offsetHeight : 0) - 8, behavior: "smooth" }); return; }
     var t = e.target.closest && e.target.closest("[data-act]");
     if (!t) return;

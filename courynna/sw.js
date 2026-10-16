@@ -1,5 +1,5 @@
 /* App shell cache so Courynna's tracker opens offline. Bump VERSION when shipping changes. */
-var VERSION = "courynna-v3";
+var VERSION = "courynna-v4";
 var SHELL = ["./", "index.html", "config.js", "docs/courynna-sheet.txt", "data/spells35.json", "vendor/firebase-app-compat.js", "vendor/firebase-auth-compat.js", "vendor/firebase-firestore-compat.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "images/courynna-thumb.webp", "images/courynna.webp"];
 
 self.addEventListener("install", function (e) {
