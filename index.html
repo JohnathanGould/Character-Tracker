@@ -926,10 +926,57 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   }
   function mutate(fn) {
     if (readOnly) return;
+    var pre = effSnap(state);
     fn(state);
     state.overdrive = Math.min(odMax(), state.overdrive);
+    effAttach(state, pre);
     render();
     scheduleSave();
+  }
+  /* This round: an action added in a change (a cast, a mythic spend, the racial light...) remembers what that change
+     did to her resources, spells and pending effects, so × on the action takes it back. End round makes it permanent
+     (only − undoes it after that). */
+  var EFF_NUM = ["burnout", "overdrive", "mythic", "hp", "petHp", "strDmg", "vials"];
+  function effSnap(s) {
+    return { her: s.turn && s.turn.her, pet: s.turn && s.turn.pet, nH: s.turn ? s.turn.her.length : 0, nP: s.turn ? s.turn.pet.length : 0,
+      num: EFF_NUM.map(function (k) { return s[k]; }), gained: s.gained, blood: JSON.stringify(s.blood || null), light: s.lightUsed,
+      active: (s.active || []).map(function (a) { return JSON.stringify(a); }), pending: (s.pending || []).map(function (p) { return JSON.stringify(p); }) };
+  }
+  function effAttach(s, pre) {
+    var e = null;
+    if (s.turn && s.turn.her === pre.her && s.turn.her.length > pre.nH) e = s.turn.her[s.turn.her.length - 1];
+    else if (s.turn && s.turn.pet === pre.pet && s.turn.pet.length > pre.nP) e = s.turn.pet[s.turn.pet.length - 1];
+    if (!e) return;
+    var f = {}, any = false;
+    EFF_NUM.forEach(function (k, i) { if (s[k] !== pre.num[i] && typeof s[k] === "number" && typeof pre.num[i] === "number") { (f.d = f.d || {})[k] = s[k] - pre.num[i]; any = true; } });
+    if (s.gained !== pre.gained) { f.gained = pre.gained; any = true; }
+    if (JSON.stringify(s.blood || null) !== pre.blood) { f.blood = JSON.parse(pre.blood); any = true; }
+    if (s.lightUsed !== pre.light) { f.light = pre.light; any = true; }
+    var aNow = (s.active || []).map(function (a) { return JSON.stringify(a); }), pNow = (s.pending || []).map(function (p) { return JSON.stringify(p); });
+    var addA = aNow.filter(function (x) { return pre.active.indexOf(x) < 0; }), delA = pre.active.filter(function (x) { return aNow.indexOf(x) < 0; });
+    var addP = pNow.filter(function (x) { return pre.pending.indexOf(x) < 0; });
+    if (addA.length) { f.addA = addA.map(function (x) { var a = JSON.parse(x); return { id: a.id, cast: a.cast }; }); any = true; }
+    if (delA.length) { f.delA = delA.map(function (x) { return JSON.parse(x); }); any = true; }
+    if (addP.length) { f.addP = addP.map(function (x) { return JSON.parse(x).id; }); any = true; }
+    if (any) e.eff = f;
+  }
+  /* × on an action: undo what it did, leaving everything done since alone */
+  function effUndo(s, who, e) {
+    var f = e.eff;
+    if (!f) return;
+    var lim = { burnout: [0, 999], overdrive: [0, odMax()], mythic: [0, 7], hp: [-HP_DEAD, hpMax()], petHp: [-petDead(), petMax()], strDmg: [0, 16], vials: [0, 99] };
+    Object.keys(f.d || {}).forEach(function (k) { var L = lim[k] || [-1e9, 1e9]; s[k] = Math.min(L[1], Math.max(L[0], s[k] - f.d[k])); });
+    if (f.addA) s.active = s.active.filter(function (a) { return !f.addA.some(function (x) { return x.id === a.id && x.cast === a.cast; }); });
+    (f.delA || []).slice().reverse().forEach(function (a) { if (!s.active.some(function (b) { return b.id === a.id; }) && s.active.length < LP().slots) s.active.unshift(a); });
+    if (f.addP) s.pending = s.pending.filter(function (p) { return f.addP.indexOf(p.id) < 0; });
+    if ("blood" in f) s.blood = f.blood;
+    if ("light" in f) s.lightUsed = f.light;
+    if ("gained" in f || (f.d && f.d.burnout)) {
+      /* burnout still counts as gained this round if another action that stays gained some */
+      var other = (s.turn.her || []).concat(s.turn.pet || []).some(function (x) { return x !== e && x.eff && x.eff.d && x.eff.d.burnout > 0; });
+      s.gained = !!(("gained" in f ? f.gained : s.gained) || other);
+    }
+    log("Took back: " + e.name);
   }
 
   function castBlood(c) {
@@ -1313,6 +1360,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   var COLOPT = ["od", "d8", "wa", "myth", "castOn"];
   function colSpell(col) {
     if (col === "x") return expSpell();
+    if (col === "t") return ui.turnSpell ? getSpell(ui.turnSpell) : null;
     if (col === "w") return bankFind(ui.customName, ui.customLvl) ? customSpell() : null;
     return ui.knownSel ? getSpell(ui.knownSel) : null;
   }
@@ -1671,6 +1719,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         return '<optgroup label="' + esc(g.label) + '">' + g.items.map(function (it) { return '<option value="' + esc(it.id) + '"' + (it.id === sel ? " selected" : "") + ">" + esc(it.name) + " · " + A[it.act] + "</option>"; }).join("") + "</optgroup>";
       }).join("") + '<optgroup label="Something else"><option value="custom"' + (sel === "custom" ? " selected" : "") + '>Something else (describe it)…</option></optgroup>';
       var pick = null; cat.forEach(function (g) { g.items.forEach(function (it) { if (it.id === sel) pick = it; }); });
+      if (who === "her") ui.turnSpell = pick && pick.spell ? pick.spell : "";
       return '<div class="tcol"><h3>' + label + "</h3>" +
         '<div class="tbudget">' + chip("Standard", b.std) + chip("Move", b.move) + chip("Swift", b.swift) + chip("5-ft step", b.step) + '<span class="chip react' + (b.react ? "" : " used") + '" title="Attacks of opportunity happen on enemies\' turns and use none of the actions above.">Reaction ' + (b.react ? "✓" : "used") + "</span></div>" +
         (b.warn.length ? '<p class="warn-text">' + esc(b.warn.join("; ")) + ".</p>" : "") +
@@ -1683,12 +1732,15 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
         (hidden || showAll ? '<p class="hint tleft">' + (showAll ? "Showing every action." : hidden + " action" + (hidden === 1 ? "" : "s") + " hidden: no " + left(b) + " left.") +
           ' <button type="button" class="linkbtn" data-act="turnall" data-who="' + who + '">' + (showAll ? "Only what's left" : "Show all") + "</button></p>" : "") +
         (sel === "custom" ? '<select id="tAct-' + who + '">' + Object.keys(A).filter(function (k) { return showAll || Actions.fits(k, b); }).map(function (k) { return '<option value="' + k + '">' + A[k] + "</option>"; }).join("") + "</select>" : "") +
+        (pick && pick.spell && who === "her" ? '<div class="tcast">' + (withCol("t", function (sp) { return castHtml(sp, "t"); }) || "") + "</div></div></div>" :
+         pick && pick.wa ? '<p class="hint">Choose the spell in the Wild Arcana column of the Spells panel; casting it there adds it here, with its mythic power.</p><button type="button" class="btn sm" data-gowa="1">Go to Wild Arcana</button></div></div>' :
         '<input type="text" id="tNote-' + who + '" maxlength="80" placeholder="' + (sel === "custom" ? "What she does" : "Details: target, result… (optional)") + '">' +
-        '<button type="button" class="btn primary sm" data-act="turnadd" data-who="' + who + '"' + (sel ? "" : " disabled") + ">Add</button></div></div>";
+        '<button type="button" class="btn primary sm" data-act="turnadd" data-who="' + who + '"' + (sel && !(pick && pick.cost && pick.cost.mythic > state.mythic) && !(pick && pick.light && state.lightUsed) ? "" : " disabled") + ">" + (pick && (pick.cost || pick.light) ? "Use" : "Add") + "</button>" +
+        (pick && pick.cost && pick.cost.mythic > state.mythic ? '<p class="warn-text">No mythic power left.</p>' : pick && pick.light && state.lightUsed ? '<p class="warn-text">Already used today.</p>' : "") + "</div></div>");
     };
     var ooc = oocText();
     $("pTurn").innerHTML =
-      '<div class="ph"><h2>This round</h2><span class="hint">Actions for her and Gwathfaron; casting adds itself. Press End round when the round is over.</span></div>' +
+      '<div class="ph"><h2>This round</h2><span class="hint">Pick each action as it happens: spells cast and mythic power is spent right away, × takes an action back, and End round makes the round final (− rolls it back).</span></div>' +
       '<div class="round tclock"><div class="rframe" aria-label="Current round"><b class="num">' + state.round + '</b><span class="lbl">Round</span></div><div class="rstep"><button class="btn rplus" data-act="roundplus" title="Next round, nothing done: counts durations down, and burnout drops by 1 if she gained none." aria-label="Next round (no actions)">+</button><button class="btn rplus" data-act="roundminus"' + (state.undo && state.undo.length ? "" : " disabled") + ' title="Undo the last round (up to 20 back): puts everything back as it was at the end of that round: round, burnout, hit points, overdrive, mythic power, spells, effects, conditions and This round." aria-label="Undo the last round">−</button></div><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects and turns off favored enemy and terrain. Burnout carries over.">Reset</button><button class="btn primary" data-act="nocast" title="End the round: durations count down, and burnout drops by 1 if she gained none this round. The round\'s actions move to Last round.">End round</button></div>' +
       '<div class="tcols">' + col("her", "Daerlieth") + col("pet", "Gwathfaron") + "</div>" +
       '<div class="tooc"><div class="tooch"><b>OOC for RPoL</b><button type="button" class="btn sm" data-ooccopy="cur">Copy</button></div><textarea id="oocCur" readonly rows="6">' + esc(ooc) + "</textarea>" +
@@ -1853,6 +1905,10 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   document.addEventListener("focusin", placeTip);
 
   /* ---------- events ---------- */
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest || !e.target.closest("[data-gowa]")) return;
+    var w = $("waSel"); if (w) { w.scrollIntoView({ block: "center", behavior: "smooth" }); w.focus(); }
+  });
   /* the round chip in the top bar: back to her tab, scrolled to This round (the GM view too) */
   document.addEventListener("click", function (e) {
     if (!e.target.closest || !e.target.closest("[data-goturn]")) return;
@@ -1876,6 +1932,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     } else if (a === "cast") {
       var cc = t.getAttribute("data-col");
       if (cc) withCol(cc, function () { doCast(); }); else doCast();
+      if (cc === "t") { ui_turn.her = ""; ui.turnSpell = ""; }
       if (cc) { ui.cols[cc] = { od: false, d8: false, wa: false, myth: false, castOn: "her" }; render(); }
     }
     else if (a === "explock") {
@@ -1908,13 +1965,24 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       var it = null; turnCatalog(tw).forEach(function (g) { g.items.forEach(function (x) { if (x.id === tid) it = x; }); });
       if (tid === "custom") { if (!tn.trim()) { $("tNote-" + tw).focus(); return; } it = { act: ($("tAct-" + tw) || {}).value || "std", name: tn.trim().slice(0, 80) }; tn = ""; }
       if (!it) return;
+      if (it.cost && it.cost.mythic && state.mythic < it.cost.mythic) return;
+      if (it.light && state.lightUsed) return;
       ui_turn[tw] = "";
-      mutate(function (s) { turnAdd(s, tw, { act: it.act, name: it.name, note: tn.trim().slice(0, 80), grants: it.grants, moves: it.moves }); });
+      mutate(function (s) {
+        var nm = it.name;
+        if (it.cost && it.cost.mythic) { s.mythic -= it.cost.mythic; log(it.name.replace(/ \(1 mythic power\)/, "") + ", mythic −" + it.cost.mythic); }
+        if (it.light) { s.lightUsed = true; log("Racial light or dancing lights used"); }
+        turnAdd(s, tw, { act: it.act, name: nm, note: tn.trim().slice(0, 80), grants: it.grants, moves: it.moves });
+      });
     } else if (a === "turnall") {
       var aw = t.getAttribute("data-who"); ui_turn.all[aw] = !ui_turn.all[aw]; renderTurn();
     } else if (a === "turnrm") {
       var rw = t.getAttribute("data-who"), rid = t.getAttribute("data-id");
-      mutate(function (s) { s.turn[rw] = s.turn[rw].filter(function (e) { return e.id !== rid; }); });
+      mutate(function (s) {
+        var gone = s.turn[rw].filter(function (e) { return e.id === rid; })[0];
+        s.turn[rw] = s.turn[rw].filter(function (e) { return e.id !== rid; });
+        if (gone) effUndo(s, rw, gone);
+      });
     }
     else if (a === "pass") passTime(parseInt(t.getAttribute("data-n"), 10) || 10);
     else if (a === "newday") {
@@ -2052,7 +2120,14 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       ui.od = false; ui.d8 = false; ui.wa = false; ui.myth = false; ui.castOn = "her"; ui.blood = false;
       render();
     }
-    else if (e.target.classList && e.target.classList.contains("turnsel")) { ui_turn[e.target.getAttribute("data-who")] = e.target.value; renderTurn(); }
+    else if (e.target.classList && e.target.classList.contains("turnsel")) {
+      var tsw = e.target.getAttribute("data-who"), tsv = e.target.value;
+      ui_turn[tsw] = tsv;
+      /* an artillery pick sets the secret (touch, sniper or burst); a spell pick starts with fresh cast options */
+      turnCatalog(tsw).forEach(function (g) { g.items.forEach(function (x) { if (x.id === tsv && x.mode) ui.mode = x.mode; }); });
+      ui.cols.t = { od: false, d8: false, wa: false, myth: false, castOn: "her" };
+      renderTurn();
+    }
     else if (id === "waSel") {
       var wb = BANK.filter(function (b) { return b.id === e.target.value; })[0];
       if (wb) { ui.customName = wb.name; ui.customLvl = wb.lvl; ui.sel = "custom"; }
@@ -2069,7 +2144,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       return;
     }
     var id = e.target.id;
-    var cm = /^(odChk|d8Chk|bmSel|bmGp|fireChk|waChk|mythChk|castOn|modeSel|elSel|cDur)-([kxw])$/.exec(id || "");
+    var cm = /^(odChk|d8Chk|bmSel|bmGp|fireChk|waChk|mythChk|castOn|modeSel|elSel|cDur)-([kxwt])$/.exec(id || "");
     if (cm) {
       var tgt = e.target;
       withCol(cm[2], function () {
@@ -2079,6 +2154,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
           fireChk: function () { ui.unkFire = v; }, modeSel: function () { ui.mode = v; }, elSel: function () { ui.element = v; }, cDur: function () { ui.customDur = v; } })[cm[1]]();
       });
       renderSpells();
+      if (cm[2] === "t") renderTurn();
       return;
     }
     if (id === "odChk") { ui.od = e.target.checked; renderCast(); }

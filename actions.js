@@ -91,26 +91,25 @@
       I("h-full1", "Full attack, one weapon " + one.map(sg).join("/") + hst + " (" + dm + ")", "full"),
       I("h-charge", "Charge " + sg(a.charge) + " (" + dm + "), −2 AC", "full", "", MV),
       I("h-aoo", "Attack of opportunity " + sg(a.single) + (a.reach > 5 ? " (reach " + a.reach + " ft)" : ""), "react", "A reaction on an enemy's turn, when a foe in her reach provokes. Uses none of her actions; " + (a.aoo > 1 ? a.aoo + " a round with Combat Reflexes." : "one a round.")),
-      I("h-art", "Arcane artillery " + sg(d.rtouch) + " touch (" + sp.artDice + "d6" + sg(sp.artFlat) + ")", "std"),
-      I("h-sniper", "Arcane artillery, sniper (120 ft)", "std"),
-      I("h-burst", "Arcane artillery, burst (15 ft, Reflex DC " + sp.secretDc + ")", "std"),
+      I("h-art", "Arcane artillery " + sg(d.rtouch) + " touch (" + sp.artDice + "d6" + sg(sp.artFlat) + ")", "std", "", { spell: "arcane-artillery", mode: "std" }),
+      I("h-sniper", "Arcane artillery, sniper (120 ft)", "std", "", { spell: "arcane-artillery", mode: "sniper" }),
+      I("h-burst", "Arcane artillery, burst (15 ft, Reflex DC " + sp.secretDc + ")", "std", "", { spell: "arcane-artillery", mode: "burst" }),
       I("h-man", "Combat maneuver (trip, disarm, grapple...) CMB " + sg(d.cmb), "std", "Or in place of one attack in a full attack."),
       I("h-feint", "Feint (Bluff)", "std"), I("h-demo", "Demoralize (Intimidate)", "std"),
       I("h-defend", "Fight defensively (with attacks)", "none", "−4 attacks, +3 dodge AC."),
       I("h-totdef", "Total defense", "std"), I("h-aid", "Aid another", "std")
     ]);
-    G("Spells", (ctx.spells || []).map(function (s) {
+    G("Spells", (ctx.spells || []).filter(function (s) { return !s.art; }).map(function (s) {
       var act = s.calc === "bm" ? "swift" : castAct(ctx.ct(s.name));
       return I("s-" + s.id, "Cast " + s.name + (s.exp ? " (experimental)" : ""), act, "", { spell: s.id });
     }).concat([
-      I("h-wa", "Wild Arcana: cast a spell she doesn't know (1 mythic power)", "std"),
-      I("h-light", "Racial light or dancing lights (spell-like)", "std"),
+      I("h-wa", "Wild Arcana: cast a spell she doesn't know (1 mythic power)", "std", "", { wa: true }),
+      I("h-light", "Racial light or dancing lights (spell-like)", "std", "", { light: true }),
       I("h-dismiss", "Dismiss a spell", "std"), I("h-conc", "Concentrate on a spell", "std")
     ]));
-    G("Mythic and overdrive", [
-      I("h-surge", "Mythic Surge: +1d6 on a d20 roll (1 mythic power)", "imm"),
-      I("h-ai", "Amazing Initiative: extra standard action (1 mythic power)", "free", "Gives one more standard action this turn (no spells or artillery).", { grants: "std" }),
-      I("h-od", "Spend 1 overdrive (ignore burnout)", "free"), I("h-odd8", "Artillery overdrive: d8s (1 overdrive)", "free")
+    G("Mythic", [
+      I("h-surge", "Mythic Surge: +1d6 on a d20 roll (1 mythic power)", "imm", "", { cost: { mythic: 1 } }),
+      I("h-ai", "Amazing Initiative: extra standard action (1 mythic power)", "free", "Gives one more standard action this turn (no spells or artillery).", { grants: "std", cost: { mythic: 1 } })
     ]);
     G("Movement", [
       I("h-move", "Move (" + d.speed + " ft)", "move", "", MV), I("h-step", "5-ft step", "step"), I("h-run", "Run (" + d.speed * 4 + " ft)", "full", "", MV),
