@@ -1,7 +1,7 @@
 /* Service worker for the character list at the site root. It replaces the one that used to serve Daerlieth's
    tracker from here: each character folder registers its own worker (daerlieth/sw.js) for its pages, and this one
    only caches the list page so it opens offline. Bump VERSION when the list page changes. */
-var VERSION = "characters-v2";
+var VERSION = "characters-v3";
 var SHELL = ["./", "index.html", "manifest.webmanifest", "daerlieth/icons/icon.svg", "daerlieth/images/daerlieth-thumb.webp", "daerlieth/images/gwathfaron-thumb.webp"];
 var ROOT = new URL("./", self.location).pathname;
 

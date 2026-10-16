@@ -469,6 +469,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 /* account: sign-in link, sign-in sheet */
 .home { display: inline-block; color: var(--muted); font-family: var(--font-mono); font-size: 0.7rem; text-decoration: none; margin-bottom: 2px; }
 .home:hover { color: var(--moon); }
+.sub .game { color: var(--moon); text-decoration: none; }
+.sub .game:hover { text-decoration: underline; }
 .acct { background: none; border: 0; padding: 0; margin-left: 6px; color: var(--moon); font-family: var(--font-mono); font-size: 0.72rem; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .sheet { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.7); }
 .sheet form { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 12px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px; padding: 20px; }
@@ -494,7 +496,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       <div>
         <a class="home" href="../" title="All of Balthazar's characters">‹ Characters</a>
         <h1>Daerlieth Nightstar</h1>
-        <p class="sub"><span id="subLvl">Eternal Mage 8 · Artillery Expert · Archmage tier 2</span> · <span id="status" class="status" aria-live="polite">Loading</span><button type="button" id="acctBtn" class="acct" hidden></button><button type="button" id="pwBtn" class="acct" hidden>Change password</button></p>
+        <p class="sub"><a class="game" href="https://rpol.net/game.php?gi=80510&amp;date=1792113654" target="_blank" rel="noopener" title="Daerlieth's game on RPoL">Cormanthyr ↗</a> · <span id="subLvl">Eternal Mage 8 · Artillery Expert · Archmage tier 2</span> · <span id="status" class="status" aria-live="polite">Loading</span><button type="button" id="acctBtn" class="acct" hidden></button><button type="button" id="pwBtn" class="acct" hidden>Change password</button></p>
       </div>
     </div>
     <div class="clock">

@@ -70,6 +70,8 @@ h1 { font-family: var(--font-display); font-weight: 400; font-size: 1.9rem; line
 .who p { margin: 2px 0 0; color: var(--muted); font-size: 0.82rem; }
 .pet { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.8rem; }
 .pet img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line-strong); }
+.game { margin: 0; font-size: 0.84rem; color: var(--muted); }
+.game a { color: var(--moon); text-underline-offset: 2px; }
 .live { font-family: var(--font-mono); font-size: 0.74rem; color: var(--muted); min-height: 1.2em; margin: 0; }
 .live b { color: var(--fg); font-weight: 500; }
 .live .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--good); margin-right: 6px; vertical-align: 1px; }
@@ -104,7 +106,8 @@ footer { margin-top: 28px; color: var(--muted); font-size: 0.78rem; }
   var CHARACTERS = [
     { path: "daerlieth/", doc: "daerlieth", name: "Daerlieth Nightstar", thumb: "daerlieth/images/daerlieth-thumb.webp",
       line: function (L) { return "Moon elf · Eternal Mage " + L + " / Spell-less Ranger " + L + " · Archmage 2"; },
-      pet: { name: "Gwathfaron, panther", thumb: "daerlieth/images/gwathfaron-thumb.webp" } }
+      pet: { name: "Gwathfaron, panther", thumb: "daerlieth/images/gwathfaron-thumb.webp" },
+      game: { name: "Cormanthyr", url: "https://rpol.net/game.php?gi=80510&date=1792113654" } }
   ];
   var PROJECT = "tracker-fe359";
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
@@ -116,6 +119,7 @@ footer { margin-top: 28px; color: var(--muted); font-size: 0.78rem; }
   list.innerHTML = CHARACTERS.map(function (c, i) {
     return '<article class="card">' +
       '<a class="who" href="' + c.path + '"><img src="' + c.thumb + '" alt="" width="72" height="72"><div><h2>' + esc(c.name) + '</h2><p id="line' + i + '">' + esc(c.line(8)) + "</p></div></a>" +
+      (c.game ? '<p class="game">Game: <a href="' + esc(c.game.url) + '" target="_blank" rel="noopener">' + esc(c.game.name) + ' on RPoL ↗</a></p>' : "") +
       (c.pet ? '<div class="pet"><img src="' + c.pet.thumb + '" alt="" width="28" height="28">' + esc(c.pet.name) + "</div>" : "") +
       '<p class="live" id="live' + i + '"></p>' +
       '<div class="row"><a class="btn primary" href="' + c.path + '">Open tracker</a><a class="btn" href="' + c.path + '?view">GM view</a></div></article>';
