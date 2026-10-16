@@ -1,5 +1,5 @@
 /* App shell cache so the tracker opens offline. Bump VERSION when shipping changes. */
-var VERSION = "daerlieth-v79";
+var VERSION = "daerlieth-v80";
 var SHELL = ["./", "index.html", "config.js", "levels.js", "rules-info.js", "sheet.js", "sheet-prose.js", "rpol.js", "actions.js", "docs/daerlieth-sheet.txt", "docs/gwathfaron-sheet.txt", "sheet.css", "vendor/firebase-app-compat.js", "vendor/firebase-auth-compat.js", "vendor/firebase-firestore-compat.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "images/daerlieth-thumb.webp", "images/daerlieth.webp", "images/gwathfaron-thumb.webp", "images/gwathfaron.webp", "data/codex.json"];
 
 self.addEventListener("install", function (e) {

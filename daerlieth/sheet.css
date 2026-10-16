@@ -7,7 +7,9 @@
 
 #sheetView { display: block; }
 #trkLower { margin-top: 16px; }
-body.view-pet main, body.view-pet .clock, body.view-pet #trkLower { display: none; }
+/* Gwathfaron's tab, like Greg's on Skabs's tracker: his headline (in #sheetHead), This round, his sheet and the log;
+   her resource, spell, concentration and hit point panels hide. The round bar stays on both tabs. */
+body.view-pet main > :not(#sheetHead):not(#pTurn) { display: none; }
 .bodyconds { margin-top: 14px; align-items: center; }
 
 .s-top { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }

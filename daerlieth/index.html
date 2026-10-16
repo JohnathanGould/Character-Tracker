@@ -512,7 +512,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
 <div class="wrap">
 <main>
-  <section id="sheetHead" aria-label="Daerlieth at a glance"></section>
+  <section id="sheetHead" aria-label="At a glance"></section>
 
   <section class="panel gauges" aria-label="Resources">
     <div class="gsec" id="pBurn"></div>
@@ -1453,10 +1453,9 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   }
   function renderBody() {
     $("pBody").innerHTML =
-      '<div class="ph"><h2>Hit points</h2><span class="hint">New day heals ' + state.level + ' (her) and ' + LP().pet.hd + ' (Gwathfaron)</span></div>' +
+      '<div class="ph"><h2>Hit points</h2><span class="hint">New day heals ' + state.level + ". Gwathfaron's are on his tab (" + state.petHp + "/" + petMax() + ")</span></div>" +
       '<div class="hpgrid">' +
       hpBlock("hp", "Daerlieth", state.hp, hpMax(), HP_DEAD, "Hard to Kill: stabilizes on her own below 0, dies at −" + HP_DEAD + ". Blood Money costs 1d6 here.") +
-      hpBlock("petHp", "Gwathfaron, panther", state.petHp, petMax(), petDead(), "Dies at −" + petDead() + ".") +
       "</div>" + bodyConds();
   }
 
@@ -1887,9 +1886,9 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     /* keep which sections are open across re-renders */
     var open = {};
     Array.prototype.forEach.call(host.querySelectorAll("details.sec"), function (d) { open[d.firstChild.textContent] = d.open; });
-    host.innerHTML = view === "pet" ? SheetEngine.renderPet(state, { readOnly: readOnly }) : SheetEngine.render(state, { readOnly: readOnly });
-    /* her headline panel lives above the tracker (main is hidden on Gwathfaron's tab) */
-    $("sheetHead").innerHTML = SheetEngine.render(state, { readOnly: readOnly, headOnly: true });
+    host.innerHTML = view === "pet" ? SheetEngine.renderPet(state, { readOnly: readOnly, noHead: true }) : SheetEngine.render(state, { readOnly: readOnly });
+    /* the headline panel above the tracker is the open tab's: hers, or Gwathfaron's (with his hit points) */
+    $("sheetHead").innerHTML = view === "pet" ? SheetEngine.renderPet(state, { readOnly: readOnly, headOnly: true }) : SheetEngine.render(state, { readOnly: readOnly, headOnly: true });
     Array.prototype.forEach.call(host.querySelectorAll("details.sec"), function (d) { var k = d.firstChild.textContent; if (k in open) d.open = open[k]; });
   }
   document.addEventListener("click", function (e) {
@@ -1914,10 +1913,9 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     if (!e.target.closest || !e.target.closest("[data-gowa]")) return;
     var w = $("waSel"); if (w) { w.scrollIntoView({ block: "center", behavior: "smooth" }); w.focus(); }
   });
-  /* the round chip in the top bar: back to her tab, scrolled to This round (the GM view too) */
+  /* the round chip in the top bar: scrolls to This round, on either tab (the GM view too) */
   document.addEventListener("click", function (e) {
     if (!e.target.closest || !e.target.closest("[data-goturn]")) return;
-    if (document.body.classList.contains("view-pet")) setView("sheet");
     var pt = $("pTurn"), top = document.querySelector(".top");
     if (pt) window.scrollTo({ top: pt.getBoundingClientRect().top + window.scrollY - (top ? top.offsetHeight : 0) - 8, behavior: "smooth" });
   });

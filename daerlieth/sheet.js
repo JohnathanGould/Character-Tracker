@@ -1054,6 +1054,10 @@
       "</div>" +
       (o.readOnly ? "" : '<div class="ctl">' + [-10, -5, -1, 1, 5, 10].map(hpBtn).join("") + "</div>") +
       shared + "</div>";
+    /* his headline panel (portrait, HP, defenses, attacks) goes at the top of his tab, above This round, like Greg's on
+       Skabs's tracker: o.headOnly returns it alone, o.noHead leaves it out of the sheet below */
+    if (o.headOnly) return h;
+    if (o.noHead) h = "";
     h += fxPanel("pet", st, o);
 
     var abRow = function (k, label) { return [label, tip(String(p.ab[k]), p.ab_t[k]), sg(m[k])]; };
