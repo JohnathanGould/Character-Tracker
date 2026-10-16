@@ -111,7 +111,9 @@ footer { margin-top: 28px; color: var(--muted); font-size: 0.78rem; }
       pet: { name: "Gwathfaron, panther", thumb: "daerlieth/images/gwathfaron-thumb.webp" },
       game: { name: "Cormanthyr", system: "Pathfinder 1e", url: "https://rpol.net/game.php?gi=80510&date=1792113654" } },
     /* no tracker yet: a card without path, doc or thumb shows the name and a "tracker coming" note */
-    { name: "Courynna Talaudrym", line: function () { return "Details to come"; } }
+    { name: "Courynna Talaudrym", thumb: "courynna/images/courynna-thumb.webp", full: "courynna/images/courynna.webp",
+      line: function () { return "Details to come"; },
+      game: { name: "Emerging", system: "D&D 3.5", url: "https://rpol.net/game.php?gi=80341&date=1792177427" } }
   ];
   var PROJECT = "tracker-fe359";
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
@@ -125,7 +127,7 @@ footer { margin-top: 28px; color: var(--muted); font-size: 0.78rem; }
     var face = c.thumb ? '<img src="' + c.thumb + '" alt="" width="72" height="72">' : '<span class="noimg" aria-hidden="true">' + esc(initials(c.name)) + "</span>";
     var who = face + '<div><h2>' + esc(c.name) + '</h2><p id="line' + i + '">' + esc(c.line(8)) + "</p></div>";
     return '<article class="card">' +
-      (c.path ? '<a class="who" href="' + c.path + '">' + who + "</a>" : '<div class="who">' + who + "</div>") +
+      (c.path ? '<a class="who" href="' + c.path + '">' + who + "</a>" : c.full ? '<a class="who" href="' + c.full + '" target="_blank" rel="noopener" title="Full portrait">' + who + "</a>" : '<div class="who">' + who + "</div>") +
       (c.game ? '<p class="game">' + (c.game.system ? esc(c.game.system) + " game: " : "Game: ") + (c.game.url ? '<a href="' + esc(c.game.url) + '" target="_blank" rel="noopener">' + esc(c.game.name) + ' on RPoL ↗</a>' : esc(c.game.name)) + "</p>" : "") +
       (c.pet ? '<div class="pet"><img src="' + c.pet.thumb + '" alt="" width="28" height="28">' + esc(c.pet.name) + "</div>" : "") +
       '<p class="live" id="live' + i + '"></p>' +
