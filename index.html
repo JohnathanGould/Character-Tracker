@@ -118,6 +118,13 @@ h1 {
   .round b { font-size: 1.9rem; }
   .rplus { min-width: 34px; padding: 0 8px; }
 }
+/* top bar: a small round chip that jumps to This round, where the round controls live */
+.rchip { display: flex; align-items: baseline; gap: 6px; padding: 4px 10px; border: 1px solid var(--moon); border-radius: 9px; background: rgba(169, 193, 255, 0.08); cursor: pointer; }
+.rchip b { font-family: var(--font-display); font-weight: 400; font-size: 1.35rem; line-height: 1; color: var(--fg); }
+.rchip .lbl { color: var(--moon); }
+.tclock { flex-wrap: wrap; margin: 0 0 14px; }
+.tclock [data-act="nocast"] { margin-left: auto; }
+.ro .tclock .btn { display: none !important; }
 .rframe .lbl { color: var(--moon); font-size: 0.62rem; margin-top: 2px; }
 .round .lbl, .lbl {
   font-size: 0.68rem;
@@ -488,8 +495,7 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
       </div>
     </div>
     <div class="clock">
-      <div class="round"><div class="rframe" aria-label="Current round"><b id="round" class="num">1</b><span class="lbl">Round</span></div><div class="rstep"><button class="btn rplus" data-act="roundplus" title="Next round, nothing done: counts durations down, and burnout drops by 1 if she gained none." aria-label="Next round (no actions)">+</button><button class="btn rplus" id="roundMinus" data-act="roundminus" title="Undo the last round (up to 20 back): puts everything back as it was at the end of that round: round, burnout, hit points, overdrive, mythic power, spells, effects, conditions and This round." aria-label="Undo the last round">−</button></div><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects and turns off favored enemy and terrain. Burnout carries over.">Reset</button></div>
-      <button class="btn primary" data-act="nocast" title="End the round: durations count down, and burnout drops by 1 if she gained none this round. The round's actions move to Last round.">End round</button>
+      <button type="button" class="rchip" data-goturn="1" title="Go to This round, where the round is ended, undone or reset" aria-label="Round, go to This round"><span class="lbl">Round</span><b id="round" class="num">1</b></button>
       <button class="btn" id="dayBtn" data-act="newday" title="Start a new day after 8 hours of sleep. Refills overdrive and mythic power and clears burnout and active spells, turns off favored enemy and terrain, and heals 1 Strength damage.">New day</button>
     </div>
   </div>
@@ -1411,7 +1417,6 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
 
   function render() {
     $("round").textContent = state.round;
-    $("roundMinus").disabled = !(state.undo && state.undo.length);
     $("subLvl").textContent = "Eternal Mage " + state.level + " · Artillery Expert · Ranger " + state.level + " · Archmage tier 2";
     $("dayBtn").textContent = ui.dayArmed ? "Confirm new day" : "New day";
     $("dayBtn").classList.toggle("warn", ui.dayArmed);
@@ -1683,7 +1688,8 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
     };
     var ooc = oocText();
     $("pTurn").innerHTML =
-      '<div class="ph"><h2>This round <span class="hint">round ' + state.round + '</span></h2><span class="hint">Actions for her and Gwathfaron; casting adds itself. End round in the top bar.</span></div>' +
+      '<div class="ph"><h2>This round</h2><span class="hint">Actions for her and Gwathfaron; casting adds itself. Press End round when the round is over.</span></div>' +
+      '<div class="round tclock"><div class="rframe" aria-label="Current round"><b class="num">' + state.round + '</b><span class="lbl">Round</span></div><div class="rstep"><button class="btn rplus" data-act="roundplus" title="Next round, nothing done: counts durations down, and burnout drops by 1 if she gained none." aria-label="Next round (no actions)">+</button><button class="btn rplus" data-act="roundminus"' + (state.undo && state.undo.length ? "" : " disabled") + ' title="Undo the last round (up to 20 back): puts everything back as it was at the end of that round: round, burnout, hit points, overdrive, mythic power, spells, effects, conditions and This round." aria-label="Undo the last round">−</button></div><button class="btn sm" data-act="resetround" title="Back to round 1. Clears concentration and pending effects and turns off favored enemy and terrain. Burnout carries over.">Reset</button><button class="btn primary" data-act="nocast" title="End the round: durations count down, and burnout drops by 1 if she gained none this round. The round\'s actions move to Last round.">End round</button></div>' +
       '<div class="tcols">' + col("her", "Daerlieth") + col("pet", "Gwathfaron") + "</div>" +
       '<div class="tooc"><div class="tooch"><b>OOC for RPoL</b><button type="button" class="btn sm" data-ooccopy="cur">Copy</button></div><textarea id="oocCur" readonly rows="6">' + esc(ooc) + "</textarea>" +
       (state.prevOoc ? '<details class="tprev"><summary>Last round</summary><div class="tooch"><span></span><button type="button" class="btn sm" data-ooccopy="prev">Copy</button></div><textarea id="oocPrev" readonly rows="6">' + esc(state.prevOoc) + "</textarea></details>" : "") + "</div>";
@@ -1847,6 +1853,13 @@ details ul { margin: 8px 0 0; padding-left: 1.1em; font-size: 0.86rem; color: va
   document.addEventListener("focusin", placeTip);
 
   /* ---------- events ---------- */
+  /* the round chip in the top bar: back to her tab, scrolled to This round (the GM view too) */
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest || !e.target.closest("[data-goturn]")) return;
+    if (document.body.classList.contains("view-pet")) setView("sheet");
+    var pt = $("pTurn"), top = document.querySelector(".top");
+    if (pt) window.scrollTo({ top: pt.getBoundingClientRect().top + window.scrollY - (top ? top.offsetHeight : 0) - 8, behavior: "smooth" });
+  });
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-act]");
     if (!t || (readOnly && t.getAttribute("data-act") !== "copylog")) return; /* the GM can copy the log too */
