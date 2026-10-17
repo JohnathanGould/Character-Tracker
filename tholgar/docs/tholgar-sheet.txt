@@ -1,0 +1,35 @@
+Name            : Tholgar "Two-Tankards" Bloodshield
+Player          : Balthazar               Height: 4'5"           HD     : 2d10
+Race            : Dwarf                   Weight: 185lbs         Speed  : 20'
+Class/Level     : Skald  (Fated Champion) Age   : 120        Darkvision : 60'
+                : Slayer (Vanguard)       Hair  : Dark brown, streaked with gray
+Size            : Medium                  Eyes  : Deep brown
+Align           : Lawful Evil             Skin  : Deep brown
+Deity           : Abbathor                Gender: Male              XP  :
+                                                               NEXT LVL :
+
+EQUIPMENT:
+Item                               Cost     Weight
+Masterwork Dwarven Chain Flail     350 gp   15 lbs
+Masterwork Chain Shirt             250 gp   25 lbs
+Composite Longbow (STR +2)         300 gp    3 lbs
+Quiver, 20 arrows                    1 gp    3 lbs
+Backpack, MW                        50 gp    4 lbs
+ - rope, 50' hemp                    1 gp   10 lbs
+ - Rations x6                        3 gp    6 lbs
+ - waterskin                         1 gp    4 lbs
+ - flint & steel                     1 gp    -----
+ - Thieves Tools, common            30 gp    1 lbs
+                                   -------------
+                                   987 gp   71 lbs
+
+MAGIC ITEMS: none (all slots open)
+
+MONETARY WEALTH: PP: 0 | GP: 13 | SP: 0 | CP: 0 | Other Treasure: --
+
+LOAD: Total weight carried: 71 lbs
+Light Load: 0-86 lbs   Medium Load: 87-173 lbs   Heavy Load: 174-260 lbs
+Lift over head: 260 lbs   Lift off ground: 520 lbs   Push or Drag: 1,300 lbs
+
+Potential Feats for level 3:
+- Street Smart = +2 to all Knowledge Skills Profession skill checks

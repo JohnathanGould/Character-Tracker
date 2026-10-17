@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05060a">
+<meta name="description" content="Tholgar “Two-Tankards” Bloodshield: live Pathfinder 1e Skald // Slayer tracker">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tholgar">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<style>html{color-scheme:dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Tholgar Bloodshield Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Marcellus&display=swap">
+<style>
+/* Same look as Daerlieth's tracker: black ground, moon-silver accent, gold for raging song. */
+:root {
+  --bg: #05060a;
+  --surface: #0c0f17;
+  --surface-2: #141925;
+  --line: #1d2333;
+  --line-strong: #394460;
+  --fg: #e9edf7;
+  --muted: #8f99b5;
+  --moon: #a9c1ff;
+  --moon-ink: #060914;
+  --gold: #ebc676;
+  --gold-fill: #d9a93f;
+  --heat: #ff8f61;
+  --good: #6fd6a4;
+  --font-display: "Marcellus", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-body: "Albert Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 900px 520px at 50% -120px, rgba(120, 150, 255, 0.10), transparent 70%);
+  color: var(--fg);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  padding-inline: 16px;
+  padding-block: 0 40px;
+}
+button, select, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--moon); outline-offset: 2px; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1120px; margin-inline: auto; }
+a { color: var(--moon); text-underline-offset: 2px; }
+
+/* top bar */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: rgba(5, 6, 10, 0.88); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); margin-inline: -16px; padding: 10px 16px; }
+.top-in { max-width: 1120px; margin-inline: auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 20px; }
+.ident { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.portrait { flex: none; width: 52px; height: 52px; padding: 0; border-radius: 50%; overflow: hidden; border: 1px solid var(--moon); background: var(--surface-2); cursor: zoom-in; box-shadow: 0 0 0 3px rgba(169, 193, 255, 0.08); }
+.portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: 1.5rem; line-height: 1.1; letter-spacing: 0.02em; margin: 0; }
+.home { display: inline-block; color: var(--muted); font-family: var(--font-mono); font-size: 0.7rem; text-decoration: none; margin-bottom: 2px; }
+.home:hover { color: var(--moon); }
+.sub { margin: 2px 0 0; color: var(--muted); font-size: 0.8rem; }
+.sub .game { color: var(--moon); text-decoration: none; }
+.sub .game:hover { text-decoration: underline; }
+.status { font-family: var(--font-mono); font-size: 0.72rem; }
+.acct { background: none; border: 0; padding: 0; margin-left: 6px; color: var(--moon); font-family: var(--font-mono); font-size: 0.72rem; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.clock { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rchip { display: flex; align-items: baseline; gap: 6px; padding: 4px 10px; border: 1px solid var(--moon); border-radius: 9px; background: rgba(169, 193, 255, 0.08); cursor: pointer; }
+.rchip b { font-family: var(--font-display); font-weight: 400; font-size: 1.35rem; line-height: 1; color: var(--fg); }
+.lbl { font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.rchip .lbl { color: var(--moon); }
+.ipchip { display: flex; align-items: baseline; gap: 6px; padding: 4px 10px; border: 1px solid var(--gold-fill); border-radius: 9px; background: rgba(235, 198, 118, 0.08); }
+.ipchip b { font-family: var(--font-display); font-weight: 400; font-size: 1.35rem; line-height: 1; color: var(--gold); }
+.ipchip .lbl { color: var(--gold); }
+.pchip { border-color: var(--moon); background: rgba(169, 193, 255, 0.08); }
+.pchip b, .pchip .lbl { color: var(--moon); }
+.pip.day { border-color: var(--moon); }
+.pip.day.on { background: radial-gradient(circle at 35% 30%, #e4ecff, var(--moon)); box-shadow: 0 0 10px rgba(169, 193, 255, 0.35); }
+.btn.moon { background: linear-gradient(180deg, #c3d4ff, var(--moon)); border-color: var(--moon); color: var(--moon-ink); }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--fg); font-weight: 600; font-size: 0.9rem; cursor: pointer; white-space: nowrap; }
+.btn:hover:not(:disabled) { background: var(--surface-2); border-color: var(--moon); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn.primary { background: linear-gradient(180deg, #c3d4ff, var(--moon)); border-color: var(--moon); color: var(--moon-ink); box-shadow: 0 0 18px rgba(169, 193, 255, 0.22); }
+.btn.gold { background: linear-gradient(180deg, #f3d995, var(--gold-fill)); border-color: var(--gold); color: #1b1404; }
+.btn.warn { border-color: var(--heat); color: var(--heat); }
+.btn.sm { min-height: 34px; padding: 0 10px; font-size: 0.82rem; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* panels */
+main { display: grid; gap: 14px; padding-top: 14px; grid-template-columns: 1fr; }
+@media (min-width: 900px) { main { grid-template-columns: 1fr 1fr; } .full { grid-column: 1 / -1; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+.ph { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.panel h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.2rem; margin: 0; }
+.panel h3 { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 14px 0 6px; }
+.hint { color: var(--muted); font-size: 0.8rem; margin: 0; }
+.warn-text { color: var(--heat); font-size: 0.82rem; margin: 6px 0 0; }
+
+/* inspiration */
+.pips { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 10px; }
+.pip { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--gold-fill); background: transparent; }
+.pip.on { background: radial-gradient(circle at 35% 30%, #fbe7b0, var(--gold-fill)); box-shadow: 0 0 10px rgba(235, 198, 118, 0.35); }
+.spend { display: grid; gap: 8px; grid-template-columns: 1fr; }
+@media (min-width: 560px) { .spend { grid-template-columns: 1fr 1fr; } }
+.opt { border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--surface-2); display: flex; flex-direction: column; gap: 6px; }
+.opt b { font-weight: 600; }
+.opt .hint { font-size: 0.76rem; }
+.opt select, .opt input, .field input, .field select { width: 100%; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 7px 9px; color: var(--fg); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font-family: var(--font-mono); font-size: 0.72rem; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line-strong); color: var(--muted); }
+.chip.used { text-decoration: line-through; opacity: 0.6; }
+.chip.ok { border-color: var(--good); color: var(--good); }
+
+/* round */
+.tclock { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.rframe { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 64px; padding: 4px 12px 5px; border: 1px solid var(--moon); border-radius: 10px; background: rgba(169, 193, 255, 0.08); }
+.rframe b { font-family: var(--font-display); font-weight: 400; font-size: 2.2rem; line-height: 1; }
+.rframe .lbl { color: var(--moon); font-size: 0.62rem; margin-top: 2px; }
+.rstep { display: flex; flex-direction: column; gap: 3px; }
+.rplus { min-width: 40px; min-height: 26px; height: 26px; padding: 0 10px; font-size: 1.2rem; line-height: 1; border-radius: 7px; }
+.tclock [data-act="endround"] { margin-left: auto; }
+.tlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.tlist li { display: flex; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; background: var(--surface-2); font-size: 0.86rem; }
+.tlist .tname { flex: 1; min-width: 0; }
+.tlist .tx { min-width: 30px; min-height: 30px; padding: 0; }
+textarea.ooc { width: 100%; min-height: 96px; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px; font-family: var(--font-mono); font-size: 0.76rem; color: var(--fg); resize: vertical; }
+
+/* hit points */
+.hpbig { display: flex; align-items: baseline; gap: 8px; }
+.hpbig b { font-family: var(--font-display); font-weight: 400; font-size: 2.6rem; line-height: 1; }
+.hpbar { height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin: 8px 0; }
+.hpbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--good), #9ff0c8); }
+.hpbar.low i { background: linear-gradient(90deg, var(--heat), #ffb08f); }
+.hpstate { font-size: 0.82rem; color: var(--muted); }
+.hpstate.bad { color: var(--heat); }
+
+/* sheet */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+@media (min-width: 560px) { .stats { grid-template-columns: repeat(6, 1fr); } }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 8px; text-align: center; background: var(--surface-2); }
+.stat .lbl { display: block; }
+.stat b { font-family: var(--font-display); font-weight: 400; font-size: 1.4rem; display: block; line-height: 1.2; }
+.stat small { color: var(--muted); font-family: var(--font-mono); font-size: 0.72rem; }
+details.sec { border-top: 1px solid var(--line); padding: 8px 0; }
+details.sec > summary { cursor: pointer; font-family: var(--font-display); font-size: 1.08rem; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+details.sec > summary::-webkit-details-marker { display: none; }
+details.sec > summary::after { content: "+"; color: var(--muted); font-family: var(--font-mono); }
+details.sec[open] > summary::after { content: "−"; }
+table.t { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin-top: 6px; }
+table.t th, table.t td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.t th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+table.t td.n, table.t th.n { text-align: right; font-family: var(--font-mono); }
+.tscroll { overflow-x: auto; }
+ul.plain { margin: 6px 0; padding-left: 18px; font-size: 0.86rem; }
+ul.plain li { margin: 3px 0; }
+pre.txt { white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.74rem; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin: 6px 0; max-height: 420px; overflow: auto; }
+.stock { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; font-size: 0.86rem; }
+.stock .q { display: flex; align-items: center; gap: 6px; }
+.stock .q b { min-width: 2ch; text-align: right; font-family: var(--font-mono); }
+.stock .btn { min-height: 30px; min-width: 34px; padding: 0 8px; }
+
+/* log */
+.log { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow: auto; font-size: 0.82rem; }
+.log li { padding: 4px 0; border-bottom: 1px solid var(--line); }
+.log .r { font-family: var(--font-mono); color: var(--muted); margin-right: 8px; }
+
+/* dialogs */
+.sheet { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.7); }
+.sheet form { width: 100%; max-width: 360px; max-height: calc(100vh - 32px); overflow: auto; display: flex; flex-direction: column; gap: 12px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px; padding: 20px; }
+.sheet form.wide { max-width: 760px; }
+.sheet h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.25rem; margin: 0; }
+.sheet label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--muted); }
+.sheet input { background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 8px; padding: 9px 10px; color: var(--fg); }
+.sheet .row { justify-content: flex-end; }
+.sheet .err { color: var(--heat); font-size: 0.85rem; margin: 0; min-height: 1.2em; }
+.portrait-full { width: 100%; height: auto; max-height: 75vh; object-fit: contain; border-radius: 10px; display: block; }
+textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--fg); white-space: pre; }
+
+/* GM view: every editing control hidden */
+.ro .edit, .ro [data-act]:not([data-act="copylog"]):not([data-act="rpol"]):not([data-act="ooccopy"]) { display: none !important; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="top-in">
+    <div class="ident">
+      <button type="button" class="portrait" data-portrait="1" aria-label="Show Tholgar's portrait"><img src="images/tholgar-thumb.webp" alt="" width="52" height="52"></button>
+      <div>
+        <a class="home" href="../" title="All of Balthazar's characters">‹ Characters</a>
+        <h1>Tholgar “Two-Tankards” Bloodshield</h1>
+        <p class="sub">Pathfinder 1e · Dwarf Skald 2 // Slayer 2 · <span id="status" class="status" aria-live="polite">Loading</span><button type="button" id="acctBtn" class="acct" hidden></button><button type="button" id="pwBtn" class="acct" hidden>Change password</button></p>
+      </div>
+    </div>
+    <div class="clock">
+      <span class="ipchip" title="Hit points"><span class="lbl">HP</span><b id="hpTop" class="num">28</b></span>
+      <span class="ipchip pchip" title="Raging song rounds left today"><span class="lbl">Song</span><b id="songTop" class="num">7</b></span>
+      <button type="button" class="rchip" data-goturn="1" aria-label="Round, go to This round"><span class="lbl">Round</span><b id="roundTop" class="num">1</b></button>
+      <button class="btn" id="dayBtn" data-act="newday" title="After a night's rest: spell slots, raging song rounds and Tactician come back, and he heals 2 hit points.">New day</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+<main>
+  <section class="panel" id="pCombat"></section>
+  <section class="panel" id="pHp"></section>
+  <section class="panel" id="pSong"></section>
+  <section class="panel" id="pSpells"></section>
+  <section class="panel full" id="pTurn"></section>
+  <section class="panel full" id="pSheet"></section>
+  <section class="panel full" id="pLog"></section>
+</main>
+</div>
+
+<div class="sheet" id="signin" hidden>
+  <form id="signinForm" autocomplete="on">
+    <h2>Sign in to edit</h2>
+    <label id="siEmailRow">Email<input id="siEmail" type="email" autocomplete="username" required></label>
+    <p class="sub" id="siAs" hidden>Signing in as <span id="siAsEmail"></span> · <button type="button" class="acct" id="siOther">use another email</button></p>
+    <label>Password<input id="siPass" type="password" autocomplete="current-password" required></label>
+    <p class="err" id="siErr" aria-live="polite"></p>
+    <div class="row"><button type="button" class="acct" id="siForgot" style="margin-right:auto">Forgot password?</button><button type="button" class="btn" id="siCancel">Cancel</button><button type="submit" class="btn primary" id="siGo">Sign in</button></div>
+  </form>
+</div>
+<div class="sheet" id="rsSheet" hidden>
+  <form id="rsForm" autocomplete="on">
+    <h2>Set a new password</h2>
+    <input type="text" id="rsUser" autocomplete="username" hidden>
+    <p class="sub" id="rsFor"></p>
+    <label>New password<input id="rsNew" type="password" autocomplete="new-password" minlength="6" required></label>
+    <label>New password again<input id="rsNew2" type="password" autocomplete="new-password" minlength="6" required></label>
+    <p class="err" id="rsErr" aria-live="polite"></p>
+    <div class="row"><button type="button" class="btn" id="rsCancel">Cancel</button><button type="submit" class="btn primary" id="rsGo">Save password</button></div>
+  </form>
+</div>
+<div class="sheet" id="pwSheet" hidden>
+  <form id="pwForm" autocomplete="on">
+    <h2>Change password</h2>
+    <input type="text" id="pwUser" autocomplete="username" hidden>
+    <label>Current password<input id="pwOld" type="password" autocomplete="current-password" required></label>
+    <label>New password<input id="pwNew" type="password" autocomplete="new-password" minlength="6" required></label>
+    <label>New password again<input id="pwNew2" type="password" autocomplete="new-password" minlength="6" required></label>
+    <p class="err" id="pwErr" aria-live="polite"></p>
+    <div class="row"><button type="button" class="btn" id="pwCancel">Cancel</button><button type="submit" class="btn primary" id="pwGo">Change</button></div>
+  </form>
+</div>
+<div class="sheet" id="helpSheet" hidden>
+  <form id="helpForm">
+    <h2 id="helpTitle"></h2>
+    <div id="helpBody"></div>
+    <div class="row"><button type="submit" class="btn primary">Close</button></div>
+  </form>
+</div>
+
+
+<script src="config.js"></script>
+<script src="vendor/firebase-app-compat.js"></script>
+<script src="vendor/firebase-auth-compat.js"></script>
+<script src="vendor/firebase-firestore-compat.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var sg = function (n) { return (n >= 0 ? "+" : "") + n; };
+
+  /* ---------- Tholgar, dwarf gestalt Skald (Fated Champion) 2 // Slayer (Vanguard) 2, Pathfinder 1e, from his sheet ---------- */
+  var LEVEL = 2, HP_BASE = 28, BAB = 2;
+  var AB = { str: 17, dex: 16, con: 18, int: 15, wis: 17, cha: 15 };
+  var mod = function (v) { return Math.floor((v - 10) / 2); };
+  var SONG_MAX = 7; /* 3 + Cha 2 + 2 for 2nd level */
+  var SLOTS1 = 3; /* 1st-level skald spells a day (2 + 1 bonus for Cha) */
+  var TACT_ROUNDS = 3 + Math.floor(LEVEL / 2); /* Tactician: 3 rounds + 1 per 2 levels */
+  var CL = 2, DC = function (l) { return 10 + l + 2; };
+  var CANTRIPS = ["Open/Close", "Prestidigitation", "Detect Magic", "Mage Hand", "Read Magic"];
+  var SPELLS1 = ["Disguise Self", "Cure Light Wounds", "Vanish"];
+  /* skills as on his sheet: [name, total, ranks, note] (armor check penalty −1 included) */
+  var SKILLS = [["Acrobatics", 2, 0, ""], ["Appraise", 7, 1, "+2 racial on precious metals and gems (Greed)"], ["Bluff", 6, 1, ""], ["Climb", 2, 0, ""],
+    ["Craft (any)", 2, 0, ""], ["Diplomacy", 2, 0, "or Perform (Oratory) +6 (Versatile Performance)"], ["Disable Device", 7, 1, "trained only"], ["Disguise", 6, 1, ""],
+    ["Escape Artist", 2, 0, ""], ["Fly", 2, 0, ""], ["Heal", 3, 0, ""], ["Intimidate", 6, 1, ""], ["Knowledge (arcana)", 7, 1, ""], ["Knowledge (dungeoneering)", 7, 1, ""],
+    ["Knowledge (engineering)", 3, 0, "untrained (Bardic Knowledge)"], ["Knowledge (geography)", 3, 0, "untrained (Bardic Knowledge)"], ["Knowledge (history)", 7, 1, ""],
+    ["Knowledge (local)", 3, 0, "untrained (Bardic Knowledge)"], ["Knowledge (nature)", 7, 1, ""], ["Knowledge (nobility)", 3, 0, "untrained (Bardic Knowledge)"],
+    ["Knowledge (planes)", 3, 0, "untrained (Bardic Knowledge)"], ["Knowledge (religion)", 7, 1, ""], ["Perception", 9, 2, ""], ["Perform (oratory)", 6, 1, ""], ["Ride", 2, 0, ""],
+    ["Sense Motive", 3, 0, "or Perform (Oratory) +6 (Versatile Performance)"], ["Spellcraft", 6, 1, "trained only"], ["Stealth", 6, 1, ""], ["Survival", 8, 2, ""], ["Swim", 2, 0, ""],
+    ["Use Magic Device", 6, 1, "trained only"]];
+  var STUDY_SKILLS = /Bluff|Knowledge|Perception|Sense Motive|Survival/;
+  var FEATS = [["Weapon Focus (dwarven chain flail)", "1st", "+1 on attack rolls with the chain flail."], ["Improved Initiative", "1st", "+4 on initiative checks."],
+    ["Scribe Scroll", "Skald bonus feat", "Can scribe scrolls of spells he knows."], ["Precise Strike", "Vanguard's Tactician (teamwork)", "+1d6 precision damage on melee hits while flanking with an ally who also has Precise Strike."]];
+  var TRAITS = [["Reactionary (combat)", "+2 on initiative."], ["Vagabond Child (regional, urban)", "Disable Device is a class skill; +1 trait bonus on it."], ["Eyes on the Dragon Hoard (campaign)", "+1 trait bonus on Appraise and Perception."]];
+  var RACIAL = [["Dwarf", "+2 Con, +2 Wis, −2 Cha. Medium humanoid (dwarf). Speed 20 ft, never reduced by armor or encumbrance. Darkvision 60 ft."],
+    ["Hardy", "+2 racial bonus on saves against poison, spells and spell-like abilities."], ["Greed", "+2 racial bonus on Appraise to price non-magical goods with precious metals or gems."],
+    ["Treasure Sense", "Works as scent, but only for precious metals (copper, silver, gold) and creatures made of them. Replaces stability and stonecunning."],
+    ["Deep Tradition", "+1 on melee attack rolls and +1 AC against attacks of opportunity from drow, duergar, aberrations, giants and orcs. Replaces defensive training and hatred."],
+    ["Weapon Familiarity", "Battleaxes, heavy picks and warhammers; weapons with “dwarven” in the name are martial."], ["Languages", "Common, Dwarven, Giant, Undercommon."]];
+  var CLASS = [
+    ["Studied Target (slayer)", "Move action: +1 on attack and damage and on Bluff, Knowledge, Perception, Sense Motive and Survival against one opponent; his class DCs against it +1. One target at a time, until it dies or he studies another. After sneak attack damage he can study that target as an immediate action."],
+    ["Lookout (vanguard)", "+½ his slayer level (+1) on initiative. Replaces track."],
+    ["Tactician (vanguard)", "Once a day, a standard action: allies within 30 ft who can see and hear him gain one of his teamwork feats (Precise Strike) for " + TACT_ROUNDS + " rounds, prerequisites waived. Replaces the 2nd-level slayer talent."],
+    ["Bardic Knowledge (skald)", "+½ skald level (+1) on all Knowledge checks; all Knowledge checks untrained."],
+    ["Raging Song (skald)", SONG_MAX + " rounds a day. Starting is a standard action; keeping it going is a free action each round. Can't be disrupted; ends if he is killed, paralyzed, stunned, knocked out or can't take the free action. Audible only; allies must hear it, and each ally chooses at the start of its turn whether to accept it. Counts as bardic performance; he can learn bard masterpieces."],
+    ["Versatile Performance (skald)", "Perform (Oratory) +6 in place of Diplomacy and Sense Motive."],
+    ["Watcher of the Weave (Fated Champion)", "Insight bonus on initiative equal to ½ his skald level (+1). Replaces well-versed."],
+    ["Spells (skald)", "Spontaneous, caster level " + CL + ", Cha-based: DC 12 for cantrips, 13 for 1st level. No arcane spell failure in light or medium armor."]
+  ];
+  var STOCK = [["arrows", "Arrows", 20, ""], ["rations", "Rations (days)", 6, ""]];
+
+  /* ---------- state ---------- */
+  var KEY = "tholgar-tracker-v1", UNDO_MAX = 20, LOG_MAX = 500;
+  function fresh() {
+    var st = {}; STOCK.forEach(function (x) { st[x[0]] = x[2]; });
+    return { v: 1, round: 1, hp: HP_BASE, song: SONG_MAX, songOn: false, slots: SLOTS1, tact: 1, tactLeft: 0, gold: 13, target: "", stock: st, cond: {}, turn: [], prevOoc: "", undo: [], log: [] };
+  }
+  function normalize(s) {
+    var f = fresh();
+    s = s && typeof s === "object" ? s : {};
+    Object.keys(f).forEach(function (k) { if (s[k] == null || typeof s[k] !== typeof f[k] || Array.isArray(f[k]) !== Array.isArray(s[k])) s[k] = f[k]; });
+    STOCK.forEach(function (x) { if (typeof s.stock[x[0]] !== "number") s.stock[x[0]] = x[2]; });
+    return s;
+  }
+  var state = fresh(), readOnly = false, roLabel = "", dirty = false, saveTimer = null;
+  var ui = { dayArmed: false, clearArmed: false, custom: "", target: "" };
+
+  function log(t) { state.log.unshift({ r: state.round, t: t }); state.log = state.log.slice(0, LOG_MAX); }
+  var NUMS = ["hp", "song", "slots", "tact", "tactLeft"];
+  function mutate(fn) {
+    if (readOnly) return;
+    var pre = { songOn: state.songOn, stock: JSON.stringify(state.stock), turn: state.turn, n: state.turn.length };
+    NUMS.forEach(function (k) { pre[k] = state[k]; });
+    fn(state);
+    if (state.turn === pre.turn && state.turn.length > pre.n) {
+      var e = state.turn[state.turn.length - 1], f = {};
+      NUMS.forEach(function (k) { if (state[k] !== pre[k]) (f.d = f.d || {})[k] = state[k] - pre[k]; });
+      if (state.songOn !== pre.songOn) f.songOn = pre.songOn;
+      if (JSON.stringify(state.stock) !== pre.stock) { var a = JSON.parse(pre.stock); f.stock = {}; Object.keys(state.stock).forEach(function (k) { if (a[k] !== state.stock[k]) f.stock[k] = state.stock[k] - a[k]; }); }
+      if (Object.keys(f).length) e.eff = f;
+    }
+    render();
+    scheduleSave();
+  }
+  function undoAction(s, e) {
+    var f = e.eff || {};
+    Object.keys(f.d || {}).forEach(function (k) { s[k] -= f.d[k]; });
+    if ("songOn" in f) s.songOn = f.songOn;
+    Object.keys(f.stock || {}).forEach(function (k) { s.stock[k] -= f.stock[k]; });
+    log("Took back: " + e.name);
+  }
+  function act(name, note) { state.turn.push({ id: "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: name, note: note || "" }); }
+  function snap(s) { var c = JSON.parse(JSON.stringify(s)); delete c.undo; delete c.log; return c; }
+
+  /* ---------- derived numbers ---------- */
+  function d() {
+    var c = state.cond, rage = state.songOn && c.selfSong; /* inspired rage on himself: +2 Str and Con, +1 Will, −1 AC */
+    var str = AB.str + (rage ? 2 : 0), con = AB.con + (rage ? 2 : 0), sm = mod(str), cm = mod(con), stud = state.target ? 1 : 0;
+    var def = c.def === "fight" ? 2 : c.def === "total" ? 4 : 0;
+    var atkMisc = (c.def === "fight" ? -4 : 0) + stud;
+    var flail = BAB + sm + 1 + 1 + atkMisc + (c.flank ? 2 : 0) + (c.deep ? 1 : 0) + (c.charge ? 2 : 0);
+    var bow = BAB + mod(AB.dex) + atkMisc;
+    var hpMax = HP_BASE + (cm - mod(AB.con)) * LEVEL;
+    return {
+      ac: 17 + def - (c.charge ? 2 : 0) - (rage ? 1 : 0), touch: 13 + def - (c.charge ? 2 : 0) - (rage ? 1 : 0), ff: 14 - (c.charge ? 2 : 0) - (rage ? 1 : 0),
+      init: 11, fort: 3 + cm, ref: 6, will: 6 + (rage ? 1 : 0), cmb: BAB + sm, cmd: 10 + BAB + sm + mod(AB.dex),
+      flail: flail, flailDmg: "1d10" + sg(Math.floor(1.5 * sm) + stud), bow: bow, bowDmg: "1d8" + sg(Math.min(sm, 2) + stud),
+      prec: !!(c.flank && (c.precAlly || state.tactLeft > 0)), rage: rage, hpMax: hpMax, dead: con, noAtk: c.def === "total"
+    };
+  }
+  function hpState(hp, D) {
+    if (hp <= -D.dead) return ["Dead", true];
+    if (hp < 0) return ["Dying: loses 1 hp a round unless he makes a DC 10 Con check (penalty equal to his negative hp) or is stabilized", true];
+    if (hp === 0) return ["Disabled: one move or standard action a round; a standard action costs 1 hp", true];
+    return [hp <= D.hpMax / 4 ? "Badly hurt" : "", hp <= D.hpMax / 4];
+  }
+
+  /* ---------- render ---------- */
+  function render() {
+    var D = d();
+    $("hpTop").textContent = state.hp;
+    $("songTop").textContent = state.song + (state.songOn ? "♪" : "");
+    $("roundTop").textContent = state.round;
+    $("dayBtn").textContent = ui.dayArmed ? "Confirm new day" : "New day";
+    $("dayBtn").classList.toggle("warn", ui.dayArmed);
+    renderCombat(D); renderHp(D); renderSong(); renderSpells(); renderTurn(D); renderSheet(D); renderLog();
+  }
+  function tog(key, label, on, hint) { return '<button type="button" class="btn sm' + (on ? " primary" : "") + '" data-act="cond" data-k="' + key + '" aria-pressed="' + !!on + '" title="' + esc(hint || "") + '">' + label + "</button>"; }
+  function renderCombat(D) {
+    var c = state.cond, fs = "background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px";
+    $("pCombat").innerHTML = '<div class="ph"><h2>Combat</h2><span class="hint">Toggles change the numbers below</span></div>' +
+      '<div class="stats">' +
+        '<div class="stat"><span class="lbl">AC</span><b class="num">' + D.ac + "</b><small>touch " + D.touch + " · ff " + D.ff + "</small></div>" +
+        '<div class="stat"><span class="lbl">Chain flail</span><b class="num">' + (D.noAtk ? "—" : sg(D.flail)) + "</b><small>" + D.flailDmg + (D.prec ? " +1d6" : "") + " · reach</small></div>" +
+        '<div class="stat"><span class="lbl">Longbow</span><b class="num">' + (D.noAtk ? "—" : sg(D.bow)) + "</b><small>" + D.bowDmg + " · ×3</small></div>" +
+        '<div class="stat"><span class="lbl">Init</span><b class="num">' + sg(D.init) + "</b><small>Dex 3, feat 4, trait 2, +1, +1</small></div>" +
+        '<div class="stat"><span class="lbl">CMB / CMD</span><b class="num">' + sg(D.cmb) + " / " + D.cmd + "</b><small></small></div>" +
+        '<div class="stat"><span class="lbl">Saves</span><b class="num">' + sg(D.fort) + " " + sg(D.ref) + " " + sg(D.will) + "</b><small>+2 vs poison, spells</small></div></div>" +
+      (state.target ? '<p class="hint" style="margin-top:8px">Studied target: <b>' + esc(state.target) + "</b> (+1 attack and damage; +1 Bluff, Knowledge, Perception, Sense Motive, Survival against it).</p>" : "") +
+      (D.prec ? '<p class="hint" style="margin-top:4px">Precise Strike: +1d6 precision damage on each melee hit.</p>' : "") +
+      '<div class="row edit" style="margin-top:10px"><input type="text" data-ui="target" maxlength="40" placeholder="Study a target (move action)" value="' + esc(ui.target) + '" style="flex:1;min-width:160px;' + fs + '">' +
+        '<button class="btn sm" data-act="study">Study</button>' + (state.target ? '<button class="btn sm" data-act="unstudy">Clear</button>' : "") + "</div>" +
+      '<div class="row edit" style="margin-top:8px">' + tog("flank", "Flanking", c.flank, "+2 melee attack") +
+        tog("precAlly", "Ally has Precise Strike", c.precAlly, "While flanking with this ally: +1d6 precision on melee hits") +
+        tog("charge", "Charging", c.charge, "+2 attack, −2 AC") + tog("deep", "vs drow/duergar/aberration/giant/orc", c.deep, "Deep Tradition: +1 melee attack, +1 AC vs their attacks of opportunity") + "</div>" +
+      '<div class="row edit" style="margin-top:6px"><span class="hint">Defense:</span>' + tog("def:", "Normal", !c.def, "") + tog("def:fight", "Fighting defensively", c.def === "fight", "−4 attack, +2 dodge AC") +
+        tog("def:total", "Total defense", c.def === "total", "+4 dodge AC, no attacks") + "</div>";
+  }
+  function renderHp(D) {
+    var hp = state.hp, st = hpState(hp, D), pct = Math.max(0, Math.min(100, Math.round(hp / D.hpMax * 100)));
+    var b = function (n) { return '<button class="btn sm" data-act="hp" data-d="' + n + '">' + (n > 0 ? "+" : "−") + Math.abs(n) + "</button>"; };
+    $("pHp").innerHTML = '<div class="ph"><h2>Hit points</h2><span class="hint">Disabled at 0, dying below, dead at −' + D.dead + " (CON)</span></div>" +
+      '<div class="hpbig"><b class="num">' + hp + '</b><span class="hint">of ' + D.hpMax + (D.rage ? " (song: CON +2)" : "") + "</span></div>" +
+      '<div class="hpbar' + (st[1] ? " low" : "") + '"><i style="width:' + pct + '%"></i></div>' +
+      (st[0] ? '<p class="hpstate' + (st[1] ? " bad" : "") + '">' + st[0] + "</p>" : "") +
+      '<div class="row edit">' + b(-10) + b(-5) + b(-1) + b(1) + b(5) + b(10) + "</div>" +
+      '<div class="row edit" style="margin-top:8px"><input type="text" inputmode="numeric" id="hpAmt" maxlength="3" placeholder="Amount" style="width:90px;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px">' +
+      '<button class="btn sm" data-act="hpamt" data-s="-1">Damage</button><button class="btn sm" data-act="hpamt" data-s="1">Heal</button></div>';
+  }
+  function renderSong() {
+    var pips = "";
+    for (var i = 0; i < SONG_MAX; i++) pips += '<span class="pip day' + (i < state.song ? " on" : "") + '"></span>';
+    var t = "";
+    for (var j = 0; j < 1; j++) t += '<span class="pip' + (j < state.tact ? " on" : "") + '"></span>';
+    $("pSong").innerHTML = '<div class="ph"><h2>Raging song</h2><span class="hint">' + state.song + " of " + SONG_MAX + " rounds left today" + (state.songOn ? " · <b>playing</b>" : "") + "</span></div>" +
+      '<div class="pips">' + pips + "</div>" +
+      '<div class="row edit">' + (state.songOn ? '<button class="btn sm" data-act="songstop">Stop the song</button>' : '<button class="btn sm moon" data-act="songstart"' + (state.song < 1 ? " disabled" : "") + ">Start (standard action)</button>") +
+        '<button class="btn sm" data-act="songset" data-d="-1"' + (state.song < 1 ? " disabled" : "") + '>−1</button><button class="btn sm" data-act="songset" data-d="1"' + (state.song >= SONG_MAX ? " disabled" : "") + ">+1</button>" +
+        tog("selfSong", "He takes the song too", state.cond.selfSong, "Inspired rage on himself: +2 Str and Con, +1 Will, −1 AC") + "</div>" +
+      '<p class="hint" style="margin-top:6px">Keeping it going is a free action: each End round while it plays uses another round, and it stops when they run out. Inspired rage (if his Fated Champion archetype keeps it): allies who accept get +2 morale to Str and Con, +1 morale on Will, −1 AC.</p>' +
+      '<h3>Tactician</h3><div class="pips">' + t + "</div>" +
+      '<p class="hint">' + (state.tactLeft ? "<b>Allies have Precise Strike: " + state.tactLeft + " rounds left.</b> " : "") + "Once a day, a standard action: allies within 30 ft who see and hear him gain Precise Strike for " + TACT_ROUNDS + " rounds.</p>" +
+      '<div class="row edit" style="margin-top:6px"><button class="btn sm moon" data-act="tact"' + (state.tact < 1 ? " disabled" : "") + ">Use Tactician</button></div>";
+  }
+  function renderSpells() {
+    var row = function (n, l) {
+      var sp = libFind(n);
+      return '<tr><td><a href="#" data-spell="' + esc(n) + '">' + esc(n) + "</a>" + (sp ? '<br><span class="hint">' + esc([sp.ct, sp.rg && "range " + sp.rg, sp.du && "duration " + sp.du].filter(Boolean).join(" · ")) + "</span>" : "") +
+        '</td><td class="n">' + DC(l) + '</td><td><button class="btn sm' + (l ? " moon" : "") + '" data-act="cast" data-n="' + esc(n) + '" data-l="' + l + '"' + (l && state.slots < 1 ? " disabled" : "") + ">Cast</button></td></tr>";
+    };
+    var p = ""; for (var i = 0; i < SLOTS1; i++) p += '<span class="pip day' + (i < state.slots ? " on" : "") + '"></span>';
+    $("pSpells").innerHTML = '<div class="ph"><h2>Skald spells</h2><span class="hint">Caster level ' + CL + " · spontaneous</span></div>" +
+      "<h3>1st level · " + state.slots + " of " + SLOTS1 + ' left today</h3><div class="pips">' + p + "</div>" +
+      '<div class="tscroll"><table class="t"><tr><th>Spell</th><th class="n">DC</th><th></th></tr>' + SPELLS1.map(function (n) { return row(n, 1); }).join("") + "</table></div>" +
+      '<div class="row edit" style="margin-top:6px"><button class="btn sm" data-act="slot" data-d="-1"' + (state.slots < 1 ? " disabled" : "") + '>−1 slot</button><button class="btn sm" data-act="slot" data-d="1"' + (state.slots >= SLOTS1 ? " disabled" : "") + ">+1 slot</button></div>" +
+      '<h3>Cantrips · at will</h3><div class="tscroll"><table class="t">' + CANTRIPS.map(function (n) { return row(n, 0); }).join("") + "</table></div>" +
+      '<p class="hint" style="margin-top:6px">Tap a name for the spell text.</p>';
+  }
+  function renderTurn(D) {
+    $("pTurn").innerHTML = '<div class="ph"><h2>This round</h2><span class="hint">Uses add themselves here; × takes one back. End round makes the round final (− rolls it back).</span></div>' +
+      '<div class="tclock"><div class="rframe"><b class="num">' + state.round + '</b><span class="lbl">Round</span></div>' +
+      '<div class="rstep"><button class="btn rplus" data-act="roundplus" aria-label="Next round (no actions)">+</button>' +
+      '<button class="btn rplus" data-act="roundminus"' + (state.undo.length ? "" : " disabled") + ' aria-label="Undo the last round">−</button></div>' +
+      '<button class="btn sm" data-act="reset">Reset</button><button class="btn primary" data-act="endround">End round</button></div>' +
+      (state.turn.length ? '<ul class="tlist">' + state.turn.map(function (e) {
+        return '<li><span class="tname">' + esc(e.name) + (e.note ? ' <span class="hint">' + esc(e.note) + "</span>" : "") + '</span><button class="btn sm tx" data-act="turnrm" data-id="' + e.id + '" aria-label="Take back">×</button></li>';
+      }).join("") + "</ul>" : '<p class="hint">Nothing this round yet.</p>') +
+      '<div class="row edit" style="margin-top:10px">' +
+        '<button class="btn sm" data-act="quick" data-n="Attack with the chain flail" data-x="' + sg(D.flail) + ", " + D.flailDmg + (D.prec ? " +1d6" : "") + '">Flail attack</button>' +
+        '<button class="btn sm" data-act="quick" data-n="Shoot the longbow" data-x="' + sg(D.bow) + ", " + D.bowDmg + '">Longbow</button>' +
+        '<button class="btn sm" data-act="quick" data-n="Move">Move</button><button class="btn sm" data-act="quick" data-n="Trip with the chain flail" data-x="CMB ' + sg(D.cmb + 1 + 1) + '">Trip</button></div>' +
+      '<div class="row edit" style="margin-top:8px"><input type="text" data-ui="custom" maxlength="80" placeholder="Another action" value="' + esc(ui.custom) + '" style="flex:1;min-width:200px;background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px">' +
+      '<button class="btn sm" data-act="custom">Add</button></div>' +
+      '<h3>OOC for RPoL</h3><textarea class="ooc" readonly>' + esc(oocText()) + '</textarea><div class="row"><button class="btn sm" data-act="ooccopy">Copy</button></div>' +
+      (state.prevOoc ? '<details class="sec"><summary>Last round</summary><pre class="txt">' + esc(state.prevOoc) + "</pre></details>" : "");
+  }
+  function oocText() {
+    var D = d();
+    return "OOC: Round " + state.round + "\nTholgar: " + (state.turn.length ? state.turn.map(function (e) { return e.name + (e.note ? " (" + e.note + ")" : ""); }).join("; ") : "nothing yet") + ".\n" +
+      "HP " + state.hp + "/" + D.hpMax + ". AC " + D.ac + ", touch " + D.touch + ", flat-footed " + D.ff + ". Raging song " + state.song + "/" + SONG_MAX + (state.songOn ? " (playing)" : "") +
+      ". 1st-level spells " + state.slots + "/" + SLOTS1 + "." + (state.target ? " Studied target: " + state.target + "." : "") + (state.tactLeft ? " Allies have Precise Strike (" + state.tactLeft + " rounds)." : "");
+  }
+  function renderSheet(D) {
+    var open = {};
+    document.querySelectorAll("#pSheet details[data-sec]").forEach(function (x) { open[x.getAttribute("data-sec")] = x.open; });
+    var sec = function (id, title, body) { return '<details class="sec" data-sec="' + id + '"' + (open[id] ? " open" : "") + "><summary>" + title + "</summary>" + body + "</details>"; };
+    var stat = function (l, v, s) { return '<div class="stat"><span class="lbl">' + l + '</span><b class="num">' + v + "</b>" + (s ? "<small>" + s + "</small>" : "") + "</div>"; };
+    var li = function (r) { return "<li><b>" + esc(r[0]) + ".</b> " + esc(r[1]) + "</li>"; };
+    var h = '<div class="ph"><h2>Sheet</h2><span class="hint">Male dwarf · Lawful Evil · Abbathor · 4\'5", 185 lb, 120 years · HD 2d10</span></div>' +
+      '<div class="stats">' + ["str", "dex", "con", "int", "wis", "cha"].map(function (k) { return stat(k.toUpperCase(), AB[k], sg(mod(AB[k]))); }).join("") + "</div>" +
+      '<p class="hint" style="margin:8px 0">Con 16 +2 and Wis 15 +2 racial, Cha 17 −2 racial. Speed 20 ft. Darkvision 60 ft. Dark brown hair streaked with gray, deep brown eyes and skin.</p>';
+    h += sec("combat", "Combat", '<div class="tscroll"><table class="t">' +
+      "<tr><th>AC</th><td>17 = 10 + 4 masterwork chain shirt + 3 Dex; touch 13; flat-footed 14. Fighting defensively +2 (−4 to hit), total defense +4.</td></tr>" +
+      "<tr><th>Initiative</th><td>+11 = Dex 3 + Improved Initiative 4 + Reactionary 2 + Watcher of the Weave 1 (insight) + Lookout 1</td></tr>" +
+      "<tr><th>Saves</th><td>Fort +7 = 3 + 4 Con; Ref +6 = 3 + 3 Dex; Will +6 = 3 + 3 Wis (gestalt: best of both). +2 vs poison, spells and spell-like abilities (Hardy).</td></tr>" +
+      "<tr><th>Melee / Ranged</th><td>+5 (BAB 2, Str 3) / +5 (BAB 2, Dex 3). CMB +5, CMD 18.</td></tr>" +
+      "<tr><th>Dwarven chain flail</th><td>Masterwork, Weapon Focus: +7, 1d10+4 (two-handed), ×2, bludgeoning, reach 10 ft (5 ft as marked on his sheet), 15 lb.</td></tr>" +
+      "<tr><th>Composite longbow</th><td>(Str +2): +5, 1d8+2, ×3, 110 ft, piercing, 3 lb; 20 arrows.</td></tr>" +
+      "<tr><th>Armor</th><td>Masterwork chain shirt: light, +4, max Dex +4, check penalty −1, 25 lb. Skald spells have no spell failure in light armor.</td></tr></table></div>");
+    h += sec("abil", "Racial traits, class abilities, traits", "<h3>Dwarf</h3><ul class=\"plain\">" + RACIAL.map(li).join("") + "</ul><h3>Skald 2 (Fated Champion) // Slayer 2 (Vanguard)</h3><ul class=\"plain\">" + CLASS.map(li).join("") + "</ul><h3>Traits</h3><ul class=\"plain\">" + TRAITS.map(li).join("") + "</ul>");
+    h += sec("feats", "Feats", '<ul class="plain">' + FEATS.map(function (f) { return "<li><b>" + esc(f[0]) + "</b> <span class=\"hint\">" + esc(f[1]) + "</span>: " + esc(f[2]) + "</li>"; }).join("") + "</ul>" +
+      '<p class="hint">Possible feat at 3rd level: Street Smart.</p>');
+    h += sec("skills", "Skills", '<p class="hint">18 ranks (8 + 1 favored class a level). Armor check penalty −1 counted.' + (state.target ? " Studied target adds +1 to the marked skills against " + esc(state.target) + "." : "") + '</p><div class="tscroll"><table class="t"><tr><th>Skill</th><th class="n">Ranks</th><th class="n">Total</th><th>Note</th></tr>' +
+      SKILLS.map(function (s) { var t = s[1] + (state.target && STUDY_SKILLS.test(s[0]) ? 1 : 0); return "<tr><td>" + esc(s[0]) + '</td><td class="n">' + (s[2] || "") + '</td><td class="n"><b>' + sg(t) + "</b></td><td class=\"hint\">" + esc(s[3]) + "</td></tr>"; }).join("") + "</table></div>");
+    h += sec("gear", "Gear and money", '<pre class="txt" id="gearTxt">Loading…</pre>');
+    h += '<div class="row" style="margin-top:12px"><button class="btn sm" data-act="rpol">Generate RPoL sheet</button></div>';
+    $("pSheet").innerHTML = h;
+    loadDocs(function () { var g = $("gearTxt"); if (g) g.textContent = DOCS.gear || "Not loaded."; });
+  }
+  function renderLog() {
+    $("pLog").innerHTML = '<div class="ph"><h2>Log</h2><div class="row"><button class="btn sm" data-act="copylog">Copy log</button>' +
+      '<button class="btn sm' + (ui.clearArmed ? " warn" : "") + '" data-act="clearlog">' + (ui.clearArmed ? "Tap again to clear" : "Clear log") + "</button></div></div>" +
+      (state.log.length ? '<ul class="log">' + state.log.map(function (e) { return '<li><span class="r">R' + e.r + "</span>" + esc(e.t) + "</li>"; }).join("") + "</ul>" : '<p class="hint">Nothing logged yet.</p>');
+  }
+
+  /* ---------- texts: his sheet (gear, money) and his spells' text (from Daerlieth's Pathfinder spell library) ---------- */
+  var DOCS = null, LIB = null;
+  function loadDocs(cb) {
+    if (DOCS) return cb();
+    fetch("docs/tholgar-sheet.txt").then(function (r) { return r.ok ? r.text() : ""; }).catch(function () { return ""; }).then(function (t) { var a = t.indexOf("EQUIPMENT:"); DOCS = { sheet: t, gear: a >= 0 ? t.slice(a).trim() : "" }; cb(); });
+  }
+  fetch("data/spells.json").then(function (r) { return r.json(); }).then(function (j) { LIB = j.spells; renderSpells(); }).catch(function () {});
+  function libFind(n) { return LIB && LIB.filter(function (x) { return x.n.toLowerCase() === n.toLowerCase(); })[0]; }
+  function spellCard(x) {
+    var row = function (k, v) { return v ? "<tr><th>" + k + "</th><td>" + esc(v) + "</td></tr>" : ""; };
+    var lv = typeof x.lv === "object" ? Object.keys(x.lv).map(function (k) { return k + " " + x.lv[k]; }).join(", ") : x.lv;
+    return '<p class="hint">' + esc(x.s + (x.ss ? " (" + x.ss + ")" : "")) + " · " + esc(x.src || "") + '</p><div class="tscroll"><table class="t">' + row("Level", lv) + row("Casting time", x.ct) + row("Components", x.c) + row("Range", x.rg) +
+      row("Target / area / effect", x.tg || x.ar || x.ef) + row("Duration", x.du) + row("Saving throw", x.sv) + row("Spell resistance", x.sr) + "</table></div>" +
+      '<div style="font-size:0.88rem;margin-top:8px">' + String(x.d || "").split(/\n+/).map(function (p) { return '<p style="margin:0 0 8px">' + esc(p) + "</p>"; }).join("") + "</div>";
+  }
+  function rpolText() {
+    var D = d(), now = new Date(), M = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], R = "----------------------------------------------------------------------------";
+    var pad = function (s, n) { s = String(s); while (s.length < n) s += " "; return s; };
+    var head = DOCS.sheet.split("\nEQUIPMENT:")[0].trim();
+    var o = [head, R];
+    ["str", "dex", "con", "int", "wis", "cha"].forEach(function (k) { o.push(k.toUpperCase() + " : " + AB[k] + " / " + sg(mod(AB[k]))); });
+    o.push(R, "HP     : " + D.hpMax + " / current " + state.hp, "AC     : 17 (touch 13, flat-footed 14). Fight defensively +2, total defense +4.", "Init   : +11   Speed 20 ft   Darkvision 60 ft",
+      "Saves  : Fort +7, Ref +6, Will +6 (+2 vs poison, spells, spell-like abilities)", "Melee +5, Ranged +5, CMB +5, CMD 18", R,
+      "Dwarven chain flail, MW   +7  1d10+4  x2  reach (Weapon Focus)", "Composite longbow (Str +2) +5  1d8+2  x3  110 ft  (" + state.stock.arrows + " arrows)", R, "SKILLS");
+    SKILLS.forEach(function (s) { o.push(" " + pad(s[0], 26) + pad(sg(s[1]), 4) + (s[2] ? " (" + s[2] + (s[2] === 1 ? " rank)" : " ranks)") : "") + (s[3] ? "  " + s[3] : "")); });
+    o.push(R, "FEATS: " + FEATS.map(function (f) { return f[0]; }).join(", ") + ".", "TRAITS: " + TRAITS.map(function (t) { return t[0]; }).join(", ") + ".",
+      "RACIAL: Hardy, Greed, Treasure Sense, Deep Tradition, Weapon Familiarity, Darkvision 60 ft. Languages: Common, Dwarven, Giant, Undercommon.",
+      "CLASS: Studied Target, Lookout, Tactician (1/day, " + TACT_ROUNDS + " rounds), Bardic Knowledge, Raging Song (" + SONG_MAX + " rounds/day), Versatile Performance (Oratory), Watcher of the Weave.",
+      "SPELLS (skald, CL " + CL + "): 0 (DC 12, at will): " + CANTRIPS.join(", ") + ". 1st (DC 13, " + SLOTS1 + "/day): " + SPELLS1.join(", ") + ".", R, DOCS.gear, R,
+      "CURRENT STATUS (" + M[now.getMonth()] + " " + now.getDate() + " " + now.getFullYear() + ", round " + state.round + ")",
+      " - Hit points " + state.hp + " of " + D.hpMax + ". Raging song " + state.song + " of " + SONG_MAX + " rounds" + (state.songOn ? " (playing)" : "") + ". 1st-level spells " + state.slots + " of " + SLOTS1 + ". Tactician " + (state.tact ? "ready" : "used today") + ".",
+      " - Arrows " + state.stock.arrows + ", rations " + state.stock.rations + ", gold " + state.gold + "." + (state.target ? " Studied target: " + state.target + "." : ""));
+    return o.join("\n");
+  }
+
+  /* ---------- events ---------- */
+  function openInfo(title, html, wide) { $("helpTitle").textContent = title; $("helpBody").innerHTML = html; $("helpForm").classList.toggle("wide", !!wide); $("helpSheet").hidden = false; }
+  function closeHelp() { $("helpSheet").hidden = true; }
+  $("helpForm").addEventListener("submit", function (e) { e.preventDefault(); closeHelp(); });
+  $("helpSheet").addEventListener("click", function (e) { if (e.target === $("helpSheet")) closeHelp(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("helpSheet").hidden) closeHelp(); });
+  var copy = function (txt, btn) {
+    var done = function () { var o = btn.textContent; btn.textContent = "Copied"; setTimeout(function () { btn.textContent = o; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, function () {}); else done();
+  };
+  document.addEventListener("click", function (e) {
+    if (e.target.closest && e.target.closest("[data-portrait]")) { openInfo("Tholgar “Two-Tankards” Bloodshield", '<img class="portrait-full" src="images/tholgar.webp" alt="Tholgar, a broad dwarf with a long braided beard, chain shirt and red cloak, a sword on his shoulder, in the mountains" width="1016" height="1548">'); return; }
+    if (e.target.closest && e.target.closest("[data-goturn]")) { var pt = $("pTurn"), tp = document.querySelector(".top"); window.scrollTo({ top: pt.getBoundingClientRect().top + window.scrollY - (tp ? tp.offsetHeight : 0) - 8, behavior: "smooth" }); return; }
+    var sl = e.target.closest && e.target.closest("[data-spell]");
+    if (sl) { e.preventDefault(); var x = libFind(sl.getAttribute("data-spell")); openInfo(sl.getAttribute("data-spell"), x ? spellCard(x) : '<p class="hint">Spell text could not be loaded. It needs a connection the first time.</p>', true); return; }
+    var t = e.target.closest && e.target.closest("[data-act]");
+    if (!t) return;
+    var a = t.getAttribute("data-act");
+    if (a === "copylog") { copy(state.log.slice().reverse().map(function (y) { return "R" + y.r + "  " + y.t; }).join("\n"), t); return; }
+    if (a === "ooccopy") { copy(oocText(), t); return; }
+    if (a === "rpol") {
+      loadDocs(function () {
+        var txt = rpolText();
+        openInfo("Tholgar: RPoL sheet", '<p class="hint">His sheet with today\'s numbers written in.</p><textarea class="rpol" readonly>' + esc(txt) + '</textarea><div class="row"><button type="button" class="btn primary" id="rpolCopy">Copy</button></div>', true);
+        $("rpolCopy").addEventListener("click", function () { copy(txt, $("rpolCopy")); });
+      });
+      return;
+    }
+    if (readOnly) return;
+    if (a === "cond") {
+      var k = t.getAttribute("data-k");
+      mutate(function (s) { if (/^def:/.test(k)) { var v = k.slice(4); if (v) s.cond.def = v; else delete s.cond.def; } else if (s.cond[k]) delete s.cond[k]; else s.cond[k] = true; s.hp = Math.min(s.hp, d().hpMax); });
+    }
+    else if (a === "study") { var tg = ui.target.trim(); if (!tg) return; ui.target = ""; mutate(function (s) { s.target = tg; act("Study " + tg, "move action: +1 attack and damage against it"); }); }
+    else if (a === "unstudy") mutate(function (s) { log("Stopped studying " + s.target); s.target = ""; });
+    else if (a === "songstart") { if (state.song < 1) return; mutate(function (s) { s.song -= 1; s.songOn = true; act("Start the raging song", "standard action, " + s.song + " rounds left"); }); }
+    else if (a === "songstop") mutate(function (s) { s.songOn = false; log("Raging song ends (" + s.song + " rounds left)"); s.hp = Math.min(s.hp, d().hpMax); });
+    else if (a === "songset") { var sd = +t.getAttribute("data-d"); mutate(function (s) { var o = s.song; s.song = Math.max(0, Math.min(SONG_MAX, s.song + sd)); log("Raging song rounds set by hand " + o + " → " + s.song); }); }
+    else if (a === "tact") { if (state.tact < 1) return; mutate(function (s) { s.tact -= 1; s.tactLeft = TACT_ROUNDS; act("Tactician: allies gain Precise Strike", TACT_ROUNDS + " rounds, standard action"); }); }
+    else if (a === "cast") {
+      var n = t.getAttribute("data-n"), l = +t.getAttribute("data-l");
+      if (l && state.slots < 1) return;
+      mutate(function (s) { if (l) s.slots -= 1; act("Cast " + n, (l ? "1st level, DC " + DC(l) + ", " + s.slots + " slots left" : "cantrip, DC " + DC(0)) + ", CL " + CL); });
+    }
+    else if (a === "slot") { var dd = +t.getAttribute("data-d"); mutate(function (s) { var o = s.slots; s.slots = Math.max(0, Math.min(SLOTS1, s.slots + dd)); log("1st-level slots set by hand " + o + " → " + s.slots); }); }
+    else if (a === "quick") { var q = t.getAttribute("data-n"), xx = t.getAttribute("data-x") || ""; mutate(function (s) { act(q, xx); if (/longbow/i.test(q) && s.stock.arrows > 0) s.stock.arrows -= 1; }); }
+    else if (a === "custom") { var c = ui.custom.trim(); if (!c) return; ui.custom = ""; mutate(function (s) { act(c); }); }
+    else if (a === "turnrm") { var id = t.getAttribute("data-id"); mutate(function (s) { var g = s.turn.filter(function (y) { return y.id === id; })[0]; s.turn = s.turn.filter(function (y) { return y.id !== id; }); if (g) undoAction(s, g); }); }
+    else if (a === "hp" || a === "hpamt") {
+      var dn = a === "hp" ? +t.getAttribute("data-d") : (parseInt(($("hpAmt") || {}).value, 10) || 0) * +t.getAttribute("data-s");
+      if (!dn) return;
+      mutate(function (s) { var D = d(), o = s.hp; s.hp = Math.max(-D.dead, Math.min(D.hpMax, s.hp + dn)); var top = s.log[0];
+        if (top && top.k === "hp" && top.r === s.round) top.t = "HP " + top.from + " → " + s.hp; else s.log.unshift({ r: s.round, k: "hp", from: o, t: "HP " + o + " → " + s.hp }); });
+    }
+    else if (a === "endround" || a === "roundplus") mutate(function (s) {
+      s.undo = s.undo.concat([snap(s)]).slice(-UNDO_MAX);
+      log(s.turn.length ? "Round " + s.round + " actions: " + s.turn.map(function (y) { return y.name + (y.note ? " (" + y.note + ")" : ""); }).join("; ") : "Round " + s.round + " passed, no actions");
+      if (s.songOn) { if (s.song > 0) { s.song -= 1; log("Raging song continues (" + s.song + " rounds left)"); } else { s.songOn = false; log("Raging song ends: no rounds left"); } }
+      if (s.tactLeft > 0) { s.tactLeft -= 1; if (!s.tactLeft) log("Tactician's Precise Strike ends for his allies"); }
+      s.prevOoc = oocText(); s.turn = []; s.round += 1; delete s.cond.charge;
+    });
+    else if (a === "roundminus") mutate(function (s) { var u = s.undo.pop(); if (!u) return; Object.keys(u).forEach(function (k) { s[k] = u[k]; }); log("Back to round " + s.round + " (undid the end of round " + s.round + ")"); });
+    else if (a === "reset") mutate(function (s) { s.round = 1; s.turn = []; s.undo = []; s.cond = {}; s.songOn = false; s.tactLeft = 0; s.target = ""; log("Reset to round 1"); });
+    else if (a === "newday") {
+      if (!ui.dayArmed) { ui.dayArmed = true; render(); setTimeout(function () { ui.dayArmed = false; render(); }, 4000); return; }
+      ui.dayArmed = false;
+      mutate(function (s) { s.songOn = false; s.cond = {}; var o = s.hp; s.hp = Math.min(HP_BASE, s.hp + LEVEL); s.song = SONG_MAX; s.slots = SLOTS1; s.tact = 1; s.tactLeft = 0; s.target = ""; s.round = 1; s.turn = []; s.undo = [];
+        log("New day: spells, raging song and Tactician back, HP " + o + " → " + s.hp); });
+    }
+    else if (a === "clearlog") {
+      if (!ui.clearArmed) { ui.clearArmed = true; renderLog(); setTimeout(function () { ui.clearArmed = false; renderLog(); }, 4000); return; }
+      ui.clearArmed = false; mutate(function (s) { s.log = []; });
+    }
+  });
+  document.addEventListener("input", function (e) { var u = e.target.getAttribute && e.target.getAttribute("data-ui"); if (u === "custom" || u === "target") ui[u] = e.target.value; });
+  /* ---------- storage (as in Daerlieth's tracker: Firestore document trackers/tholgar, public read, owner writes) ---------- */
+  var CFG = window.TRACKER_CONFIG || {};
+  var WANTS_EDIT = KEY + ":edit";
+  var VIEW_ONLY = /[?&#]view\b/.test(location.search + location.hash);
+  var auth = null, ref = null, user = null, saveSeq = 0;
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* storage unavailable */ } }
+  function setStatus(t) { var el = $("status"); if (el) el.textContent = readOnly ? roLabel : t; }
+  function setReadOnly(label) { readOnly = true; roLabel = label; document.body.classList.add("ro"); setStatus(""); }
+  function setEditable(label) { readOnly = false; roLabel = ""; document.body.classList.remove("ro"); setStatus(label); }
+  function scheduleSave() { dirty = true; setStatus("Saving"); clearTimeout(saveTimer); saveTimer = setTimeout(flush, 350); }
+  var SAVE_LIMIT = 180000;
+  function bytes(str) { try { return unescape(encodeURIComponent(str)).length; } catch (e) { return str.length * 3; } }
+  function fitPayload() {
+    var payload = JSON.stringify(state);
+    while (bytes(payload) > SAVE_LIMIT && (state.undo.length || state.log.length > 50)) {
+      if (state.undo.length > 5) state.undo.shift();
+      else if (state.log.length > 50) state.log = state.log.slice(0, Math.max(50, Math.floor(state.log.length * 0.8)));
+      else state.undo.shift();
+      payload = JSON.stringify(state);
+    }
+    return payload;
+  }
+  function flush() {
+    if (!dirty) return;
+    dirty = false;
+    var payload = fitPayload();
+    lsSet(KEY, payload);
+    if (!ref) { setStatus("Saved on this device"); return; }
+    var mine = ++saveSeq;
+    if (!navigator.onLine) setStatus("Offline, saved on this device");
+    ref.set({ json: payload, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+      .then(function () { if (mine === saveSeq && !dirty) setStatus("Saved"); })
+      .catch(function (err) {
+        if (err && err.code === "permission-denied") setReadOnly("Save refused by the Firestore rules for " + ((user && user.email) || "this account"));
+        else setStatus("Not saved");
+      });
+  }
+  function applyRemote(sn) {
+    if (sn.metadata.hasPendingWrites || dirty) return;
+    if (sn.exists) {
+      try {
+        var incoming = normalize(JSON.parse(sn.data().json || "{}"));
+        lsSet(KEY, JSON.stringify(incoming));
+        if (JSON.stringify(incoming) !== JSON.stringify(state)) { state = incoming; render(); }
+      } catch (e) { /* keep what is shown */ }
+    }
+    var label = sn.metadata.fromCache ? "Offline, last saved copy" : "Live";
+    if (readOnly) setReadOnly(sn.exists || sn.metadata.fromCache ? label : "Waiting for the first save");
+    else setStatus(sn.metadata.fromCache ? "Offline, saved on this device" : "Saved");
+  }
+  function setUser(u) {
+    user = u || null;
+    if (VIEW_ONLY) setReadOnly(navigator.onLine ? "Live (viewer preview)" : "Offline, last saved copy");
+    else if (user && [].concat(CFG.ownerUids || CFG.ownerUid || []).indexOf(user.uid) >= 0) setEditable(navigator.onLine ? "Saved" : "Offline, saved on this device");
+    else setReadOnly(user ? "Signed in as " + (user.email || "?") + ", view only" : navigator.onLine ? "Live" : "Offline, last saved copy");
+    render();
+    renderAcct();
+  }
+  function renderAcct() {
+    var b = $("acctBtn");
+    if (!auth || VIEW_ONLY) { b.hidden = true; $("pwBtn").hidden = true; return; }
+    b.hidden = !user && !lsGet(WANTS_EDIT);
+    b.textContent = user ? "Sign out" : "Sign in";
+    $("pwBtn").hidden = !user || readOnly;
+  }
+  function hookAccount() {
+    if (/[?&#]edit\b/.test(location.search + location.hash)) lsSet(WANTS_EDIT, "1");
+    var sheet = $("signin"), err = $("siErr");
+    if (CFG.editorEmail) {
+      $("siEmail").value = CFG.editorEmail; $("siEmailRow").hidden = true; $("siAs").hidden = false; $("siAsEmail").textContent = CFG.editorEmail;
+      $("siOther").addEventListener("click", function () { $("siAs").hidden = true; $("siEmailRow").hidden = false; $("siEmail").value = ""; $("siEmail").focus(); });
+    }
+    function close() { sheet.hidden = true; err.textContent = ""; }
+    $("acctBtn").addEventListener("click", function () { if (user) { auth.signOut(); return; } sheet.hidden = false; (CFG.editorEmail ? $("siPass") : $("siEmail")).focus(); });
+    $("siCancel").addEventListener("click", close);
+    sheet.addEventListener("click", function (e) { if (e.target === sheet) close(); });
+    var pw = $("pwSheet"), pwErr = $("pwErr");
+    function closePw() { pw.hidden = true; pwErr.textContent = ""; $("pwForm").reset(); }
+    $("pwBtn").addEventListener("click", function () { if (!user) return; $("pwUser").value = user.email || ""; pw.hidden = false; $("pwOld").focus(); });
+    $("pwCancel").addEventListener("click", closePw);
+    $("pwForm").addEventListener("submit", function (e) {
+      e.preventDefault(); pwErr.textContent = "";
+      var nw = $("pwNew").value;
+      if (nw !== $("pwNew2").value) { pwErr.textContent = "The new passwords don't match."; return; }
+      if (nw.length < 6) { pwErr.textContent = "Use at least 6 characters."; return; }
+      $("pwGo").disabled = true;
+      user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(user.email, $("pwOld").value))
+        .then(function () { return user.updatePassword(nw); })
+        .then(function () { closePw(); setStatus("Password changed"); })
+        .catch(function (x) { pwErr.textContent = /invalid-credential|wrong-password/.test((x && x.code) || "") ? "The current password is wrong." : (x && x.message) || "Could not change the password."; })
+        .then(function () { $("pwGo").disabled = false; });
+    });
+    $("siForgot").addEventListener("click", function () {
+      var email = CFG.editorEmail || $("siEmail").value.trim();
+      if (!email) { err.textContent = "Enter the email first."; return; }
+      err.textContent = "Sending…";
+      auth.sendPasswordResetEmail(email, { url: location.origin + location.pathname + "?edit" })
+        .then(function () { err.textContent = "Reset email requested for " + email + "."; })
+        .catch(function (x) { err.textContent = (x && x.message) || "Could not send the email."; });
+    });
+    var rs = $("rsSheet"), rsErr = $("rsErr"), q = new URLSearchParams(location.search), rsCode = q.get("mode") === "resetPassword" ? q.get("oobCode") : null;
+    function closeRs() { rs.hidden = true; rsErr.textContent = ""; $("rsForm").reset(); history.replaceState(null, "", location.pathname + "?edit"); }
+    if (rsCode) {
+      lsSet(WANTS_EDIT, "1"); rs.hidden = false;
+      auth.verifyPasswordResetCode(rsCode).then(function (email) { $("rsUser").value = email; $("rsFor").textContent = "For " + email; })
+        .catch(function () { rsErr.textContent = "This reset link has expired or was already used."; $("rsGo").disabled = true; });
+    }
+    $("rsCancel").addEventListener("click", closeRs);
+    $("rsForm").addEventListener("submit", function (e) {
+      e.preventDefault(); rsErr.textContent = "";
+      var nw = $("rsNew").value;
+      if (nw !== $("rsNew2").value) { rsErr.textContent = "The passwords don't match."; return; }
+      $("rsGo").disabled = true;
+      auth.confirmPasswordReset(rsCode, nw).then(function () { return auth.signInWithEmailAndPassword($("rsUser").value, nw); })
+        .then(function () { closeRs(); setStatus("Password changed"); })
+        .catch(function (x) { rsErr.textContent = (x && x.message) || "Could not set the password."; $("rsGo").disabled = false; });
+    });
+    $("signinForm").addEventListener("submit", function (e) {
+      e.preventDefault(); err.textContent = ""; $("siGo").disabled = true;
+      auth.signInWithEmailAndPassword($("siEmail").value.trim(), $("siPass").value)
+        .then(function () { $("siPass").value = ""; close(); })
+        .catch(function (x) {
+          var c = (x && x.code) || "";
+          err.textContent = /invalid-credential|wrong-password|user-not-found|invalid-email/.test(c) ? "Wrong email or password." : /too-many-requests/.test(c) ? "Too many tries. Wait a few minutes." : (x && x.message) || "Could not sign in.";
+        })
+        .then(function () { $("siGo").disabled = false; });
+    });
+  }
+  function initStore() {
+    var cached = lsGet(KEY);
+    if (cached) { try { state = normalize(JSON.parse(cached)); render(); } catch (e) { /* ignore a bad copy */ } }
+    var fb = CFG.firebase || {};
+    if (!fb.apiKey || !fb.projectId || !CFG.characterId || !window.firebase) { setStatus("This device only"); return; }
+    firebase.initializeApp(fb);
+    var store = firebase.firestore();
+    store.enablePersistence({ synchronizeTabs: true }).catch(function () {});
+    auth = firebase.auth();
+    ref = store.collection("trackers").doc(CFG.characterId);
+    setReadOnly("Loading");
+    hookAccount();
+    renderAcct();
+    auth.onAuthStateChanged(setUser);
+    ref.onSnapshot({ includeMetadataChanges: true }, applyRemote, function () { setStatus("Can't reach the tracker"); });
+    window.addEventListener("online", function () { setUser(user); });
+    window.addEventListener("offline", function () { if (readOnly) setReadOnly("Offline, last saved copy"); else setStatus("Offline, saved on this device"); });
+  }
+
+  render();
+  initStore();
+  if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(function () {});
+})();
+</script>
+</body>
+</html>

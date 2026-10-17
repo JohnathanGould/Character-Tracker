@@ -7,6 +7,7 @@ Courynna Talaudrym (D&D 3.5 Factotum): https://johnathangould.github.io/Characte
 Nhym Ashcloak (D&D 3.5 whisper gnome rogue): https://johnathangould.github.io/Character-Tracker/nhym/ (GM view: add `?view`).
 
 Skabs (Shadowdark goblin paladin): https://johnathangould.github.io/Character-Tracker/skabs/ (GM view: add `?view`).
+Tholgar "Two-Tankards" Bloodshield (Pathfinder 1e dwarf Skald // Slayer): https://johnathangould.github.io/Character-Tracker/tholgar/ (GM view: add `?view`).
 
 ## Daerlieth Nightstar
 

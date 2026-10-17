@@ -119,7 +119,10 @@ footer { margin-top: 28px; color: var(--muted); font-size: 0.78rem; }
       game: { name: "Forgotten Realms 3.5", system: "D&D 3.5", url: "https://rpol.net/game.php?gi=80363" } },
     { path: "skabs/", doc: "skabs", name: "Skabs", thumb: "skabs/images/skabs-thumb.webp",
       line: function () { return "Goblin · Paladin 4 · with Greg, his war pony"; }, live: function (s) { return " · luck <b>" + (s.luck || 0) + "</b>" + (s.torch && s.torch.on ? " · torch lit" : ""); },
-      game: { name: "The Alright Company", system: "Shadowdark" } }
+      game: { name: "The Alright Company", system: "Shadowdark" } },
+    { path: "tholgar/", doc: "tholgar", name: "Tholgar “Two-Tankards” Bloodshield", thumb: "tholgar/images/tholgar-thumb.webp",
+      line: function () { return "Dwarf · Skald 2 // Slayer 2"; }, live: function (s) { return " · song <b>" + (s.song != null ? s.song : 7) + "</b>/7" + (s.songOn ? " · playing" : ""); },
+      game: { name: "name to come", system: "Pathfinder 1e" } }
   ];
   var PROJECT = "tracker-fe359";
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
