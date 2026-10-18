@@ -122,7 +122,10 @@ footer { margin-top: 28px; color: var(--muted); font-size: 0.78rem; }
       game: { name: "The Alright Company", system: "Shadowdark", url: "https://rpol.net/game.php?gi=78799&date=1792357554" } },
     { path: "tholgar/", doc: "tholgar", name: "Tholgar “Two-Tankards” Bloodshield", thumb: "tholgar/images/tholgar-thumb.webp",
       line: function () { return "Dwarf · Skald 2 // Slayer 2"; }, live: function (s) { return " · song <b>" + (s.song != null ? s.song : 7) + "</b>/7" + (s.songOn ? " · playing" : ""); },
-      game: { name: "Midnight Gospel", system: "Pathfinder 1e", url: "https://rpol.net/game.php?gi=80406&date=1791684804" } }
+      game: { name: "Midnight Gospel", system: "Pathfinder 1e", url: "https://rpol.net/game.php?gi=80406&date=1791684804" } },
+    { path: "vaelith/", doc: "vaelith", name: "Vaelith Thorn",
+      line: function () { return "Wood elf · Archer 1"; }, live: function (s) { return " · arrows <b>" + (s.stock ? s.stock.arrows : 40) + "</b>" + (s.torch && s.torch.on ? " · torch lit" : ""); },
+      game: { name: "Trailblazers of ShadowDark", system: "Shadowdark", url: "https://rpol.net/game.php?gi=80435&date=1791766376" } }
   ];
   var PROJECT = "tracker-fe359";
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };

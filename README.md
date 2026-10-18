@@ -8,6 +8,7 @@ Nhym Ashcloak (D&D 3.5 whisper gnome rogue): https://johnathangould.github.io/Ch
 
 Skabs (Shadowdark goblin paladin): https://johnathangould.github.io/Character-Tracker/skabs/ (GM view: add `?view`).
 Tholgar "Two-Tankards" Bloodshield (Pathfinder 1e dwarf Skald // Slayer): https://johnathangould.github.io/Character-Tracker/tholgar/ (GM view: add `?view`).
+Vaelith Thorn (Shadowdark wood elf archer): https://johnathangould.github.io/Character-Tracker/vaelith/ (GM view: add `?view`).
 
 ## Daerlieth Nightstar
 

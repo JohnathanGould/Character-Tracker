@@ -1,0 +1,55 @@
+NAME     : Vaelith Thorn
+ANCESTRY : Wood Elf
+CLASS    : Archer
+LEVEL    : 1         XP:  0  ALGN : Neutral LUCK: 1
+HP       : 8/8       AC: 15  DEITY: Gede
+
+STATS
+STR: 11 (+0)
+DEX: 18 (+4)
+CON: 10 (+0)
+INT: 12 (+1)
+WIS: 14 (+2)
+CHA: 15 (+2)
+
+RACIAL ABILITY :
+- Make bow attacks with advantage.
+- Languages: Common, Elvish
+
+CLASS ABILITIES:
+- Weapons      : Club, dagger, longbow, shortbow, staff
+- Armor        : Leather armor, chainmail
+- Hit Points   : 1d8 per level
+- Called Shot  : You can aim at a specific body part on a humanoid target.
+                 You must make the choice before rolling dice (at a -2 penalty).
+                 - Hitting a target below the waist prevents movement for 2 rounds.
+                 - Hitting an arm will cause them to drop whatever they are carrying on that side.
+                 - Hitting the head deals an extra 2 points of damage.
+- Draw         : +1 to attack and damage with a longbow or shortbow.
+- Quiver       : Your first two bundles of arrows don't consume gear slots.
+- Taking Cover : You impose disadvantage on ranged attacks or spellcasting checks targeting you
+                 with only 25% cover (instead of the normally required 50%)
+
+ATTACK / WEAPONS
+- Longbow: Attack +4 / Damage 1d8 (Range: F) [arrows: 40]
+- Dagger : Attack +4 / Damage 1d4 (Range: N - F/Th)
+
+GEAR (10 slots max)[b]
+1. Leather Armor (10gp)
+2. Longbow       ( 8gp)
+3. Dagger        ( 1gp)
+4. Backpack      ( 2gp)
+5. Rations x3    ( 5sp)
+6. Rations x3    ( 5sp)
+7. Rope 60'      ( 1gp)
+8. Torch         ( 5sp)
+9. Torch         ( 5sp)
+10.
+[b]Free to carry (Hand/Belt):
+1. 2 bundles of arrows (2gp)
+TREASURE: 30 - 26 = 4gp
+
+TALENTS / SPELLS
+- +2 DEX
+
+called: Trailblazers of ShadowDark @ https://rpol.net/game.php?gi=80435&date=1791766376
