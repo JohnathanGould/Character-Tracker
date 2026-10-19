@@ -183,7 +183,7 @@ GEMS:
 ----------------------------------------------------------------------------
 GEAR
 
-COIN: GP: 165  SP: 8   (reserve 165.80 gp, 3.3 lb, kept in haversack)
+COIN: GP: 157  SP: 8   (reserve 157.80 gp, 3.3 lb, kept in haversack)
 
 ITEM                              GP      LB    RUNNING LB
 
@@ -191,20 +191,20 @@ ITEM                              GP      LB    RUNNING LB
 +1 mithral chain shirt          (owned)  12.5      12.5
 Cloak of Resistance +1          (owned)   1.0      13.5
 Ring of Protection +1           (owned)    -       13.5
-Traveler's outfit                  1      5.0      18.5
+Cold weather outfit                8      7.0      20.5
 
 -- BELT --
-Rapier, masterwork              (owned)   2.0      20.5
-Belt pouch                         1      0.5      21.0
-Arrows x20                         1      3.0      24.0
-Potions x3 (CMW, 2x CLW)        (owned)   0.3      24.3
+Rapier, masterwork              (owned)   2.0      22.5
+Belt pouch                         1      0.5      23.0
+Arrows x20                         1      3.0      26.0
+Potions x3 (CMW, 2x CLW)        (owned)   0.3      26.3
 
 -- SLUNG / ON BACK --
-Longbow, masterwork             (owned)   3.0      27.3
-Handy Haversack (empty or full) (owned)   5.0      32.3
+Longbow, masterwork             (owned)   3.0      29.3
+Handy Haversack (empty or full) (owned)   5.0      34.3
 
-MUNDANE COST OUTSIDE HAVERSACK            3 gp
-TOTAL CARRIED                                     32.3 lb
+MUNDANE COST OUTSIDE HAVERSACK           10 gp
+TOTAL CARRIED                                     34.3 lb
 
 IN HAVERSACK:
 
@@ -256,34 +256,35 @@ Entertainer's outfit               3       4      79.5
 Cleric's vestments                 5       6      85.5
 Courtier's outfit                 30       6      91.5
 Jewelry for courtier's outfit     50       -      91.5
+Traveler's outfit                  1       5      96.5
 
 -- AMMUNITION --
-Arrows x20 (spare)                 1       3      94.5
+Arrows x20 (spare)                 1       3      99.5
 
 -- ALCHEMICAL --
-Smokesticks x3                    60     1.5      96.0
-Tanglefoot bag                    50       4     100.0
-Thunderstone                      30       1     101.0
-Alchemist's fire x2               40       2     103.0
-Antitoxin x2                     100       -     103.0
-Holy water                        25       1     104.0
+Smokesticks x3                    60     1.5      101.0
+Tanglefoot bag                    50       4     105.0
+Thunderstone                      30       1     106.0
+Alchemist's fire x2               40       2     108.0
+Antitoxin x2                     100       -     108.0
+Holy water                        25       1     109.0
 
 -- MUSIC --
-Mandolin, common                   5       3     107.0
+Mandolin, common                   5       3     112.0
 
 -- SCROLLS (CL 1, 25 gp, 0.5 lb each) --
-Comprehend Languages              25     0.5     107.5
-Disguise Self                     25     0.5     108.0
-Charm Person                      25     0.5     108.5
-Alarm                             25     0.5     109.0
-Obscuring Mist                    25     0.5     109.5
-Shield                            25     0.5     110.0
+Comprehend Languages              25     0.5     112.5
+Disguise Self                     25     0.5     113.0
+Charm Person                      25     0.5     113.5
+Alarm                             25     0.5     114.0
+Obscuring Mist                    25     0.5     114.5
+Shield                            25     0.5     115.0
 
-IN HAVERSACK                 1036.20 gp          110.0 lb
-RESERVE (gold coins)          165.80 gp          3.3 lb
-HAVERSACK TOTAL                                 113.3 lb of 120 (6.7 spare)
+IN HAVERSACK                 1037.20 gp          115.0 lb
+RESERVE (gold coins)          157.80 gp          3.3 lb
+HAVERSACK TOTAL                                 118.3 lb of 120 (1.7 spare)
 
-TOTAL SPENT                  1039.20 gp   (of 1,205)
+TOTAL SPENT                  1047.20 gp   (of 1,205)
 
 ----------------------------------------------------------------------------
 LOAD:  LIGHT   MEDIUM (-3) HEAVY/MAX (-6)  LIFT (X 2)  PUSH/DRAG (X 5)
