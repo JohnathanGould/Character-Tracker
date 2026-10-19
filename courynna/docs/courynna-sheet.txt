@@ -176,7 +176,7 @@ LEVEL 1 (DC:16)
 LEVEL 2 (DC:17)
 - Invisibility
 ----------------------------------------------------------------------------
-COIN:    PP:    GP: 1205    SP:     CP:
+COIN:    PP:    GP: 1197    SP:     CP:
 GEMS:
 
                                                   TOTAL WEIGHT:        LB
