@@ -196,15 +196,15 @@ Cold weather outfit                8      7.0      20.5
 -- BELT --
 Rapier, masterwork              (owned)   2.0      22.5
 Belt pouch                         1      0.5      23.0
-Arrows x20                         1      3.0      26.0
-Potions x3 (CMW, 2x CLW)        (owned)   0.3      26.3
+Arrows x8                          1      1.2      24.2
+Potions x3 (CMW, 2x CLW)        (owned)   0.3      24.5
 
 -- SLUNG / ON BACK --
-Longbow, masterwork             (owned)   3.0      29.3
-Handy Haversack (empty or full) (owned)   5.0      34.3
+Longbow, masterwork             (owned)   3.0      27.5
+Handy Haversack (empty or full) (owned)   5.0      32.5
 
 MUNDANE COST OUTSIDE HAVERSACK           10 gp
-TOTAL CARRIED                                     34.3 lb
+TOTAL CARRIED                                     32.5 lb
 
 IN HAVERSACK:
 
@@ -259,29 +259,29 @@ Jewelry for courtier's outfit     50       -      91.5
 Traveler's outfit                  1       5      96.5
 
 -- AMMUNITION --
-Arrows x20 (spare)                 1       3      99.5
+Arrows x30 (spare)                 1     4.5     101.0
 
 -- ALCHEMICAL --
-Smokesticks x3                    60     1.5      101.0
-Tanglefoot bag                    50       4     105.0
-Thunderstone                      30       1     106.0
-Alchemist's fire x2               40       2     108.0
-Antitoxin x2                     100       -     108.0
-Holy water                        25       1     109.0
+Smokesticks x3                    60     1.5      102.5
+Tanglefoot bag                    50       4     106.5
+Thunderstone                      30       1     107.5
+Alchemist's fire x2               40       2     109.5
+Antitoxin x2                     100       -     109.5
+Holy water                        25       1     110.5
 
 -- MUSIC --
-Mandolin, common                   5       3     112.0
+Mandolin, common                   5       3     113.5
 
 -- SCROLLS (CL 1, 25 gp, 0.5 lb each) --
-Comprehend Languages              25     0.5     112.5
-Disguise Self                     25     0.5     113.0
-Charm Person                      25     0.5     113.5
-Alarm                             25     0.5     114.0
-Obscuring Mist                    25     0.5     114.5
-Shield                            25     0.5     115.0
+Comprehend Languages              25     0.5     114.0
+Disguise Self                     25     0.5     114.5
+Charm Person                      25     0.5     115.0
+Alarm                             25     0.5     115.5
+Obscuring Mist                    25     0.5     116.0
+Shield                            25     0.5     116.5
 
-IN HAVERSACK                 1037.20 gp          115.0 lb
-HAVERSACK TOTAL                                 115.0 lb of 120 (5.0 spare)
+IN HAVERSACK                 1037.20 gp          116.5 lb
+HAVERSACK TOTAL                                 116.5 lb of 120 (3.5 spare)
 
 SPENT ON GEAR                1047.20 gp
 

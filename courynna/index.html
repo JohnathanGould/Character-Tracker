@@ -586,7 +586,7 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
   function renderStock() {
     var row = function (k, label, n, note) {
       return "<span>" + (/^scroll:/.test(k) ? '<a href="#" data-spell="' + esc(label) + '">' + esc(label) + "</a>" : esc(label)) + (note ? ' <span class="hint">' + esc(note) + "</span>" : "") + '</span><span class="q"><b>' + n + "</b>" +
-        '<button class="btn sm edit" data-act="use" data-k="' + k + '"' + (n < 1 ? " disabled" : "") + '>Use</button><button class="btn sm edit" data-act="add" data-k="' + k + '">+</button></span>';
+        '<button class="btn sm edit" data-act="use" data-k="' + k + '"' + (n < 1 ? " disabled" : "") + '>Use</button><button class="btn sm edit" data-act="add" data-k="' + k + '">+</button>' + (k === "arrows" ? '<button class="btn sm edit" data-act="packarrows" title="Move 10 arrows from the quiver into the haversack">10 to pack</button>' : "") + "</span>";
     };
     var umd = skillTotal(SKILLS.filter(function (s) { return s[0] === "Use Magic Device"; })[0]);
     $("pStock").innerHTML = '<div class="ph"><h2>Consumables</h2><span class="hint">Use counts one down and logs it</span></div>' +
@@ -747,6 +747,7 @@ textarea.rpol { width: 100%; min-height: 50vh; background: var(--bg); border: 1p
       mutate(function (s) { var o = s.hp; s.hp = Math.max(DEAD, Math.min(HP_MAX, s.hp + n)); var top = s.log[0];
         if (top && top.k === "hp" && top.r === s.round) { top.t = "HP " + top.from + " → " + s.hp; } else s.log.unshift({ r: s.round, k: "hp", from: o, t: "HP " + o + " → " + s.hp }); });
     }
+    else if (a === "packarrows") mutate(function (s) { var n = Math.min(10, s.stock.arrows); if (!n) return; s.stock.arrows -= n; s.stock.arrowsSpare += n; log("Moved " + n + " arrows to the pack (quiver " + s.stock.arrows + ", spare " + s.stock.arrowsSpare + ")"); });
     else if (a === "use" || a === "add") {
       var key = t.getAttribute("data-k"), sc = /^scroll:/.test(key), nm = sc ? key.slice(7) : key, dl = a === "use" ? -1 : 1;
       var label = sc ? "Scroll of " + nm : (STOCK.filter(function (x) { return x[0] === nm; })[0] || [0, nm])[1];
