@@ -183,7 +183,7 @@ GEMS:
 ----------------------------------------------------------------------------
 GEAR
 
-COIN: GP: 157  SP: 8   (reserve 157.80 gp, 3.3 lb, kept in haversack)
+COIN: GP: 1197  (after the 8 gp cold weather outfit; coin weight not counted below)
 
 ITEM                              GP      LB    RUNNING LB
 
@@ -281,10 +281,9 @@ Obscuring Mist                    25     0.5     114.5
 Shield                            25     0.5     115.0
 
 IN HAVERSACK                 1037.20 gp          115.0 lb
-RESERVE (gold coins)          157.80 gp          3.3 lb
-HAVERSACK TOTAL                                 118.3 lb of 120 (1.7 spare)
+HAVERSACK TOTAL                                 115.0 lb of 120 (5.0 spare)
 
-TOTAL SPENT                  1047.20 gp   (of 1,205)
+SPENT ON GEAR                1047.20 gp
 
 ----------------------------------------------------------------------------
 LOAD:  LIGHT   MEDIUM (-3) HEAVY/MAX (-6)  LIFT (X 2)  PUSH/DRAG (X 5)
